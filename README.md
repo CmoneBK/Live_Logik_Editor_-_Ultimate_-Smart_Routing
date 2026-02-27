@@ -1,4 +1,8 @@
-# Live Logik-Editor - Ultimate Smart Routing ⚡
+🌍 *Read this in other languages: [English](#english-version) | [Deutsch](#deutsche-version)*
+
+---
+
+# <a id="english-version"></a>Live Logik-Editor - Ultimate Smart Routing ⚡
 
 A powerful, browser-based logic circuit editor and live simulator. This tool automatically converts simple text-based boolean expressions into a fully interactive Function Block Diagram (FBD/FBS) with smart cable routing and real-time simulation.
 
@@ -60,6 +64,72 @@ SYSTEM_ACTIVE := Q1 && ¬ERROR_STATE
 
 * **HTML5 / CSS3 / Vanilla JavaScript**
 * [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom) (v3.6.1) for canvas manipulation.
+
+---
+---
+
+# <a id="deutsche-version"></a>Live Logik-Editor - Ultimate Smart Routing ⚡
+
+Ein leistungsstarker, browserbasierter Logikschaltungs-Editor und Live-Simulator. Dieses Tool wandelt einfache textbasierte Boolesche Ausdrücke automatisch in einen vollständig interaktiven Funktionsbausteinplan (FBP/FBS) mit intelligentem Auto-Routing und Echtzeit-Simulation um.
+
+## ✨ Funktionen
+
+* **Text-zu-Diagramm Generierung**: Schreiben Sie Ihre Logik in einen übersichtlichen Texteditor, und die App kompiliert sie sofort in eine grafische, knotenbasierte Schaltung.
+* **Intelligentes Auto-Routing**: Kabel (Verbindungen) berechnen automatisch saubere, überlappungsfreie Pfade und Kabelkanäle zwischen den Logikbausteinen.
+* **Interaktive Live-Simulation**: 
+  * Generiert automatisch UI-Bedienelemente (Schalter für Zustände, Taster für Impulse).
+  * Echtzeit-LED-Anzeigen zur Überwachung der Ausgänge.
+  * **Visuelles Graphen-Feedback**: Aktive Linien, Knoten und Pins leuchten während der Simulation dynamisch auf, wenn ihr Zustand `true` ist.
+* **Native RS-Flip-Flop Unterstützung**: Der Compiler erkennt automatisch Variablen wie `S1`, `R1` und `Q1` und fasst sie in speziellen RS-Glied-Bausteinen (Reset-Set) zusammen.
+* **Syntax-Hervorhebung**: Benutzerdefiniertes, nicht-blockierendes Highlighting für Operatoren, Zuweisungen und Logikzustände, um den Code lesbar zu halten.
+* **SVG-Export**: Laden Sie Ihre sauber gerouteten Logikdiagramme als `.svg`-Dateien für Dokumentationen oder Präsentationen herunter.
+* **Auto-Save**: Verlieren Sie nie Ihre Arbeit; der Editor-Zustand wird kontinuierlich im `localStorage` Ihres Browsers gespeichert.
+* **Pan & Zoom Benutzeroberfläche**: Navigieren Sie mühelos durch komplexe Diagramme dank der integrierten SVG-Pan-und-Zoom-Funktion.
+
+## 🚀 Schnellstart
+
+Da es sich um eine reine HTML/JS/CSS-Anwendung handelt, sind keine Build-Schritte oder Bundler erforderlich.
+
+1. Klonen oder laden Sie das Repository herunter.
+2. Öffnen Sie die Datei `index.html` in einem beliebigen modernen Webbrowser.
+3. Beginnen Sie, Ihre Logik im linken Bereich einzutippen, oder klicken Sie auf **"Beispiel laden"**, um das Standardbeispiel aufzurufen.
+
+## 📖 Syntax & Logik-Regeln
+
+Der Editor verwendet eine einfache Syntax im Pseudocode-Stil, um Logikgatter und Zuweisungen zu definieren.
+
+### Operatoren
+* **`:=`** : Zuweisung (z.B., `AUSGANG := EINGANG`)
+* **`&&`** : UND-Gatter (AND)
+* **`||`** : ODER-Gatter (OR)
+* **`¬`** : NICHT / Invertierung (NOT)
+* **`()`** : Klammern für Ausführungsreihenfolge und Gruppierung
+
+### Spezielle Variablen (RS-Flip-Flops)
+Wenn Sie Ihre Variablen mit `S`, `R` und `Q` gefolgt von einer Zahl (z.B. `1`) benennen, gruppiert die Engine diese automatisch in einen **RS-Flip-Flop-Baustein**:
+* `S1 := ...` (Setz-Bedingung für Flip-Flop 1)
+* `R1 := ...` (Rücksetz-Bedingung für Flip-Flop 1)
+* `Q1` repräsentiert den Ausgang von Flip-Flop 1.
+
+### Beispielcode
+```text
+S1 := START_BTN
+R1 := STOP_BTN || EMERGENCY_STOP
+SYSTEM_ACTIVE := Q1 && ¬ERROR_STATE
+```
+
+## 🎮 Simulationsmodus
+
+1. Schreiben Sie Ihre Logik im Editor.
+2. Die Benutzeroberfläche füllt die Panels **Eingänge** und **Ausgänge** automatisch basierend auf Ihren Variablen.
+   * *Tipp:* Suffixe sind wichtig! Variablen, die auf `_SCHALTER` enden oder `NH`/`NA` heißen, werden als rastende Schalter gerendert. Andere Eingänge werden als Taster gerendert.
+3. Klicken Sie auf **"Simulation starten"**.
+4. Interagieren Sie mit den Schaltern und Tastern. Beobachten Sie, wie sich die Logik in Echtzeit durch den SVG-Graphen ausbreitet.
+
+## 🛠️ Erstellt mit
+
+* **HTML5 / CSS3 / Vanilla JavaScript**
+* [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom) (v3.6.1) für die Canvas-Manipulation.
 
 <a href="/Logik Editor Preview.png" target="_blank">
           <img src="/Logik Editor Preview.png" alt="Startbildschirm" width="600">
