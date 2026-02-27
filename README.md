@@ -41,14 +41,29 @@ If you name your variables using `S`, `R`, and `Q` followed by a number (e.g., `
 * `R1 := ...` (Reset condition for Flip-Flop 1)
 * `Q1` represents the output of Flip-Flop 1.
 
-<a href="/Logik Editor Preview.png" target="_blank">
-          <img src="/Logik Editor Preview.png" alt="Startbildschirm" width="600">
- 
 ### Example Code
 ```text
 S1 := START_BTN
 R1 := STOP_BTN || EMERGENCY_STOP
 SYSTEM_ACTIVE := Q1 && ¬ERROR_STATE
+```
+
+## 🎮 Simulation Mode
+
+1. Write your logic in the editor.
+2. The UI will automatically populate the **Eingänge** (Inputs) and **Ausgänge** (Outputs) panels based on your variables.
+   * *Hint:* Suffixes matter! Variables ending in `_SCHALTER` or named `NH`/`NA` will render as toggle switches. Other inputs render as momentary push-buttons (TASTER).
+3. Click **"Simulation starten"** (Start Simulation).
+4. Interact with the switches and buttons. Watch the logic propagate through the SVG FBD graph in real-time.
+
+## 🛠️ Built With
+
+* **HTML5 / CSS3 / Vanilla JavaScript**
+* [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom) (v3.6.1) for canvas manipulation.
+
+<a href="/Logik Editor Preview.png" target="_blank">
+          <img src="/Logik Editor Preview.png" alt="Startbildschirm" width="600">
+ 
 
 
  
