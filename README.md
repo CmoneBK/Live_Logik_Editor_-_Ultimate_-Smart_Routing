@@ -41,11 +41,14 @@ If you name your variables using `S`, `R`, and `Q` followed by a number (e.g., `
 * `R1 := ...` (Reset condition for Flip-Flop 1)
 * `Q1` represents the output of Flip-Flop 1.
 
+<a href="/Logik Editor Preview.png" target="_blank">
+          <img src="/Logik Editor Preview.png" alt="Startbildschirm" width="600">
+ 
 ### Example Code
 ```text
 S1 := START_BTN
 R1 := STOP_BTN || EMERGENCY_STOP
 SYSTEM_ACTIVE := Q1 && ¬ERROR_STATE
 
- <a href="/Logik Editor Preview.png" target="_blank">
-          <img src="/Logik Editor Preview.png" alt="Startbildschirm" width="600">
+
+ 
