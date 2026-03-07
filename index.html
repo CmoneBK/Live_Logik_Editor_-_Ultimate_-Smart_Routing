@@ -114,24 +114,20 @@
         .fbs-line { fill: none; stroke-width: 2.5px; stroke-linejoin: round; stroke-linecap: round; }
         .fbs-io-box { fill: #f0f0f0; stroke-width: 2px; rx: 4px; ry: 4px; }
       	/* --- Live-Simulation Styles (MIT AFTERGLOW) --- */
-        
         /* 1. Ausklingen (Fade-Out): Langsamer Übergang (1s), wenn das Signal wegfällt */
         .fbs-block, .fbs-io-box, .fbs-line, .fbs-dot, .fbs-bubble, .circ-component { 
             transition: stroke 1s ease-out, fill 1s ease-out, opacity 1s ease-out, stroke-width 1s ease-out, filter 1s ease-out !important; 
         }
-        
         /* 2. Einschalten (Snap-In): Keine Verzögerung (0s), wenn das Signal anliegt */
         svg.sim-running .active,
         .circ-component.active {
             transition: stroke 0s, fill 0s, opacity 0s, stroke-width 0s, filter 0s !important;
         }
-        
         /* Glow-Effekte für aktive Zustände (heller Schein) */
         svg.sim-running .fbs-block.active { stroke-width: 3.5px; filter: drop-shadow(0 0 6px rgba(255,255,255,0.7)); }
         svg.sim-running .fbs-io-box.active { stroke-width: 3px; filter: drop-shadow(0 0 6px rgba(255,255,255,0.5)); }
         svg.sim-running .fbs-line.active { stroke-width: 3.5px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.6)); }
         svg.sim-running .fbs-dot.active { filter: drop-shadow(0 0 5px rgba(255,255,255,0.6)); }
-        
         /* Inaktive Zustände (Das Ziel des Ausfadens) */
         svg.sim-running .fbs-block.inactive { stroke: #444 !important; }
         svg.sim-running .fbs-io-box.inactive { stroke: #444 !important; color: #888; }
@@ -336,7 +332,7 @@
     <div id="left-panel">
         <div class="header-area">
             <div class="header-title-wrapper">
-                <h2>Logik-Editor</h2>
+                <h2 title="Virtueller Automatisierungs-, Logik- & Industrie-Simulator" style="color: #2196f3; font-weight: 900; letter-spacing: 2px; cursor: help;">VALIS</h2>
                 <span id="save-indicator">Gespeichert</span>
             </div>
             <div style="display: flex; gap: 5px; align-items: center;">
@@ -360,7 +356,9 @@
                     <span class="legend-code" title="Klicken zum Einfügen" onclick="insertSymbol('¬')">¬</span> <span>NICHT (auch !, NOT)</span>
                 </div>
                 <div class="legend-rs-note">
-                    <strong>Info:</strong> Variablen wie <span class="legend-code rs">S1</span>, <span class="legend-code rs">R1</span>, <span class="legend-code rs">Q1</span> werden als <strong>RS-Glied</strong> interpretiert.
+                    <strong>Info Speicherglieder:</strong><br>
+                    <span class="legend-code rs">S1</span> / <span class="legend-code rs">S1_RS</span>, <span class="legend-code rs">R1</span> ➔ Ausgang <span class="legend-code rs">Q1</span> (RS, Rücksetz-dominant)<br>
+                    <span class="legend-code rs">S1_SR</span>, <span class="legend-code rs">R1_SR</span> ➔ Ausgang <span class="legend-code rs">Q1_SR</span> (SR, Setz-dominant)
                 </div>
             </div>
             <div class="editor-wrapper">
@@ -383,8 +381,8 @@
     </div>
     <div id="graph-container">
         <div class="graph-top-bar">
-            <div class="info-box">
-                <strong>Bedienungshinweise:</strong> Logik links tippen • Ansichten beliebig kombinieren • Zwischenräume verschieben • "Simulation starten" für Live-Test.
+            <div class="info-box" title="Virtual Automation, Logic & Industrial Simulator">
+                <strong>⚙️ Willkommen bei VALIS:</strong> Logik links tippen • "Simulation starten" für Live-Test.
             </div>
             <div style="display: flex; gap: 5px;">
                 <button id="btn-view-fbs" class="btn-export view-btn active" onclick="toggleWorkspaceView('fbs-wrapper')">Logikplan</button>
@@ -783,7 +781,8 @@
             addNode(id, type, label = id) {
                 if (!this.nodes.has(id)) {
                     let c = '#333';
-                    if (type === 'INPUT' || type === 'GATE' || type === 'RS') {
+                    // FIX: Hier hat das SR-Glied gefehlt, weshalb es unsichtbar dunkelgrau gezeichnet wurde!
+                    if (type === 'INPUT' || type === 'GATE' || type === 'RS' || type === 'SR') {
                         c = palette[this.colorIndex % palette.length];
                         this.colorIndex++;
                     }
@@ -809,67 +808,90 @@
             let jsCompiledCode = "";
             const definedOutputs = new Set();
             const allUsedInputs = new Set();
-            const rsBlocks = new Set();
+            const rsBlocks = new Map(); // NEU: Map statt Set für RS/SR Unterscheidung
             const exprCache = new Map();
-            // Pre-Scan: Alle RS-Glieder vorab sammeln
+
+            // Pre-Scan: Alle RS und SR-Glieder vorab sammeln
             lines.forEach(line => {
                 let cleanLine = line.split('//')[0].trim();
-                // NEU: Normalisierung der Zuweisungs-Operatoren (ersetzt das erste Vorkommen durch :=)
                 cleanLine = cleanLine.replace(/(:=|=|<-|\bIST\b|\bIS\b|\bGLEICH\b)/i, ':=');
                 if (!cleanLine || !cleanLine.includes(':=')) return;
-                const match = cleanLine.split(':=')[0].trim().match(/^([SR])(\d+)$/);
-                if (match) rsBlocks.add(match[2]);
+                
+                // NEU: Erkennt S1, R1 (RS) und S1_RS, R1_RS (RS) sowie S1_SR (SR)
+                const match = cleanLine.split(':=')[0].trim().match(/^([SR])(\d+)(_(?:SR|RS))?$/i);
+                if (match) {
+                    let suffix = match[3] ? match[3].toUpperCase() : '';
+                    let isSR = suffix === '_SR';
+                    rsBlocks.set(match[2] + suffix, isSR ? 'SR' : 'RS');
+                }
             });
+
             function createGate(type, inputObjs) {
                 const gateId = (type === '&' ? 'AND_' : 'OR_') + graph.gateCounter++;
                 graph.addNode(gateId, 'GATE', type === '&' ? '&' : '>=1');
                 inputObjs.forEach(inp => graph.addEdge(inp.id, gateId, '', inp.inverted));
+
                 const operator = type === '&' ? '&&' : '||';
                 const jsInputs = inputObjs.map(inp => (inp.inverted ? '!' : '') + `state.${inp.id}`).join(` ${operator} `);
                 jsCompiledCode += `    state.${gateId} = ${jsInputs || 'false'};\n`;
+
                 return gateId;
             }
+
             function evaluateFlat(expr) {
                 expr = String(expr).trim();
-                // 1. Zuerst nach OR trennen (schwächste Bindung, höchste Ebene im Baum)
+																						  
                 let orParts = expr.split('||').map(s => s.trim());
                 if (orParts.length > 1) { 
                     let resultId = createGate('||', orParts.map(p => evaluateFlat(p))); 
                     exprCache.set(expr, resultId);
                     return { id: resultId, inverted: false };
                 } 
-                // 2. Dann nach AND trennen (stärkere Bindung)
+                
                 let andParts = expr.split('&&').map(s => s.trim());
                 if (andParts.length > 1) { 
                     let resultId = createGate('&', andParts.map(p => evaluateFlat(p))); 
                     exprCache.set(expr, resultId);
                     return { id: resultId, inverted: false };
                 }
-                // 3. JETZT ERST (auf der Ebene des einzelnen Terms) die Invertierung prüfen!
+
                 let inverted = false;
                 let cleanId = expr;
                 if (cleanId.startsWith('¬')) {
                     inverted = true;
                     cleanId = cleanId.substring(1).trim();
                 }
-                // Falls es ein geklammerter Ausdruck war, der durch ein Gatter ersetzt wurde
+
                 if (/^(AND_|OR_)\d+$/.test(cleanId)) return { id: cleanId, inverted }; 
+                
                 let canonicalKey = cleanId;
                 if (exprCache.has(canonicalKey)) return { id: exprCache.get(canonicalKey), inverted };
+
                 let resultId;
-                const qMatch = cleanId.match(/^Q(\d+)$/);
-                // Ist es ein Merker (RS-Glied) oder ein normaler Eingang?
-                if (qMatch && rsBlocks.has(qMatch[1])) {
-                    resultId = `RS_${qMatch[1]}`;
+                
+                // Unterscheidung zwischen Standard Q, Q_RS und Q_SR
+                const qMatch = cleanId.match(/^Q(\d+)(_(?:SR|RS))?$/i);
+                if (qMatch) {
+                    let suffix = qMatch[2] ? qMatch[2].toUpperCase() : '';
+                    let key = qMatch[1] + suffix;
+                    if (rsBlocks.has(key)) {
+                        resultId = `${rsBlocks.get(key)}_${qMatch[1]}`;
+                    } else {
+                        graph.addNode(cleanId, 'INPUT', cleanId);
+                        allUsedInputs.add(cleanId);
+                        resultId = cleanId;
+                    }
                 } else {
                     graph.addNode(cleanId, 'INPUT', cleanId);
                     allUsedInputs.add(cleanId);
                     resultId = cleanId;
                 }
+                
                 exprCache.set(canonicalKey, resultId);
-                // Wir geben die Variable und ihren Invertierungs-Status zurück
+																				
                 return { id: resultId, inverted };
             }
+
             function parseExpression(expr) {
                 let parsed = expr;
                 let changed = true;
@@ -883,59 +905,89 @@
                 }
                 return evaluateFlat(parsed);
             }
+
             lines.forEach(line => {
                 let cleanLine = line.split('//')[0].trim();
-                // NEU: Normalisierung der Zuweisungs-Operatoren
+																
                 cleanLine = cleanLine.replace(/(:=|=|<-|\bIST\b|\bIS\b|\bGLEICH\b)/i, ':=');
                 if (!cleanLine || !cleanLine.includes(':=')) return;
+
                 const parts = cleanLine.split(':=');
                 const outputStr = parts[0].trim();
                 let expressionStr = parts[1].trim();
-				// --- NORMALISIERUNG ALLER ALTERNATIVEN ZEICHEN ---
-                // Übersetzt Wörter und Zeichen in die Standard-Norm (&&, ||, ¬)
+
+																				   
                 expressionStr = expressionStr
-                    .replace(/!/g, '¬')
-                    .replace(/\bNOT\b/gi, '¬')
-                    .replace(/\bNICHT\b/gi, '¬')
-                    .replace(/\bAND\b/gi, '&&')
-                    .replace(/\bUND\b/gi, '&&')
-                    .replace(/\^/g, '&&')
-                    .replace(/∧/g, '&&')
-                    .replace(/\bOR\b/gi, '||')
-                    .replace(/\bODER\b/gi, '||')
-                    .replace(/\bv\b/gi, '||')
-                    .replace(/∨/g, '||');
-                // Wandelt einzelne & und | sicher in && und || um
+										
+											   
+                    .replace(/!/g, '¬').replace(/\bNOT\b/gi, '¬').replace(/\bNICHT\b/gi, '¬')
+                    .replace(/\bAND\b/gi, '&&').replace(/\bUND\b/gi, '&&').replace(/\^/g, '&&').replace(/∧/g, '&&')
+                    .replace(/\bOR\b/gi, '||').replace(/\bODER\b/gi, '||').replace(/\bv\b/gi, '||').replace(/∨/g, '||');
+                
+										  
+											  
+												
+											 
+										   
+																  
                 expressionStr = expressionStr.replace(/&&/g, '##AND##').replace(/&/g, '&&').replace(/##AND##/g, '&&');
                 expressionStr = expressionStr.replace(/\|\|/g, '##OR##').replace(/\|/g, '||').replace(/##OR##/g, '||');
-                const rsMatch = outputStr.match(/^([SR])(\d+)$/);
+
+                // Pins auf SR und RS prüfen
+                const rsMatch = outputStr.match(/^([SR])(\d+)(_(?:SR|RS))?$/i);
                 let targetId = outputStr;
                 let targetPin = '';
+
                 if (rsMatch) {
-                    const pin = rsMatch[1]; const num = rsMatch[2];
-                    targetId = `RS_${num}`; targetPin = pin;
-                    rsBlocks.add(num);
-                    graph.addNode(targetId, 'RS', `RS-Glied ${num}`);
-                    definedOutputs.add(`Q${num}`);
+                    const pin = rsMatch[1].toUpperCase(); 
+                    const num = rsMatch[2];
+                    const suffix = rsMatch[3] ? rsMatch[3].toUpperCase() : '';
+                    const isSR = suffix === '_SR';
+                    const blockType = isSR ? 'SR' : 'RS';
+                    
+                    targetId = `${blockType}_${num}`; 
+                    targetPin = pin;
+                    rsBlocks.set(`${num}${suffix}`, blockType);
+                    graph.addNode(targetId, blockType, `${blockType}-Glied ${num}`);
+                    definedOutputs.add(`Q${num}${suffix}`);
                 } else {
                     graph.addNode(targetId, 'OUTPUT', outputStr);
                     definedOutputs.add(targetId);
                 }
+
                 const sourceObj = parseExpression(expressionStr);
                 graph.addEdge(sourceObj.id, targetId, targetPin, sourceObj.inverted);
+
                 if (rsMatch) {
                     jsCompiledCode += `    state.${targetId}_${targetPin} = ${sourceObj.inverted ? '!' : ''}state.${sourceObj.id};\n`;
                 } else {
                     jsCompiledCode += `    state.${targetId} = ${sourceObj.inverted ? '!' : ''}state.${sourceObj.id};\n`;
                 }
             });
-            rsBlocks.forEach(num => {
-                jsCompiledCode += `    if (state.RS_${num}_R) { state.RS_${num} = false; } else if (state.RS_${num}_S) { state.RS_${num} = true; }\n`;
-                jsCompiledCode += `    state.Q${num} = state.RS_${num};\n`;
+
+            // Generiere SPS-Code für RS und SR Hardware-Logik
+            rsBlocks.forEach((type, key) => {
+                // Schneidet _SR oder _RS ab, um die pure Nummer zu bekommen
+                const num = key.replace(/_(?:SR|RS)$/i, '');
+                const blockId = `${type}_${num}`;
+                
+                // FIX: Echte sequenzielle Dominanz-Logik (wie in einer echten SPS)
+                if (type === 'RS') {
+                    // RS: Rücksetzdominant
+                    jsCompiledCode += `    if (state.${blockId}_S) { state.${blockId} = true; }\n`;
+                    jsCompiledCode += `    if (state.${blockId}_R) { state.${blockId} = false; }\n`;
+                } else {
+                    // SR: Setzdominant
+                    jsCompiledCode += `    if (state.${blockId}_R) { state.${blockId} = false; }\n`;
+                    jsCompiledCode += `    if (state.${blockId}_S) { state.${blockId} = true; }\n`;
+                }
+                jsCompiledCode += `    state.Q${key} = state.${blockId};\n`;
             });
+
             graph.nodes.forEach(node => {
                 if (!definedOutputs.has(node.id) && node.type === 'INPUT') node.type = 'PURE_INPUT';
             });
+
             return { graph, jsCompiledCode, inputs: [...allUsedInputs].filter(i => !definedOutputs.has(i) && !i.startsWith('AND_') && !i.startsWith('OR_')), outputs: [...definedOutputs] };
         }
         function calculateLayout(graph) {
@@ -972,8 +1024,8 @@
             Object.keys(columns).forEach(level => {
                 let totalHeight = 0;
                 columns[level].forEach(node => {
-                    node.width = (node.type === 'RS' ? 50 : (node.type === 'GATE' ? 45 : Math.max(60, node.label.length * 8 + 10)));
-                    node.height = (node.type === 'RS' ? 65 : (node.type === 'GATE' ? Math.max(30, node.inputs.length * 15 + 15) : 30));
+                    node.width = ((node.type === 'RS' || node.type === 'SR') ? 50 : (node.type === 'GATE' ? 45 : Math.max(60, node.label.length * 8 + 10)));
+                    node.height = ((node.type === 'RS' || node.type === 'SR') ? 65 : (node.type === 'GATE' ? Math.max(30, node.inputs.length * 15 + 15) : 30));
                     totalHeight += node.height + MIN_GAP;
                 });
                 totalHeight -= MIN_GAP;
@@ -1051,7 +1103,7 @@
                 const target = graph.nodes.get(edge.targetId);
                 if(!source || !target) return;
                 let startY = source.y + (source.height / 2);
-                if (source.type === 'RS') startY = source.y + 15;
+                if (source.type === 'RS' || source.type === 'SR') startY = source.y + 15;
                 const netKey = edge.sourceId + '_' + startY;
                 if (!nets[netKey]) nets[netKey] = { source, startY, edges: [], color: edge.color };
                 nets[netKey].edges.push(edge);
@@ -1067,7 +1119,7 @@
                         const usableHeight = target.height - 20; 
                         const spacing = usableHeight / Math.max(1, target.inputs.length);
                         endY = target.y + 20 + spacing * (inIndex + 0.5); 
-                    } else if (target.type === 'RS') {
+                    } else if (target.type === 'RS' || target.type === 'SR') {
                         if (edge.targetPin === 'S') endY = target.y + 15;
                         if (edge.targetPin === 'R') endY = target.y + target.height - 15;
                     }
@@ -1128,7 +1180,7 @@
             graph.nodes.forEach(node => {
                 const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("transform", `translate(${safe(node.x)}, ${safe(node.y)})`);
-                if (node.type === 'GATE' || node.type === 'RS') {
+                if (node.type === 'GATE' || node.type === 'RS' || node.type === 'SR') {
                     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("id", `node-block-${node.id}`);
                     rect.setAttribute("width", safe(node.width));
@@ -1143,7 +1195,7 @@
                     text.setAttribute("class", "fbs-text");
                     text.textContent = node.label;
                     g.appendChild(text);
-                    if (node.type === 'RS') {
+                    if (node.type === 'RS' || node.type === 'SR') {
                         const sText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         sText.setAttribute("x", 4); sText.setAttribute("y", 18); sText.setAttribute("class", "fbs-pin-text"); sText.textContent = "S";
                         const rText = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1204,24 +1256,20 @@
         window.loadExample = function(type) {
             if (!type) return;
             const selectEl = document.querySelector('.btn-reset');
-            
             // 10 Millisekunden warten, damit das Dropdown-Menü sich im Browser 
             // visuell schließen kann, bevor der blockierende Confirm-Dialog aufpoppt!
             setTimeout(() => {
                 if (confirm("Möchtest du deinen Code und die Anlage durch das Beispiel überschreiben?")) {
                     try {
                         textarea.value = EXAMPLES[type];
-                        
                         if (EXAMPLES.types) {
                             componentTypes = { ...EXAMPLES.types };
                             localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
                         }
-                        
                         spsState = {};
                         updateHighlighting(); 
                         updateEditor(); 
                         saveToStorage();
-                        
                         // Anlage aufbauen und Physik vorbereiten
                         if (EXAMPLES.factory) {
                             EXAMPLES.factory.globalViewMode = 'side';
@@ -1230,21 +1278,18 @@
                         } else {
                             clearFactory(true); 
                         }
-                        
                         // NEU: Wenn der Factory-Tab gerade versteckt ist, klappen wir ihn 
                         // automatisch auf, damit man das geladene Beispiel sofort sieht!
                         const factoryPanel = document.getElementById('factory-wrapper');
                         if (factoryPanel.style.display === 'none') {
                             toggleWorkspaceView('factory-wrapper');
                         }
-                        
                     } catch (e) {
                         // Falls jemals wieder ein Fehler passiert, zeigt der Editor ihn dir jetzt an!
                         console.error("Fehler beim Laden des Beispiels:", e);
                         alert("Fehler beim Laden: " + e.message);
                     }
                 }
-                
                 // Dropdown wieder auf "Beispiele..." zurücksetzen
                 selectEl.selectedIndex = 0;
             }, 10);
@@ -1258,7 +1303,7 @@
 			// NEU: Syntax-Highlighting für die neuen Schlüsselwörter inkl. ∧ und ∨
             text = text.replace(/(&amp;&amp;|&amp;|\|\||\||\^|∧|\bv\b|∨|¬|!|\bAND\b|\bOR\b|\bUND\b|\bODER\b|\bNOT\b|\bNICHT\b)/gi, '<span class="token operator">$1</span>');
             text = text.replace(/(\(|\))/g, '<span class="token paren">$1</span>');
-            text = text.replace(/\b([SRQ]\d+)\b/g, '<span class="token rs">$1</span>');
+            text = text.replace(/\b([SRQ]\d+(?:_(?:SR|RS))?)\b/gi, '<span class="token rs">$1</span>');
             highlightingContent.innerHTML = text;
         }
 		// Funktion zum Einfügen von Symbolen an der aktuellen Cursor-Position
@@ -1322,12 +1367,15 @@
             });
             simOutputsContainer.innerHTML = '<h3>Ausgänge</h3>';
             outputs.forEach(name => {
-                if(!name.match(/^[SR]\d+$/)) {
+                if(!name.match(/^[SR]\d+(_(?:SR|RS))?$/i)) {
                     spsState[name] = oldState[name] || false;
+                    
                     let selectHTML = "";
-                    if (name.match(/^Q\d+$/)) {
+                    
+                    if (name.match(/^Q\d+(_(?:SR|RS))?$/i)) {
                         componentTypes[name] = 'relais'; 
-                        selectHTML = `<span class="type-select" style="border: none; background: transparent; color: #888; cursor: default;">RS-Ausgang</span>`;
+                        let lbl = name.includes('_SR') ? 'SR-Ausgang' : 'RS-Ausgang';
+                        selectHTML = `<span class="type-select" style="border: none; background: transparent; color: #888; cursor: default;">${lbl}</span>`;
                     } else if (usedAsSource.has(name)) {
                         componentTypes[name] = 'relais'; 
                         selectHTML = `<span class="type-select" style="border: none; background: transparent; color: #888; cursor: default;">Hilfsrelais</span>`;
@@ -1555,21 +1603,18 @@
             }
             currentGraph.nodes.forEach(node => {
                 const val = !!spsState[node.id];
-                
                 // 1. Logik-Blöcke (FBS)
                 const block = document.getElementById(`node-block-${node.id}`);
                 if (block) {
                     if (val) { block.classList.add('active'); block.classList.remove('inactive'); }
                     else { block.classList.add('inactive'); block.classList.remove('active'); }
                 }
-
                 // 2. Leitungen und Punkte (FBS)
                 const nets = document.querySelectorAll(`.net-source-${node.id}`);
                 nets.forEach(el => {
                     if (val) { el.classList.add('active'); el.classList.remove('inactive'); }
                     else { el.classList.add('inactive'); el.classList.remove('active'); }
                 });
-                
                 // 3. Schaltplan-Spulen/Lampen (IEC)
                 if (document.getElementById('circuit-wrapper').style.display !== 'none') {
                     const circOut = document.getElementById(`circ-out-${node.id}`);
@@ -1615,7 +1660,7 @@
             });
             // 2. Mappings für Nodes & Ausgänge
             graph.nodes.forEach(n => {
-                if (n.type === 'GATE' || n.type === 'RS') {
+                if (n.type === 'GATE' || n.type === 'RS' || n.type === 'SR') { // HIER ERGÄNZT
                     symMap[n.id] = `-KF${kfCount++}`;
                     contactTypeMap[n.id] = 'relais';
                 } else if (n.type === 'OUTPUT') {
@@ -1756,7 +1801,9 @@
                 }
             });
             // 4. Logik-Netzwerk zeichnen
-            const nodesToDraw = Array.from(graph.nodes.values()).filter(n => ['GATE', 'RS', 'OUTPUT'].includes(n.type)).sort((a,b) => a.level - b.level);
+            const nodesToDraw = Array.from(graph.nodes.values())
+                .filter(n => ['GATE', 'RS', 'SR', 'OUTPUT'].includes(n.type)) // HIER ERGÄNZT
+                .sort((a,b) => a.level - b.level);
             nodesToDraw.forEach(node => {
                 let inEdges = graph.edges.filter(e => e.targetId === node.id);
                 if (node.type === 'GATE' && node.label === '&') { 
@@ -1798,29 +1845,48 @@
                         currX = endX + 130;
                     }
                 }
-                else if (node.type === 'RS') { 
+                else if (node.type === 'RS' || node.type === 'SR') { 
                     let sEdge = inEdges.find(e => e.targetPin === 'S'), rEdge = inEdges.find(e => e.targetPin === 'R');
                     let sName = sEdge ? (symMap[sEdge.sourceId] || sEdge.sourceId) : 'N/A';
                     let rName = rEdge ? (symMap[rEdge.sourceId] || rEdge.sourceId) : 'N/A';
                     let sType = sEdge ? (contactTypeMap[sEdge.sourceId] || 'relais') : 'relais';
                     let rType = rEdge ? (contactTypeMap[rEdge.sourceId] || 'relais') : 'relais';
+                    
                     let sInverted = sEdge ? sEdge.inverted : false;
                     if (sEdge) {
                         let cTypeSrc = componentTypes[sEdge.sourceId];
                         if (cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc') sInverted = !sInverted;
                     }
+                    
                     let rInverted = rEdge ? rEdge.inverted : false;
                     if (rEdge) {
                         let cTypeSrc = componentTypes[rEdge.sourceId];
                         if (cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc') rInverted = !rInverted;
                     }
+
                     let startX = currX, parX = currX + 90;
                     drawLine(startX, yTop, startX, 90); drawLine(startX, 90, parX, 90);
-                    drawLine(startX, 90, startX, 150 - 15); drawContact(startX, 150, sName, sInverted, sType); drawLine(startX, 165, startX, 230);
-                    drawLine(parX, 90, parX, 150 - 15); drawContact(parX, 150, symMap[node.id], false, 'relais'); drawLine(parX, 165, parX, 230);
-                    drawLine(startX, 230, parX, 230);
-                    drawLine(startX, 230, startX, 300 - 15); drawContact(startX, 300, rName, !rInverted, rType); 
-                    drawLine(startX, 315, startX, 430); 
+
+                    if (node.type === 'RS') {
+                        // RS-Glied (Rücksetz-dominant): Set und Haltekreis parallel, danach Reset in Reihe!
+                        drawLine(startX, 90, startX, 150 - 15); drawContact(startX, 150, sName, sInverted, sType); drawLine(startX, 165, startX, 230);
+                        drawLine(parX, 90, parX, 150 - 15); drawContact(parX, 150, symMap[node.id], false, 'relais'); drawLine(parX, 165, parX, 230);
+                        
+                        drawLine(startX, 230, parX, 230); // Zusammenführen
+                        
+                        drawLine(startX, 230, startX, 300 - 15); drawContact(startX, 300, rName, !rInverted, rType); 
+                        drawLine(startX, 315, startX, 430); 
+                    } else {
+                        // SR-Glied (Setz-dominant): Haltekreis und Reset in Reihe, dieses Paket komplett parallel zu Set!
+                        drawLine(startX, 90, startX, 150 - 15); drawContact(startX, 150, symMap[node.id], false, 'relais'); drawLine(startX, 165, startX, 230);
+                        drawLine(startX, 230, startX, 300 - 15); drawContact(startX, 300, rName, !rInverted, rType); drawLine(startX, 315, startX, 380);
+                        
+                        drawLine(parX, 90, parX, 225 - 15); drawContact(parX, 225, sName, sInverted, sType); drawLine(parX, 240, parX, 380);
+                        
+                        drawLine(startX, 380, parX, 380); // Zusammenführen
+                        drawLine(startX, 380, startX, 430); 
+                    }
+
                     drawCoil(startX, 450, symMap[node.id], node.id); 
                     drawLine(startX, 470, startX, yBot); 
                     currX = parX + 130;
