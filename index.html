@@ -385,6 +385,7 @@
                 <span id="save-indicator">Gespeichert</span>
             </div>
             <div style="display: flex; gap: 5px; align-items: center;">
+              	<button class="btn-export" onclick="openHelpModal()" style="background: #17a2b8; font-size: 11px; padding: 3px 8px; box-shadow: none;">ℹ️ Hilfe / Tipps</button>
                 <button class="btn-export" onclick="openSaveLoadModal()" style="background: #2196f3; font-size: 11px; padding: 3px 8px; box-shadow: none;">💾 Speichern / Laden</button>
                 <select class="btn-reset" onchange="loadExample(this.value)" style="background: #333; padding: 3px 5px; border-radius: 3px;">
                     <option value="" disabled selected>Beispiele...</option>
@@ -556,6 +557,20 @@
                 <div id="factory-canvas-area"></div>
             </div>
         </div>
+		<div id="help-modal" style="display: none; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.8); z-index: 2000; width: 450px; color: #ccc; font-size: 12px; line-height: 1.6;">
+			<h3 style="margin-top:0; color:#fff; border-bottom: 1px solid #555; padding-bottom: 10px;">ℹ️ Wichtige Bedienungshinweise</h3>
+			
+			<ul style="padding-left: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
+				<li><strong style="color: #9CDCFE;">Hardware-Kopplung:</strong> Sobald ein Signal (Taster, Sensor etc.) einem echten Bauteil in der 2D-Anlage zugewiesen wird, übernimmt die 2D-Mechanik die Kontrolle. Die manuelle Eingabe im linken Simulationsfenster wird für diese Variable dann gesperrt – klicke stattdessen direkt auf die Bauteile in der Anlage!</li>
+				<li><strong style="color: #9CDCFE;">Taster einrasten:</strong> Halte <kbd>STRG</kbd> oder <kbd>CMD</kbd> gedrückt, während du einen Taster anklickst, um ihn dauerhaft einrasten zu lassen (Dauerfeuer).</li>
+				<li><strong style="color: #9CDCFE;">Profi-Steuerung (2D):</strong> Ziehe bei gestoppter Simulation mit der Maus einen Rahmen in den Hintergrund, um mehrere Objekte gleichzeitig auszuwählen. Nutze <kbd>STRG+C</kbd> und <kbd>STRG+V</kbd> zum Kopieren ganzer Anlagenteile und <kbd>ENTF</kbd> zum Löschen.</li>
+				<li><strong style="color: #9CDCFE;">Pläne navigieren:</strong> Du kannst dich im Logik- und Schaltplan völlig frei bewegen, indem du das Mausrad zum Zoomen und die gedrückte linke Maustaste zum Verschieben nutzt.</li>
+			</ul>
+
+			<div style="display: flex; justify-content: flex-end;">
+				<button onclick="closeHelpModal()" style="background: #007acc; color: white; border: none; padding: 6px 16px; border-radius: 3px; cursor: pointer; font-weight: bold;">Verstanden</button>
+			</div>
+		</div>
 		<div id="saveload-modal" style="display: none; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.8); z-index: 2000; width: 500px;">
 			<h3 style="margin-top:0; color:#fff; border-bottom: 1px solid #555; padding-bottom: 10px;">💾 Projekt Speichern & Laden</h3>
 			<div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -3141,6 +3156,13 @@
                     delete o._savedParentId;
                 });
             } catch(e) { console.error(e); } finally { isLoadingFactory = false; }
+        };
+		// --- NEU: HILFE MODAL STEUERUNG ---
+        window.openHelpModal = function() {
+            document.getElementById('help-modal').style.display = 'block';
+        };
+        window.closeHelpModal = function() {
+            document.getElementById('help-modal').style.display = 'none';
         };
         // Sichere Base64-Codierung (Unterstützt Umlaute und Sonderzeichen wie ¬ ∧ ∨)
         function utoa(data) { return btoa(unescape(encodeURIComponent(data))); }
