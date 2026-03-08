@@ -231,8 +231,12 @@
             stroke: var(--logic-color) !important;
         }
         .circ-moving-contact { transition: transform 0.1s ease-out, stroke 0.3s, filter 0.3s !important; }
-        .circ-moving-contact.is-no.open { transform: rotate(30deg); }
-        .circ-moving-contact.is-nc.open { transform: rotate(-30deg); }
+        /* Schließer (NO): Geschlossen = 0deg (gerade), Offen = nach links geklappt */
+        .circ-moving-contact.is-no.open { transform: rotate(-25deg); } 
+        
+        /* Öffner (NC): Geschlossen = 15deg (schräg nach rechts am Haken), Offen = noch weiter rechts weggeklappt! */
+        .circ-moving-contact.is-nc { transform: rotate(15deg); }
+        .circ-moving-contact.is-nc.open { transform: rotate(40deg); }
         .circ-static { transition: stroke 0.3s, fill 0.3s, filter 0.3s !important; }
         .circ-wire { transition: stroke 0.3s, filter 0.3s !important; }
         /* Hier wurde die stroke Transition ergänzt, damit das Umfärben weich passiert */
@@ -1985,8 +1989,21 @@
                     let val = !!spsState[varName]; 
                     let blade = el.querySelector('.circ-moving-contact');
                     let isNC = blade ? blade.classList.contains('is-nc') : false;
-                    // Ein Kontakt schließt/leuchtet bei TRUE (Schließer) oder FALSE (Öffner). Ein Draht leuchtet immer bei TRUE.
-                    let isVisuallyActive = blade ? (isNC ? !val : val) : val;
+                    
+                    // FIX: Unterscheidung zwischen Hardware-Eingängen und Relais!
+                    let isVisuallyActive = val;
+                    if (blade) {
+                        let isInput = globalInputs.includes(varName); // Prüft, ob es ein Taster/Sensor ist
+                        if (isNC) {
+                            // Hardware-Öffner: val=true heißt UNBERÜHRT (also geschlossen)
+                            // Relais-Öffner: val=true heißt SPULE AKTIV (also offen)
+                            isVisuallyActive = isInput ? val : !val;
+                        } else {
+                            // Schließer (Hardware & Relais) sind immer geschlossen bei val=true
+                            isVisuallyActive = val;
+                        }
+                    }
+                    
                     if (isSimulationActive) {
                         if (isVisuallyActive) {
                             el.dataset.lastOn = Date.now();
@@ -2126,11 +2143,14 @@
                 g.appendChild(createSvgElement('circle', {cx: x, cy: y + 15, r: 2.5, fill: '#000', class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 15, x2: x, y2: y - 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 15, x2: x, y2: y + 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                let movingLine = createSvgElement('line', { x1: x, y1: y - 5, x2: x, y2: y + 15, stroke: '#000', 'stroke-width': 2, class: `circ-moving-contact ${isNC ? 'is-nc' : 'is-no'}` });
-                movingLine.style.transformOrigin = `${x}px ${y - 5}px`;
+                // Das bewegliche Teil ist etwas länger, um beim Drehen die Lücke zu schließen
+                let movingLine = createSvgElement('line', { x1: x, y1: y - 6, x2: x, y2: y + 15, stroke: '#000', 'stroke-width': 2, class: `circ-moving-contact ${isNC ? 'is-nc' : 'is-no'}` });                
+                // FIX: Drehpunkt ist jetzt unten am Kontakt!
+                movingLine.style.transformOrigin = `${x}px ${y + 15}px`; 
                 if (!isNC) movingLine.classList.add('open');
-                g.appendChild(movingLine);
-                if (isNC) g.appendChild(createSvgElement('line', {x1: x, y1: y + 5, x2: x + 10, y2: y + 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
+                g.appendChild(movingLine);                
+                // FIX: Der Haken (die feste Kerbe) für den Öffner ist jetzt oben rechts!
+                if (isNC) g.appendChild(createSvgElement('line', {x1: x, y1: y - 5, x2: x + 8, y2: y - 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 // NEU: Intelligente Klemmenbezeichnungen (DIN EN 60947-5-1)
                 let pinTop, pinBot;
                 if (window.configWechsler) {
@@ -2143,8 +2163,11 @@
                 drawSmallText(g, x - 5, y - 10, pinTop, 'end');
                 drawSmallText(g, x - 5, y + 15, pinBot, 'end');
                 if (type === 'taster' || type === 'schalter' || type === 'nothalt') {
-                    let dashEndX = isNC ? x + 6 : x - 6;
+                    // FIX: Mechanischer Drücker kommt immer von links. 
+                    // Die offene NO-Klinge liegt bei ca. x-5, die geschlossene NC-Klinge bei ca. x+3.
+                    let dashEndX = isNC ? x + 3 : x - 5; 
                     g.appendChild(createSvgElement('line', {x1: dashEndX, y1: y + 2.5, x2: x - 18, y2: y + 2.5, stroke: '#000', 'stroke-width': 1.5, 'stroke-dasharray': '2,2'}));
+                    
                     if (type === 'nothalt') {
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5}));
                         g.appendChild(createSvgElement('path', {d: `M ${x - 18} ${y - 2.5} A 5 5 0 0 0 ${x - 18} ${y + 7.5} Z`, fill: '#000'}));
@@ -2404,22 +2427,26 @@
                         g.appendChild(createSvgElement('line', {x1: rc.coilX - 16, y1: top + 18, x2: rc.coilX + 16, y2: top + 18, stroke: '#000', 'stroke-width': 1}));
                         g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top, x2: rc.coilX, y2: bottom, stroke: '#000', 'stroke-width': 1}));
                         if (window.configWechsler) {
-                            // --- MINIATUR-SYMBOL: WECHSLER ---
-                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 3, x2: rc.coilX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 6, x2: leftX + 4, y2: top + 13, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 6, x2: rightX, y2: top + 13, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: rightX - 5, y1: top + 13, x2: rightX + 2, y2: top + 13, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); 
+                            // --- MINIATUR-SYMBOL: WECHSLER (Drehpunkt unten) ---
+                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 13, x2: rc.coilX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Root-Pin unten
+                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 13, x2: rightX - 1, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Klinge liegt nach oben rechts an (NC)
+                            
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // NC Pin
+                            g.appendChild(createSvgElement('line', {x1: rightX - 3, y1: top + 6, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // NC Haken (Kerbe)
+                            
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // NO Pin
                         } else {
-                            // --- MINIATUR-SYMBOL: S & Ö GETRENNT ---
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1}));
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 6, x2: leftX + 4, y2: top + 13, stroke: '#000', 'stroke-width': 1}));
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1}));
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 6, x2: rightX - 4, y2: top + 13, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: rightX - 5, y1: top + 13, x2: rightX + 2, y2: top + 13, stroke: '#000', 'stroke-width': 1})); 
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); 
+                            // --- MINIATUR-SYMBOL: S & Ö GETRENNT (Drehpunkt unten) ---
+                            // S (Schließer)
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Pin oben
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX - 4, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Klinge offen (nach oben links)
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Pin unten
+
+                            // Ö (Öffner)
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Pin oben
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 6, x2: rightX + 3, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Haken oben rechts
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX + 2.5, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Klinge liegt schräg oben rechts an
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Pin unten
                         }
                         noPaths.forEach((p, idx) => {
                             let text = createSvgElement('text', {x: leftX, y: top + 30 + idx * 13, 'font-size': '10px', fill: '#333', 'text-anchor': 'middle', 'font-family': 'monospace'});
