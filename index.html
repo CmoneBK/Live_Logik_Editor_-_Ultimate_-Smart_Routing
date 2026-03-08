@@ -5,6 +5,7 @@
     <title>Live Logik-Editor 2 - Flexible Syntax</title>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; margin: 0; background-color: #1e1e1e; color: #d4d4d4; }
         #left-panel { width: 35%; padding: 20px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
@@ -3073,9 +3074,10 @@
         function getFactoryStateObj() {
             return {
                 globalViewMode: globalViewMode,
-                items: factoryItems.map(i => ({ x: i.x, y: i.y, vx: i.vx, vy: i.vy, material: i.material, useGravity: i.useGravity, useCollision: i.useCollision })),
+                // NEU: Werte runden (Math.round), da 15-stellige Kommazahlen aus der Physik den Link extrem aufblähen!
+                items: factoryItems.map(i => ({ x: Math.round(i.x), y: Math.round(i.y), vx: Math.round(i.vx||0), vy: Math.round(i.vy||0), material: i.material, useGravity: i.useGravity, useCollision: i.useCollision })),
                 objects: factoryObjects.map(o => ({
-                    id: o.id, type: o.type, x: o.x, y: o.y, width: o.width, height: o.height, rotation: o.rotation,
+                    id: o.id, type: o.type, x: Math.round(o.x), y: Math.round(o.y), width: Math.round(o.width), height: Math.round(o.height||0), rotation: Math.round(o.rotation||0),
                     linkedVar: o.linkedVar, linkedVarExt: o.linkedVarExt, linkedVarRet: o.linkedVarRet,
                     parentId: o.parent ? o.parent.id : null, attachmentType: o.attachmentType,
                     color: o.color, interval: o.interval, useCollision: o.useCollision, labelPinned: o.labelPinned 
@@ -3148,32 +3150,34 @@
             const textArea = document.getElementById('saveload-text');
             const linkInput = document.getElementById('share-link-input');
             const qrContainer = document.getElementById('qr-code-container');
+
             const saveData = {
                 version: "1.0",
                 code: textarea.value,
                 types: componentTypes,
                 factory: getFactoryStateObj()
             };
+            
             let jsonString = JSON.stringify(saveData);
             textArea.value = JSON.stringify(saveData, null, 2);
-            // Alten QR-Code vom vorherigen Speichern aus der Box löschen
+            
             qrContainer.innerHTML = ''; 
+
             try {
-                let base64 = utoa(jsonString);
-                let url = window.location.href.split('#')[0] + '#state=' + base64;
+                // NEU: High-End Komprimierung des JSONs zu einem absolut URL-sicheren, kurzen String!
+                let compressed = LZString.compressToEncodedURIComponent(jsonString);
+                let url = window.location.href.split('#')[0] + '#state=' + compressed;
                 linkInput.value = url;
-                // QR Code generieren!
-                // Wichtiger Schutz: Ein QR Code hat ein physisches Limit. 
-                // Wenn die Anlage riesig wird (viele hunderte Objekte), sperren wir den QR Code, 
-                // da die kleinen Pixel auf dem Monitor sonst von Handykameras nicht mehr trennbar sind.
-                if (url.length < 2500) {
+
+                // Da der Link jetzt extrem kurz ist, erzeugt er auch bei großen Anlagen blitzschnell saubere QR-Codes
+                if (compressed.length < 3500) {
                     new QRCode(qrContainer, {
                         text: url,
                         width: 80,
                         height: 80,
                         colorDark : "#000000",
                         colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.L
+                        correctLevel : QRCode.CorrectLevel.L // Low-Level erzeugt dickere Pixel (leichter vom Monitor abzufotografieren)
                     });
                 } else {
                     qrContainer.innerHTML = '<span style="color: red; font-size: 9px; text-align: center; font-weight: bold; line-height: 1.2;">Anlage zu<br>groß für<br>QR-Code</span>';
@@ -3181,6 +3185,7 @@
             } catch(e) {
                 linkInput.value = "Fehler beim Generieren des Links";
             }
+
             modal.style.display = 'block';
         };
         window.copyShareLink = function() {
@@ -3282,8 +3287,9 @@
         function checkUrlForState() {
             if (window.location.hash && window.location.hash.startsWith('#state=')) {
                 try {
-                    let base64 = window.location.hash.substring(7);
-                    let jsonString = atou(base64);
+                    let compressed = window.location.hash.substring(7);
+                    // NEU: Link-Hash dekomprimieren
+                    let jsonString = LZString.decompressFromEncodedURIComponent(compressed);
                     let data = JSON.parse(jsonString);
                     // URL oben im Browser bereinigen, damit man sie beim normalen Aktualisieren nicht nochmal lädt
                     history.replaceState(null, null, ' ');
