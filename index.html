@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Live Logik-Editor 2 - Flexible Syntax</title>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; margin: 0; background-color: #1e1e1e; color: #d4d4d4; }
         #left-panel { width: 35%; padding: 20px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
@@ -554,19 +555,36 @@
                 <div id="factory-canvas-area"></div>
             </div>
         </div>
-		<div id="saveload-modal" style="display: none; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.8); z-index: 2000; width: 450px;">
+		<div id="saveload-modal" style="display: none; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.8); z-index: 2000; width: 500px;">
 			<h3 style="margin-top:0; color:#fff; border-bottom: 1px solid #555; padding-bottom: 10px;">💾 Projekt Speichern & Laden</h3>
 			<div style="display: flex; gap: 10px; margin-bottom: 15px;">
-				<button onclick="downloadLeasave()" class="btn-export" style="background-color: #4caf50; flex: 1;">⬇️ Als .leasave speichern</button>
-				<button onclick="document.getElementById('leasave-upload').click()" class="btn-export" style="background-color: #ff9800; flex: 1;">⬆️ .leasave laden</button>
-				<input type="file" id="leasave-upload" accept=".leasave" style="display: none;" onchange="uploadLeasave(event)">
+				<button onclick="downloadValisave()" class="btn-export" style="background-color: #4caf50; flex: 1;">⬇️ Als .valisave speichern</button>
+				<button onclick="document.getElementById('valisave-upload').click()" class="btn-export" style="background-color: #ff9800; flex: 1;">⬆️ .valisave laden</button>
+				<input type="file" id="valisave-upload" accept=".valisave" style="display: none;" onchange="uploadValisave(event)">
 			</div>
 			<p style="color: #aaa; font-size: 11px; margin-bottom: 5px;">Oder als Raw-Code kopieren / hier einfügen:</p>
 			<textarea id="saveload-text" spellcheck="false" style="width: 100%; height: 180px; background: #1e1e1e; color: #9cdcfe; border: 1px solid #555; border-radius: 3px; font-family: monospace; font-size: 11px; padding: 8px; box-sizing: border-box; resize: vertical;"></textarea>
+			<div style="display: flex; gap: 15px; margin-top: 15px; border-top: 1px solid #555; padding-top: 10px; align-items: center;">
+				<div style="flex: 1; display: flex; flex-direction: column;">
+					<p style="color: #aaa; font-size: 11px; margin-bottom: 5px;">🔗 Anlage als direkten Link teilen:</p>
+					<div style="display: flex; gap: 5px;">
+						<input type="text" id="share-link-input" readonly style="flex: 1; background: #1e1e1e; color: #4caf50; border: 1px solid #555; border-radius: 3px; font-family: monospace; font-size: 11px; padding: 6px;">
+						<button onclick="copyShareLink()" style="background: #2196f3; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold;">Kopieren</button>
+					</div>
+				</div>
+				<div id="qr-code-container" onclick="openLargeQR()" title="Klicken zum Vergrößern" style="width: 90px; height: 90px; background: #fff; padding: 5px; border-radius: 3px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; box-sizing: border-box; cursor: zoom-in; border: 2px solid transparent; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#2196f3'" onmouseout="this.style.borderColor='transparent'">
+				</div>
+			</div>
 			<div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
 				<button onclick="closeSaveLoadModal()" style="background: #555; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer;">Abbrechen</button>
 				<button onclick="applyRawCode()" style="background: #007acc; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-weight: bold;">Daten anwenden (Importieren)</button>
 			</div>
+		</div>
+		<div id="qr-modal-large" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; flex-direction: column;">
+			<div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,1);">
+				<div id="qr-code-large-container" style="width: 400px; height: 400px; display: flex; justify-content: center; align-items: center;"></div>
+			</div>
+			<button onclick="closeLargeQR()" style="margin-top: 30px; background: #e6194B; color: white; border: 2px solid #fff; padding: 12px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">Schließen</button>
 		</div>
     <script>
         const textarea = document.getElementById('code');
@@ -1195,7 +1213,6 @@
             graph.nodes.forEach(node => {
                 const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("transform", `translate(${safe(node.x)}, ${safe(node.y)})`);
-                
                 if (node.type === 'GATE' || node.type === 'RS' || node.type === 'SR') {
                     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("id", `node-block-${node.id}`);
@@ -1204,17 +1221,14 @@
                     rect.setAttribute("class", "fbs-block");
                     rect.setAttribute("stroke", node.color);
                     g.appendChild(rect);
-                    
                     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", safe(node.width / 2));
                     text.setAttribute("text-anchor", "middle");
                     text.setAttribute("class", "fbs-text");
-
                     if (node.type === 'RS' || node.type === 'SR') {
                         // IEC Norm: RS oder SR steht mittig oben im Baustein
                         text.setAttribute("y", 14);
                         text.textContent = node.type; 
-                        
                         // Den Namen ("RS-Glied 1") setzen wir als kleines Label ÜBER den Baustein
                         const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         titleText.setAttribute("x", safe(node.width / 2));
@@ -1225,24 +1239,19 @@
                         titleText.setAttribute("fill", "#666");
                         titleText.textContent = node.label;
                         g.appendChild(titleText);
-
                         const isRS = node.type === 'RS';
-                        
                         // IEC Norm Dominanz: 
                         // RS (Rücksetzdominant) -> S, R1
                         // SR (Setzdominant) -> S1, R
                         const sText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         sText.setAttribute("x", 4); sText.setAttribute("y", 20); sText.setAttribute("class", "fbs-pin-text"); 
                         sText.textContent = isRS ? "S" : "S1";
-
                         const rText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         rText.setAttribute("x", 4); rText.setAttribute("y", safe(node.height - 11)); rText.setAttribute("class", "fbs-pin-text"); 
                         rText.textContent = isRS ? "R1" : "R";
-
                         const qText = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         qText.setAttribute("x", safe(node.width - 12)); qText.setAttribute("y", 20); qText.setAttribute("class", "fbs-pin-text"); 
                         qText.textContent = "Q";
-                        
                         g.appendChild(sText); g.appendChild(rText); g.appendChild(qText);
                     } else {
                         // Standard Logik-Gatter (&, >=1)
@@ -1250,7 +1259,6 @@
                         text.textContent = node.label;
                     }
                     g.appendChild(text);
-                    
                 } else {
                     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("id", `node-block-${node.id}`);
@@ -1263,7 +1271,6 @@
                         rect.setAttribute("fill", "#ffffff");
                     }
                     g.appendChild(rect);
-                    
                     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     text.setAttribute("x", safe(node.width / 2));
                     text.setAttribute("y", safe(node.height / 2 + 4));
@@ -1271,13 +1278,11 @@
                     text.setAttribute("class", "fbs-text");
                     text.setAttribute("font-size", "11px");
                     text.textContent = node.label;
-                    
                     const maxTextWidth = node.width - 10;
                     if (node.label.length * 6.5 > maxTextWidth) {
                         text.setAttribute("textLength", maxTextWidth);
                         text.setAttribute("lengthAdjust", "spacingAndGlyphs");
                     }
-                    
                     const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
                     title.textContent = node.label;
                     text.appendChild(title);
@@ -1728,17 +1733,14 @@
             let sfCount = 1, kfCount = 1, bgCount = 1, mbCount = 1, pCount = 1;
             let symMap = {};
             let contactTypeMap = {};
-            
             // NEU: Variablen für Pfade und den Kontaktspiegel
             let pathCounter = 1; 
             let relayContacts = {}; // Speichert, welches Relais wo seine Kontakte hat
-
             let getNodeColor = (id) => {
                 if (!id || id === 'NONE') return '#000';
                 return graph.nodes.get(id) ? graph.nodes.get(id).color : '#f58231';            
             };
             const usedAsSource = new Set(graph.edges.map(e => e.sourceId));
-
             let preRungsToDraw = [];
             inputsList.forEach(i => { 
                 let cType = componentTypes[i] || 'taster';
@@ -1753,7 +1755,6 @@
                     contactTypeMap[i] = cType.replace('_nc', ''); 
                 }
             });
-
             graph.nodes.forEach(n => {
                 if (n.type === 'GATE' || n.type === 'RS' || n.type === 'SR') { 
                     symMap[n.id] = `-KF${kfCount++}`;
@@ -1771,7 +1772,6 @@
                     }
                 }
             });
-
             const drawLine = (x1, y1, x2, y2, width = 2, varName = null, color = null) => {
                 let l = createSvgElement('line', {x1, y1, x2, y2, stroke: '#000', 'stroke-width': width});
                 if (varName && varName !== 'NONE') {
@@ -1781,18 +1781,15 @@
                 circuitContent.appendChild(l); 
                 return l;
             };
-
             const drawText = (x, y, txt, bold = false) => {
                 let t = createSvgElement('text', {x, y, 'font-size': '13px', fill: '#000', 'font-family': 'Segoe UI, Tahoma, sans-serif'});
                 if (bold) t.setAttribute('font-weight', 'bold'); t.textContent = txt; circuitContent.appendChild(t);
             };
-
             // NEU: Hilfsfunktion für die kleinen Klemmenbezeichnungen
             const drawSmallText = (parent, x, y, txt, anchor = 'end') => {
                 let t = createSvgElement('text', {x, y, 'font-size': '9px', fill: '#666', 'font-family': 'monospace', 'text-anchor': anchor});
                 t.textContent = txt; parent.appendChild(t);
             };
-
             const addLabelText = (parentG, x, y, textContent, isBold = false) => {
                 let fontSize = isBold ? '13px' : '12px';
                 let fontWeight = isBold ? 'bold' : 'normal';
@@ -1809,35 +1806,28 @@
                     t.textContent = textContent; parentG.appendChild(t);
                 }
             };
-
             // NEU: PathNum hinzugefügt, um den Kontakt im Spiegel zu registrieren
             const drawContact = (x, y, label, isNC, type, varName, color, pathNum) => {
                 let g = createSvgElement('g', {class: `circ-contact-group circ-colored-group circ-var-${varName}`});
                 if (color) g.style.setProperty('--logic-color', color);
-                
                 // Im Kontaktspiegel eintragen
                 if (varName && varName !== 'NONE') {
                     if (!relayContacts[varName]) relayContacts[varName] = { contacts: [] };
                     relayContacts[varName].contacts.push({ isNC: isNC, path: pathNum });
                 }
-
                 addLabelText(g, x + 15, y, label, false);
                 g.appendChild(createSvgElement('circle', {cx: x, cy: y - 15, r: 2.5, fill: '#000', class: 'circ-static'}));
                 g.appendChild(createSvgElement('circle', {cx: x, cy: y + 15, r: 2.5, fill: '#000', class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 15, x2: x, y2: y - 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 15, x2: x, y2: y + 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                
                 let movingLine = createSvgElement('line', { x1: x, y1: y - 5, x2: x, y2: y + 15, stroke: '#000', 'stroke-width': 2, class: `circ-moving-contact ${isNC ? 'is-nc' : 'is-no'}` });
                 movingLine.style.transformOrigin = `${x}px ${y - 5}px`;
                 if (!isNC) movingLine.classList.add('open');
                 g.appendChild(movingLine);
-                
                 if (isNC) g.appendChild(createSvgElement('line', {x1: x, y1: y + 5, x2: x + 10, y2: y + 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                
                 // NEU: Klemmenbezeichnungen (13/14 für NO, 11/12 für NC)
                 drawSmallText(g, x - 5, y - 10, isNC ? '11' : '13', 'end');
                 drawSmallText(g, x - 5, y + 15, isNC ? '12' : '14', 'end');
-
                 if (type === 'taster' || type === 'schalter' || type === 'nothalt') {
                     let dashEndX = isNC ? x + 6 : x - 6;
                     g.appendChild(createSvgElement('line', {x1: dashEndX, y1: y + 2.5, x2: x - 18, y2: y + 2.5, stroke: '#000', 'stroke-width': 1.5, 'stroke-dasharray': '2,2'}));
@@ -1854,31 +1844,25 @@
                 }
                 circuitContent.appendChild(g);
             };
-
             const drawCoil = (x, y, label, id, type='relais', color, pathNum) => {
                 let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
                 if (color) g.style.setProperty('--logic-color', color);
-                
                 // Registriere Spule für den Kontaktspiegel
                 if (type === 'relais' && id) {
                     if (!relayContacts[id]) relayContacts[id] = { contacts: [] };
                     relayContacts[id].coilX = x;
                 }
-
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 20, x2: x, y2: y - 10, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 10, x2: x, y2: y + 20, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 let rect = createSvgElement('rect', {id: `circ-out-${id}`, class: 'circ-component', x: x - 20, y: y - 10, width: 40, height: 20, fill: '#fff', stroke: '#000', 'stroke-width': 2});
                 g.appendChild(rect);
                 if (type === 'valve') g.appendChild(createSvgElement('line', {x1: x - 20, y1: y + 10, x2: x + 20, y2: y - 10, stroke: '#000', 'stroke-width': 2}));
                 addLabelText(g, x + 30, y, label, true);
-                
                 // NEU: Klemmen A1/A2 oder 1/2
                 drawSmallText(g, x - 5, y - 15, type === 'valve' ? '1' : 'A1', 'end');
                 drawSmallText(g, x - 5, y + 20, type === 'valve' ? '2' : 'A2', 'end');
-                
                 circuitContent.appendChild(g);
             };
-
             const drawLED = (x, y, label, id, color, pathNum) => {
                 let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
                 if (color) g.style.setProperty('--logic-color', color);
@@ -1889,23 +1873,18 @@
                 g.appendChild(createSvgElement('line', {x1: x - 10.6, y1: y - 10.6, x2: x + 10.6, y2: y + 10.6, stroke: '#000', 'stroke-width': 2}));
                 g.appendChild(createSvgElement('line', {x1: x - 10.6, y1: y + 10.6, x2: x + 10.6, y2: y - 10.6, stroke: '#000', 'stroke-width': 2}));
                 addLabelText(g, x + 25, y, label, true);
-                
                 // NEU: Klemmen X1/X2 für Leuchten
                 drawSmallText(g, x - 5, y - 18, 'X1', 'end');
                 drawSmallText(g, x - 5, y + 24, 'X2', 'end');
-
                 circuitContent.appendChild(g);
             };
-
             let currX = 100;
             const yTop = 50, yBot = 500;
-
             preRungsToDraw.forEach(item => {
                 let col = getNodeColor(item.id);
                 if (item.cType === 'nothalt') {
                     let p1 = pathCounter++;
                     drawText(currX, yTop - 25, p1.toString(), true); // Pfadnummer oben
-
                     drawLine(currX, yTop, currX, 150 - 15, 2, item.id, col);
                     drawContact(currX, 150, `${item.deviceName} (${item.id})`, true, 'nothalt', item.id, col, p1);
                     drawLine(currX, 165, currX, 430, 2, item.id, col);
@@ -1917,14 +1896,12 @@
                     let p2 = pathCounter++;
                     drawText(currX, yTop - 25, p1.toString(), true); 
                     drawText(currX + 60, yTop - 25, p2.toString(), true); 
-
                     let sBoxY = 150;
                     circuitContent.appendChild(createSvgElement('rect', {x: currX - 15, y: sBoxY, width: 30, height: 30, fill: '#fff', stroke: '#000', 'stroke-width': 2}));
                     let diamondPts = `${currX},${sBoxY+3} ${currX+7},${sBoxY+10} ${currX},${sBoxY+17} ${currX-7},${sBoxY+10}`;
                     circuitContent.appendChild(createSvgElement('polygon', {points: diamondPts, fill: 'none', stroke: '#000', 'stroke-width': 1.5}));
                     circuitContent.appendChild(createSvgElement('line', {x1: currX - 2.5, y1: sBoxY+5.5, x2: currX - 2.5, y2: sBoxY+14.5, stroke: '#000', 'stroke-width': 1.5}));
                     circuitContent.appendChild(createSvgElement('line', {x1: currX + 2.5, y1: sBoxY+5.5, x2: currX + 2.5, y2: sBoxY+14.5, stroke: '#000', 'stroke-width': 1.5}));
-                    
                     // Zeichne das Sensoren-Innenleben
                     if (item.cType === 'sensor_ind') {
                         let indPath = `M ${currX-9} ${sBoxY+26} L ${currX-9} ${sBoxY+23} A 3 3 0 0 1 ${currX-3} ${sBoxY+23} A 3 3 0 0 1 ${currX+3} ${sBoxY+23} A 3 3 0 0 1 ${currX+9} ${sBoxY+23} L ${currX+9} ${sBoxY+26}`;
@@ -1944,7 +1921,6 @@
                         circuitContent.appendChild(createSvgElement('rect', {x: currX-3, y: sBoxY+22, width: 6, height: 3.5, fill: '#fff'})); 
                     }
                     addLabelText(circuitContent, currX + 20, sBoxY - 5, `${item.deviceName} (${item.id})`, false);
-                    
                     drawLine(currX, yTop, currX, sBoxY, 2, item.id, col); 
                     drawLine(currX, sBoxY + 30, currX, yBot, 2, item.id, col); 
                     drawLine(currX + 15, sBoxY + 15, currX + 60, sBoxY + 15, 2, item.id, col); 
@@ -1954,19 +1930,15 @@
                     currX += 140;
                 }
             });
-
             const nodesToDraw = Array.from(graph.nodes.values())
                 .filter(n => ['GATE', 'RS', 'SR', 'OUTPUT'].includes(n.type))
                 .sort((a,b) => a.level - b.level);
-
             nodesToDraw.forEach(node => {
                 let inEdges = graph.edges.filter(e => e.targetId === node.id);
                 let col = node.color;
-                
                 if (node.type === 'GATE' && node.label === '&') { 
                     let p = pathCounter++;
                     drawText(currX, yTop - 25, p.toString(), true);
-
                     let y = 110, dy = 260 / Math.max(1, inEdges.length);
                     drawLine(currX, yTop, currX, y - 15, 2, node.id, col);
                     inEdges.forEach((edge, idx) => {
@@ -1976,7 +1948,6 @@
                         let physNC = cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc';
                         let isNC = physNC ? !edge.inverted : edge.inverted;
                         let srcCol = getNodeColor(edge.sourceId);
-                        
                         drawContact(currX, y, name, isNC, type, edge.sourceId, srcCol, p);
                         if (idx < inEdges.length - 1) drawLine(currX, y + 15, currX, y + dy - 15, 2, node.id, col);
                         y += dy;
@@ -1991,26 +1962,21 @@
                     if(branches > 0) {
                         let startP = pathCounter++;
                         drawText(currX, yTop - 25, startP.toString(), true);
-
                         let startX = currX, endX = currX + (branches - 1) * 90;
                         drawLine(startX, yTop, startX, 90, 2, node.id, col); 
                         drawLine(startX, 90, endX, 90, 2, node.id, col); 
                         drawLine(startX, 350, endX, 350, 2, node.id, col); 
-                        
                         inEdges.forEach((edge, idx) => {
                             let bx = currX + idx * 90;
                             let bp = (idx === 0) ? startP : pathCounter++;
                             if (idx > 0) drawText(bx, yTop - 25, bp.toString(), true);
-
                             let name = symMap[edge.sourceId] || edge.sourceId;
                             let type = contactTypeMap[edge.sourceId] || 'relais';
                             let cTypeSrc = componentTypes[edge.sourceId];
                             let physNC = cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc';
                             let isNC = physNC ? !edge.inverted : edge.inverted;
                             let srcCol = getNodeColor(edge.sourceId);
-                            
                             drawLine(bx, 90, bx, 220 - 15, 2, edge.sourceId, srcCol); 
-																							   
                             drawContact(bx, 220, name, isNC, type, edge.sourceId, srcCol, bp);
                             drawLine(bx, 235, bx, 350, 2, edge.sourceId, srcCol);
                         });
@@ -2023,13 +1989,11 @@
                 else if (node.type === 'RS' || node.type === 'SR') { 
                     let p1 = pathCounter++;
                     let p2 = pathCounter++;
-
                     let sEdge = inEdges.find(e => e.targetPin === 'S'), rEdge = inEdges.find(e => e.targetPin === 'R');
                     let sName = sEdge ? (symMap[sEdge.sourceId] || sEdge.sourceId) : 'N/A';
                     let rName = rEdge ? (symMap[rEdge.sourceId] || rEdge.sourceId) : 'N/A';
                     let sType = sEdge ? (contactTypeMap[sEdge.sourceId] || 'relais') : 'relais';
                     let rType = rEdge ? (contactTypeMap[rEdge.sourceId] || 'relais') : 'relais';
-                    
                     let sInverted = sEdge ? sEdge.inverted : false;
                     if (sEdge) {
                         let cTypeSrc = componentTypes[sEdge.sourceId];
@@ -2040,28 +2004,21 @@
                         let cTypeSrc = componentTypes[rEdge.sourceId];
                         if (cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc') rInverted = !rInverted;
                     }
-
                     let startX = currX, parX = currX + 90;
                     drawText(startX, yTop - 25, p1.toString(), true);
                     drawText(parX, yTop - 25, p2.toString(), true);
-
                     drawLine(startX, yTop, startX, 90, 2, node.id, col); 
                     drawLine(startX, 90, parX, 90, 2, node.id, col);
-                    
                     let sCol = sEdge ? getNodeColor(sEdge.sourceId) : col;
                     let rCol = rEdge ? getNodeColor(rEdge.sourceId) : col;
-
                     if (node.type === 'RS') {
                         drawLine(startX, 90, startX, 150 - 15, 2, sEdge ? sEdge.sourceId : node.id, sCol); 
                         drawContact(startX, 150, sName, sInverted, sType, sEdge ? sEdge.sourceId : 'NONE', sCol, p1); 
                         drawLine(startX, 165, startX, 230, 2, node.id, col);
-                        
                         drawLine(parX, 90, parX, 150 - 15, 2, node.id, col); 
                         drawContact(parX, 150, symMap[node.id], false, 'relais', node.id, col, p2); 
                         drawLine(parX, 165, parX, 230, 2, node.id, col);
-                        
                         drawLine(startX, 230, parX, 230, 2, node.id, col); 
-                        
                         drawLine(startX, 230, startX, 300 - 15, 2, node.id, col); 
                         drawContact(startX, 300, rName, !rInverted, rType, rEdge ? rEdge.sourceId : 'NONE', rCol, p1); 
                         drawLine(startX, 315, startX, 430, 2, node.id, col); 
@@ -2069,15 +2026,12 @@
                         drawLine(startX, 90, startX, 150 - 15, 2, node.id, col); 
                         drawContact(startX, 150, symMap[node.id], false, 'relais', node.id, col, p1); 
                         drawLine(startX, 165, startX, 230, 2, node.id, col);
-                        
                         drawLine(startX, 230, startX, 300 - 15, 2, node.id, col); 
                         drawContact(startX, 300, rName, !rInverted, rType, rEdge ? rEdge.sourceId : 'NONE', rCol, p1); 
                         drawLine(startX, 315, startX, 380, 2, node.id, col);
-                        
                         drawLine(parX, 90, parX, 225 - 15, 2, sEdge ? sEdge.sourceId : node.id, sCol); 
                         drawContact(parX, 225, sName, sInverted, sType, sEdge ? sEdge.sourceId : 'NONE', sCol, p2); 
                         drawLine(parX, 240, parX, 380, 2, node.id, col);
-                        
                         drawLine(startX, 380, parX, 380, 2, node.id, col); 
                         drawLine(startX, 380, startX, 430, 2, node.id, col); 
                     }
@@ -2088,7 +2042,6 @@
                 else if (node.type === 'OUTPUT') { 
                     let p = pathCounter++;
                     drawText(currX, yTop - 25, p.toString(), true);
-
                     let edge = inEdges[0];
                     if (edge) {
                         let name = symMap[edge.sourceId] || edge.sourceId;
@@ -2097,34 +2050,27 @@
                         let physNC = cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc';
                         let isNC = physNC ? !edge.inverted : edge.inverted;
                         let srcCol = getNodeColor(edge.sourceId);
-                        
                         drawLine(currX, yTop, currX, 220 - 15, 2, edge.sourceId, srcCol); 
                         drawContact(currX, 220, name, isNC, type, edge.sourceId, srcCol, p);
                         drawLine(currX, 235, currX, 430, 2, node.id, col); 
                     } else { 
                         drawLine(currX, yTop, currX, 430, 2, node.id, col); 
                     }
-                    
                     if (node.isRelay) drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p);
                     else if (node.outType === 'valve') drawCoil(currX, 450, symMap[node.id], node.id, 'valve', col, p);
                     else drawLED(currX, 450, symMap[node.id], node.id, col, p);
-                    
                     drawLine(currX, 470, currX, yBot, 2, node.id, col); 
                     currX += 130;
                 }
             });
-
             // Zeichne die Hauptschienen L+ und M
             let totalWidth = Math.max(1000, currX + 50);
-																		  
             let lPlus = drawLine(20, yTop, totalWidth - 20, yTop, 3);
             lPlus.setAttribute('stroke', '#f58231'); lPlus.classList.remove('circ-wire');
             drawText(25, yTop - 10, 'L+ (24V DC)', true);
-            
             let mMinus = drawLine(20, yBot, totalWidth - 20, yBot, 3);
             mMinus.setAttribute('stroke', '#4363d8'); mMinus.classList.remove('circ-wire');
             drawText(25, yBot + 20, 'M (0V DC)', true);
-
             // ==============================================================
             // NEU: GRAFISCHER KONTAKTSPIEGEL (Schützkreuz nach IEC Norm)
             // ==============================================================
@@ -2133,24 +2079,19 @@
                 // Wir zeichnen nur einen Spiegel, wenn es wirklich eine Schütz/Relais-Spule (coilX) gibt!
                 if (rc.coilX) {
                     let mirrorY = yBot + 35; // Etwas Platz unter der 0V-Schiene
-                    
                     let g = createSvgElement('g', {});
-                    
                     // Name des Relais (z.B. -KF1)
                     let tTitle = createSvgElement('text', {x: rc.coilX, y: mirrorY, 'font-size': '11px', 'font-weight': 'bold', fill: '#000', 'text-anchor': 'middle', 'font-family': 'Segoe UI, Tahoma, sans-serif'});
                     tTitle.textContent = symMap[id] || id;
                     g.appendChild(tTitle);
-                    
                     // Schließer und Öffner sammeln und aufsteigend nach Pfad sortieren
                     let noPaths = rc.contacts.filter(c => !c.isNC).map(c => c.path).sort((a,b)=>a-b);
                     let ncPaths = rc.contacts.filter(c => c.isNC).map(c => c.path).sort((a,b)=>a-b);
-
                     // Nur zeichnen, wenn das Relais auch wirklich Kontakte hat!
                     if (noPaths.length > 0 || ncPaths.length > 0) {
                         let top = mirrorY + 5; // Start der Tabelle
                         let maxRows = Math.max(1, Math.max(noPaths.length, ncPaths.length));
                         let bottom = top + 20 + maxRows * 13;
-
                         // --- TABELLEN-GITTER ZEICHNEN ---
                         // Obere Querlinie
                         g.appendChild(createSvgElement('line', {x1: rc.coilX - 16, y1: top, x2: rc.coilX + 16, y2: top, stroke: '#000', 'stroke-width': 1}));
@@ -2158,38 +2099,32 @@
                         g.appendChild(createSvgElement('line', {x1: rc.coilX - 16, y1: top + 18, x2: rc.coilX + 16, y2: top + 18, stroke: '#000', 'stroke-width': 1}));
                         // Vertikale Trennlinie in der Mitte
                         g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top, x2: rc.coilX, y2: bottom, stroke: '#000', 'stroke-width': 1}));
-
                         // --- MINIATUR-SYMBOL: SCHLIESSER (NO) links ---
                         let leftX = rc.coilX - 8;
                         g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Pin oben
                         g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 6, x2: leftX + 4, y2: top + 13, stroke: '#000', 'stroke-width': 1})); // Geöffnetes Messer
                         g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Pin unten
-
                         // --- MINIATUR-SYMBOL: ÖFFNER (NC) rechts ---
                         let rightX = rc.coilX + 8;
                         g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Pin oben
                         g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 6, x2: rightX - 4, y2: top + 13, stroke: '#000', 'stroke-width': 1})); // Geschlossenes Messer
                         g.appendChild(createSvgElement('line', {x1: rightX - 5, y1: top + 13, x2: rightX + 2, y2: top + 13, stroke: '#000', 'stroke-width': 1})); // NC-Winkel / Häkchen
                         g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Pin unten
-
                         // --- PFADNUMMERN EINSCHREIBEN ---
                         noPaths.forEach((p, idx) => {
                             let text = createSvgElement('text', {x: leftX, y: top + 30 + idx * 13, 'font-size': '10px', fill: '#333', 'text-anchor': 'middle', 'font-family': 'monospace'});
                             text.textContent = p.toString();
                             g.appendChild(text);
                         });
-                        
                         ncPaths.forEach((p, idx) => {
                             let text = createSvgElement('text', {x: rightX, y: top + 30 + idx * 13, 'font-size': '10px', fill: '#333', 'text-anchor': 'middle', 'font-family': 'monospace'});
                             text.textContent = p.toString();
                             g.appendChild(text);
                         });
                     }
-
                     circuitContent.appendChild(g);
                 }
             });
-
             setTimeout(() => {
                 if (document.getElementById('circuit-wrapper').offsetWidth > 0) {
                     panZoomCircuitInstance = svgPanZoom(circuitSvg, { zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true });
@@ -3205,46 +3140,108 @@
                 });
             } catch(e) { console.error(e); } finally { isLoadingFactory = false; }
         };
-        // --- NEU: SPEICHER- UND LADE-MODAL LOGIK (.leasave & Raw Code) ---
+        // Sichere Base64-Codierung (Unterstützt Umlaute und Sonderzeichen wie ¬ ∧ ∨)
+        function utoa(data) { return btoa(unescape(encodeURIComponent(data))); }
+        function atou(b64) { return decodeURIComponent(escape(atob(b64))); }
         window.openSaveLoadModal = function() {
             const modal = document.getElementById('saveload-modal');
             const textArea = document.getElementById('saveload-text');
-            // Wir erzeugen einen Snapshot des exakten aktuellen Zustands der IDE
+            const linkInput = document.getElementById('share-link-input');
+            const qrContainer = document.getElementById('qr-code-container');
             const saveData = {
                 version: "1.0",
                 code: textarea.value,
                 types: componentTypes,
                 factory: getFactoryStateObj()
             };
-            // Ins Textfeld schreiben (Variante 1)
+            let jsonString = JSON.stringify(saveData);
             textArea.value = JSON.stringify(saveData, null, 2);
+            // Alten QR-Code vom vorherigen Speichern aus der Box löschen
+            qrContainer.innerHTML = ''; 
+            try {
+                let base64 = utoa(jsonString);
+                let url = window.location.href.split('#')[0] + '#state=' + base64;
+                linkInput.value = url;
+                // QR Code generieren!
+                // Wichtiger Schutz: Ein QR Code hat ein physisches Limit. 
+                // Wenn die Anlage riesig wird (viele hunderte Objekte), sperren wir den QR Code, 
+                // da die kleinen Pixel auf dem Monitor sonst von Handykameras nicht mehr trennbar sind.
+                if (url.length < 2500) {
+                    new QRCode(qrContainer, {
+                        text: url,
+                        width: 80,
+                        height: 80,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.L
+                    });
+                } else {
+                    qrContainer.innerHTML = '<span style="color: red; font-size: 9px; text-align: center; font-weight: bold; line-height: 1.2;">Anlage zu<br>groß für<br>QR-Code</span>';
+                }
+            } catch(e) {
+                linkInput.value = "Fehler beim Generieren des Links";
+            }
             modal.style.display = 'block';
+        };
+        window.copyShareLink = function() {
+            const linkInput = document.getElementById('share-link-input');
+            linkInput.select();
+            document.execCommand("copy");
+            const ind = document.getElementById('save-indicator');
+            ind.textContent = "Link kopiert!";
+            ind.style.color = "#ff9800";
+            ind.style.opacity = '1';
+            setTimeout(() => { ind.textContent = "Gespeichert"; ind.style.color = "#3cb44b"; ind.style.opacity = '0.3'; }, 2000);
+        };
+		// --- NEU: QR-Code vergrößern ---
+        window.openLargeQR = function() {
+            const linkInput = document.getElementById('share-link-input').value;
+            // Falls da ein Fehler steht oder die Anlage eh zu groß war, abbrechen
+            if (!linkInput || linkInput.includes("Fehler")) return;
+            const largeModal = document.getElementById('qr-modal-large');
+            const largeContainer = document.getElementById('qr-code-large-container');
+            // Vorherigen fetten QR-Code löschen
+            largeContainer.innerHTML = ''; 
+            // QR Code in riesig und gestochen scharf neu zeichnen
+            new QRCode(largeContainer, {
+                text: linkInput,
+                width: 400,
+                height: 400,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.L
+            });
+            // Pop-up anzeigen (Wir nutzen Flexbox zur Zentrierung)
+            largeModal.style.display = 'flex';
+        };
+        window.closeLargeQR = function() {
+            document.getElementById('qr-modal-large').style.display = 'none';
         };
         window.closeSaveLoadModal = function() {
             document.getElementById('saveload-modal').style.display = 'none';
-            document.getElementById('leasave-upload').value = ""; // Input zurücksetzen
+            // ID angepasst
+            document.getElementById('valisave-upload').value = ""; 
         };
-        window.downloadLeasave = function() {
-            // Holt sich den Text aus der Textarea, verpackt ihn als Datei und erzwingt einen Download
+        window.downloadValisave = function() {
             const textArea = document.getElementById('saveload-text');
             const blob = new Blob([textArea.value], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'anlage.leasave';
+            // NEU: Dateiendung auf .valisave geändert
+            a.download = 'anlage.valisave';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         };
-        window.uploadLeasave = function(event) {
-            // Liest die Datei ein und schiebt den Inhalt in die Textarea
+        window.uploadValisave = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('saveload-text').value = e.target.result;
-                applyRawCode(); // Wendet es automatisch an, sobald hochgeladen!
+                applyRawCode(); 
             };
             reader.readAsText(file);
         };
@@ -3281,8 +3278,46 @@
             }
         };
         textarea.addEventListener('input', () => { updateHighlighting(); updateEditor(); saveToStorage(); });
-        loadFromStorage(); updateHighlighting(); updateEditor(); loadFactoryState(); 
-        // Zündet die 2D-Engine sofort im Hintergrund!
+        // --- AUTO-LOADER AUS URL-LINK ---
+        function checkUrlForState() {
+            if (window.location.hash && window.location.hash.startsWith('#state=')) {
+                try {
+                    let base64 = window.location.hash.substring(7);
+                    let jsonString = atou(base64);
+                    let data = JSON.parse(jsonString);
+                    // URL oben im Browser bereinigen, damit man sie beim normalen Aktualisieren nicht nochmal lädt
+                    history.replaceState(null, null, ' ');
+                    if (data.code !== undefined) textarea.value = data.code;
+                    if (data.types !== undefined) componentTypes = data.types;
+                    localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
+                    saveToStorage();
+                    spsState = {};
+                    updateHighlighting(); 
+                    updateEditor(); 
+                    if (data.factory) {
+                        localStorage.setItem('logikFactoryState', JSON.stringify(data.factory));
+                        loadFactoryState();
+                    } else {
+                        clearFactory(true);
+                    }
+                    return true; 
+                } catch (e) {
+                    console.error("Link konnte nicht gelesen werden:", e);
+                    alert("Der Link ist ungültig oder beschädigt. Es wird die zuletzt gespeicherte Anlage geladen.");
+                }
+            }
+            return false;
+        }
+        // INITIALISIERUNG
+        // 1. Zuerst prüfen, ob wir von einem Link kommen
+        if (!checkUrlForState()) {
+            // 2. Wenn kein Link da war, normal aus dem Browser-Speicher laden
+            loadFromStorage(); 
+            updateHighlighting(); 
+            updateEditor(); 
+            loadFactoryState(); 
+        }
+        // 3. Engine zünden
         startFactoryEngine();
     </script>
 </body>
