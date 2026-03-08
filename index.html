@@ -836,25 +836,29 @@
             if (wsResizing) {
                 let wc = document.getElementById('workspace-container');
                 let isGridMode = wc.classList.contains('layout-grid');
-                let isHorizontalMove = wsCurrentResizer.style.cursor === 'col-resize';
-                // Exakte Delta-Berechnung für sauberes Schieben
+                // Gleiche kugelsichere Erkennung wie beim Klicken
+                let isHorizontalMove;
+                if (isGridMode) {
+                    isHorizontalMove = wsCurrentResizer.style.cursor === 'col-resize';
+                } else {
+                    isHorizontalMove = wc.style.flexDirection !== 'column';
+                }
                 let delta = isHorizontalMove ? (e.clientX - wsMouseStart) : (e.clientY - wsMouseStart);
                 let totalSize = wsStartSizePrev + wsStartSizeNext;
                 let newPrev = Math.max(50, wsStartSizePrev + delta);
                 let newNext = Math.max(50, wsStartSizeNext - delta);
-                // Verhindert das Zerquetschen eines Panels
                 if (newPrev <= 50) newNext = totalSize - 50;
                 if (newNext <= 50) newPrev = totalSize - 50;
                 if (isGridMode) {
                     if (isHorizontalMove) {
-                        wc.style.setProperty('--grid-col-1', newPrev + 'fr');
-                        wc.style.setProperty('--grid-col-2', newNext + 'fr');
+                        // FIX: 'px' statt 'fr'! Verhindert, dass das Grid beim Ziehen explodiert.
+                        wc.style.setProperty('--grid-col-1', newPrev + 'px'); 
+                        wc.style.setProperty('--grid-col-2', newNext + 'px'); 
                     } else {
-                        wc.style.setProperty('--grid-row-1', newPrev + 'fr');
-                        wc.style.setProperty('--grid-row-2', newNext + 'fr');
+                        wc.style.setProperty('--grid-row-1', newPrev + 'px'); 
+                        wc.style.setProperty('--grid-row-2', newNext + 'px'); 
                     }
                 } else {
-                    // FIX: Wir nutzen absolute flex-basis statt flex-grow, um Pixel-Sprünge zu verhindern!
                     wsPrevPanel.style.flex = `0 0 ${newPrev}px`;
                     wsNextPanel.style.flex = `0 0 ${newNext}px`;
                 }
@@ -1926,7 +1930,7 @@
             }
             updateWorkspace();
         };
-        // --- SPLITTER DRAG & DROP LOGIK (Jetzt mit Grid-Support!) ---
+        // --- SPLITTER DRAG & DROP LOGIK (Repariert: Kugelsichere Richtungs-Erkennung!) ---
         let wsResizing = false;
         let wsCurrentResizer = null;
         let wsPrevPanel = null;
@@ -1941,7 +1945,14 @@
                 resizer.classList.add('active');
                 let wc = document.getElementById('workspace-container');
                 let isGridMode = wc.classList.contains('layout-grid');
-                let isHorizontalMove = resizer.style.cursor === 'col-resize';
+                // FIX: Kugelsichere Erkennung, ob wir Links/Rechts oder Oben/Unten ziehen!
+                let isHorizontalMove;
+                if (isGridMode) {
+                    isHorizontalMove = resizer.style.cursor === 'col-resize';
+                } else {
+                    // Im Flex-Modus gilt: Wenn es NICHT untereinander (column) ist, ist es horizontal!
+                    isHorizontalMove = wc.style.flexDirection !== 'column'; 
+                }
                 if (isGridMode) {
                     let style = window.getComputedStyle(wc);
                     let tracks = isHorizontalMove ? style.gridTemplateColumns.split(' ') : style.gridTemplateRows.split(' ');
@@ -1954,15 +1965,13 @@
                     while(wsNextPanel && wsNextPanel.style.display === 'none') wsNextPanel = wsNextPanel.nextElementSibling;
                     let rectPrev = wsPrevPanel.getBoundingClientRect();
                     let rectNext = wsNextPanel.getBoundingClientRect();
-                    // FIX: Echte Pixel auslesen für Sprungfreiheit
                     wsStartSizePrev = isHorizontalMove ? rectPrev.width : rectPrev.height;
                     wsStartSizeNext = isHorizontalMove ? rectNext.width : rectNext.height;
-                    // Sofortiges Einfrieren der aktuellen Größe beim Klick
                     wsPrevPanel.style.flex = `0 0 ${wsStartSizePrev}px`;
                     wsNextPanel.style.flex = `0 0 ${wsStartSizeNext}px`;
                 }
                 wsMouseStart = isHorizontalMove ? e.clientX : e.clientY;
-                document.body.style.cursor = resizer.style.cursor;
+                document.body.style.cursor = isHorizontalMove ? 'col-resize' : 'row-resize';
                 e.preventDefault();
             });
         });
