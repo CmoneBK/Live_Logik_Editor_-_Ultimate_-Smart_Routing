@@ -3772,23 +3772,19 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             ctxMenu.innerHTML = '';
             let infoBox = document.createElement('div'); infoBox.style.padding = '6px 15px'; infoBox.style.color = '#ffeb3b'; infoBox.style.fontSize = '10px'; infoBox.style.borderBottom = '1px solid #555'; infoBox.style.cursor = 'default'; infoBox.style.fontFamily = 'monospace';
             infoBox.innerHTML = `📍 X: ${Math.round(obj.x)} | Y: ${Math.round(obj.y)}<br>📏 W: ${Math.round(obj.width)} | H: ${Math.round(obj.height || obj.width)} | R: ${Math.round(obj.rotation)}°`;
-            // NEU: Zeigt an, dass das Menü sich auf eine Gruppe bezieht!
             if (selectedElements.includes(obj) && selectedElements.length > 1) {
                 infoBox.innerHTML += `<br><br><span style="color:#007acc;font-weight:bold;">📦 GRUPPE (${selectedElements.length} Objekte)</span>`;
             }
             ctxMenu.appendChild(infoBox);
-			// --- NEU: VARIABLEN LIVE ÄNDERN ODER ENTFERNEN ---
-            // Wird nur angezeigt, wenn wir ein einzelnes Element (keine Gruppe) rechtsklicken
             if (!selectedElements.includes(obj) || selectedElements.length === 1) {
                 const addVarSelect = (label, currentVal, listType, varProp) => {
                     let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
                     let wrapper = document.createElement('div'); wrapper.style.padding = '0 15px 5px 15px';
-                    wrapper.onclick = (e) => e.stopPropagation(); // Verhindert, dass Klicks ins Dropdown das Menü schließen
+                    wrapper.onclick = (e) => e.stopPropagation(); 
                     wrapper.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">🔌 ${label}</div>`;
                     let sel = document.createElement('select');
                     sel.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px; outline: none; cursor: pointer;";
                     let optNone = document.createElement('option'); optNone.value = ""; optNone.textContent = "-- Entfernen (Keine) --"; sel.appendChild(optNone);
-                    // Liste abrufen
                     let items = [];
                     if (listType === 'in') items = globalInputs;
                     else if (listType === 'out') items = globalOutputs;
@@ -3798,10 +3794,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         if (i === currentVal) o.selected = true;
                         sel.appendChild(o);
                     });
-                    // Wenn der Nutzer eine neue Variable wählt
                     sel.onchange = (e) => {
                         obj[varProp] = e.target.value || null;
-                        // Visuelle Namensschilder sofort live updaten!
                         let v1 = obj.linkedVar || obj.linkedVarExt || ''; let v2 = obj.linkedVarRet || '';
                         if (['taster', 'schalter', 'nothalt', 'led'].includes(obj.type)) {
                             let span = obj.el.querySelector('span'); if (span) span.textContent = v1 ? (v1.length > 5 ? v1.substring(0,4)+'..' : v1) : '---';
@@ -3822,7 +3816,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     };
                     wrapper.appendChild(sel); ctxMenu.appendChild(wrapper);
                 };
-                // Bauteil analysieren und passendes Dropdown einblenden
                 let isInput = ['taster', 'schalter', 'nothalt', 'sensor_ind', 'sensor_kap', 'sensor_opt', 'sensor_mag'].includes(obj.type);
                 let isOutput = ['led', 'conveyor', 'zylinder_single', 'zylinder_double', 'turntable', 'stacklight', 'spawner_metall', 'spawner_kunststoff'].includes(obj.type);
                 if (isInput) addVarSelect('Variable (Eingang)', obj.linkedVar, 'in', 'linkedVar');
@@ -3839,15 +3832,13 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                 }
                 if (obj.type === 'display') addVarSelect('Timer/Zähler', obj.linkedVar, 'timers', 'linkedVar');
-				// --- NEU: PLUGIN-SPEZIFISCHE KONTEXTMENÜS ---
-            	// Die Engine fragt das Plugin, ob es eigene UI-Elemente für dieses Menü beisteuern will!
-            	if (ComponentRegistry[obj.type] && ComponentRegistry[obj.type].contextMenu) {
-                ComponentRegistry[obj.type].contextMenu(obj, ctxMenu, saveFactoryState);
-            	}
+                // --- PLUGIN-HOOK FÜR EIGENE MENÜS ---
+                if (ComponentRegistry[obj.type] && ComponentRegistry[obj.type].contextMenu) {
+                    ComponentRegistry[obj.type].contextMenu(obj, ctxMenu, saveFactoryState);
+                }
             }
             let btnDel = document.createElement('div'); btnDel.className = 'ctx-item'; btnDel.textContent = '🗑️ Löschen';
             btnDel.onclick = () => { 
-                // Lösche alle markierten, wenn der Rechtsklick auf einem davon war
                 if (selectedElements.includes(obj)) {
                     selectedElements.forEach(sel => deleteObjRecursive(sel));
                     clearSelection();
@@ -3870,7 +3861,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }; 
                 ctxMenu.appendChild(btnRot);
             }
-			// NEU: Button zum Anpinnen der Namensschilder
             if (obj.labelEl) {
                 let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
                 let btnPin = document.createElement('div'); btnPin.className = 'ctx-item'; 
@@ -3892,9 +3882,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btnCol.textContent = isSolid ? '👻 Kollision: AUS (Geist)' : '🧱 Kollision: AN (Massiv)';
                 btnCol.onclick = () => { obj.useCollision = !isSolid; updateObjTransform(obj); saveFactoryState(); }; ctxMenu.appendChild(btnCol);
             }
-			if (obj.type && obj.type.startsWith('spawner_')) {
+            if (obj.type && obj.type.startsWith('spawner_')) {
                 let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
-                // 1. Der Toggle für Massiv / Normal
                 let btnMode = document.createElement('div'); 
                 btnMode.className = 'ctx-item'; 
                 btnMode.innerHTML = obj.spawnSolid ? '🧱 Modus: Massiv (Kollision AN)' : '👻 Modus: Normal (Kollision AUS)';
@@ -3903,19 +3892,16 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     saveFactoryState(); 
                 }; 
                 ctxMenu.appendChild(btnMode);
-                // 2. NEU: Direkt-Eingabe für das Intervall
                 let intWrapper = document.createElement('div'); intWrapper.style.padding = '5px 15px';
-                intWrapper.onclick = (e) => e.stopPropagation(); // Menü schließt nicht beim Klicken ins Textfeld
+                intWrapper.onclick = (e) => e.stopPropagation(); 
                 intWrapper.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">⏱️ Intervall (Sekunden)</div>`;
                 let intInput = document.createElement('input');
                 intInput.type = 'number'; intInput.min = '0.5'; intInput.step = '0.5'; intInput.value = obj.interval || 3;
                 intInput.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px; outline: none; box-sizing: border-box;";
-                // Live-Update beim Ändern der Zahl!
                 intInput.onchange = (e) => {
                     let newVal = parseFloat(e.target.value);
                     if (newVal > 0) {
                         obj.interval = newVal;
-                        // Namensschild sofort updaten
                         if (obj.labelEl) {
                             let v1 = obj.linkedVar || '';
                             obj.labelEl.textContent = v1 ? `${v1} (${newVal}s)` : `Immer an (${newVal}s)`;
@@ -3927,7 +3913,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 ctxMenu.appendChild(intWrapper);
             }
             if (obj.type && obj.type.startsWith('zylinder')) {
-                // 1. NEU: Bereits montierte Sensoren auflisten und Löschen anbieten
                 let attachedSensors = obj.children ? obj.children.filter(c => c.type === 'sensor_mag') : [];
                 if (attachedSensors.length > 0) {
                     let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
@@ -3943,7 +3928,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         ctxMenu.appendChild(btnRemove);
                     });
                 }
-                // 2. Verfügbare Sensoren zum Hinzufügen auflisten
                 let availableMags = globalInputs.filter(inp => componentTypes[inp] === 'sensor_mag' && !factoryObjects.find(o => o.linkedVar === inp));
                 if (availableMags.length > 0) {
                     let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
@@ -3956,7 +3940,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     });
                 }
             }
-			// NEU: Beliebige Bauteile an den Kolben eines Zylinders koppeln!
             if (obj.parent && obj.attachmentType === 'rod') {
                 let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
                 let btnDetach = document.createElement('div'); btnDetach.className = 'ctx-item'; btnDetach.textContent = '🔗 Vom Kolben lösen';
@@ -3967,7 +3950,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }; 
                 ctxMenu.appendChild(btnDetach);
             } else if (obj.type !== 'item' && obj.type !== 'sensor_mag') {
-                // Suche den nächsten Zylinder im Umkreis von 200 Pixeln
                 let nearestCyl = null; let minDist = 200;
                 let objCx = obj.x + obj.width/2; let objCy = obj.y + (obj.height||obj.width)/2;
                 factoryObjects.forEach(cyl => {
@@ -3991,16 +3973,22 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     ctxMenu.appendChild(btnAttach);
                 }
             }
-			// NEU: Individuelle Stummschaltung für jedes Bauteil
-            let sepSound = document.createElement('div'); sepSound.style.borderTop = '1px solid #555'; sepSound.style.margin = '5px 0'; ctxMenu.appendChild(sepSound);
-            let btnMute = document.createElement('div'); btnMute.className = 'ctx-item';
-            btnMute.textContent = obj.muteSound ? '🔇 Ton: STUMM (Klicken für Ton)' : '🔊 Ton: AN (Klicken zum Stummschalten)';
-            btnMute.onclick = () => { 
-                obj.muteSound = !obj.muteSound; 
-                saveFactoryState(); 
-                ctxMenu.style.display = 'none'; // Menü nach Klick schließen
-            }; 
-            ctxMenu.appendChild(btnMute);
+            // --- NEU: INTELLIGENTER SOUND-MUTE-BUTTON ---
+            let makesSound = false;
+            if (['zylinder_single', 'zylinder_double', 'conveyor'].includes(obj.type)) makesSound = true;
+            if (ComponentRegistry[obj.type] && ComponentRegistry[obj.type].playSound) makesSound = true;
+            if (obj.children && obj.children.some(c => ComponentRegistry[c.type] && ComponentRegistry[c.type].playSound)) makesSound = true;
+            if (makesSound) {
+                let sepSound = document.createElement('div'); sepSound.style.borderTop = '1px solid #555'; sepSound.style.margin = '5px 0'; ctxMenu.appendChild(sepSound);
+                let btnMute = document.createElement('div'); btnMute.className = 'ctx-item';
+                btnMute.textContent = obj.muteSound ? '🔇 Ton: STUMM (Klicken für Ton)' : '🔊 Ton: AN (Klicken zum Stummschalten)';
+                btnMute.onclick = () => { 
+                    obj.muteSound = !obj.muteSound; 
+                    saveFactoryState(); 
+                    ctxMenu.style.display = 'none'; 
+                }; 
+                ctxMenu.appendChild(btnMute);
+            }
             let wrapRect = document.getElementById('factory-wrapper').getBoundingClientRect();
             ctxMenu.style.left = (x - wrapRect.left) + 'px'; ctxMenu.style.top = (y - wrapRect.top) + 'px'; ctxMenu.style.display = 'block';
         }
