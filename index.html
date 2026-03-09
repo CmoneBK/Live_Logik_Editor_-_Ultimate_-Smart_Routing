@@ -581,6 +581,7 @@
             <div class="workspace-resizer" id="ws-resizer-1" style="grid-area: r1;"></div>
             <div id="circuit-wrapper" class="workspace-panel" style="display: none; grid-area: iec; background-image: radial-gradient(#e0e0e0 1px, transparent 1px); background-size: 20px 20px;">
                 <div class="circuit-btn-container">
+                    <button id="btn-toggle-econ" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleEconMode()">💼 Modus: Relais (Klassisch)</button>
                     <button id="btn-toggle-colors" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleCircuitColors()">🌈 Bunte Pfade: AUS</button>
                     <button id="btn-toggle-wech" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleWechsler()">🔀 Wechslernummerierung: AUS</button>
                     <button id="btn-toggle-seq" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleSeqNum()">🔢 Fortlaufende Nrn: AUS</button>
@@ -1903,6 +1904,23 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         window.configWechsler = false;
         window.configSeqNum = false;
 		window.configDetails = 2; // 0 = Aus, 1 = E/A, 2 = Alle
+		// --- NEU: SCHALTPLAN MODUS (KLASSISCH VS WIRTSCHAFTLICH) ---
+        window.configEconMode = false;
+        window.toggleEconMode = function() {
+            window.configEconMode = !window.configEconMode;
+            const btn = document.getElementById('btn-toggle-econ');
+            if (window.configEconMode) {
+                btn.style.backgroundColor = '#4caf50'; // Grün für Wirtschaftlich
+                btn.textContent = '💼 Modus: Direkt (Wirtschaftlich)';
+            } else {
+                btn.style.backgroundColor = '#555';    // Grau für Klassisch
+                btn.textContent = '💼 Modus: Relais (Klassisch)';
+            }
+            if (currentGraph) {
+                drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true);
+                runSimulationTick();
+            }
+        };
         window.toggleDetails = function() {
             window.configDetails = (window.configDetails + 1) % 3; // Zählt 0, 1, 2, 0, 1...
             const btn = document.getElementById('btn-toggle-details');
@@ -2555,182 +2573,317 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 return pNC ? !edge.inverted : edge.inverted;
             };			
             const nodesToDraw = Array.from(graph.nodes.values()).filter(n => ['GATE', 'RS', 'SR', 'TON', 'TOF', 'TP', 'CTU', 'OUTPUT'].includes(n.type)).sort((a,b) => a.level - b.level);
+
+            // --- NEU: DIE REKURSIVEN BAUM-GENERATOREN ---
+            function getTreeW(nodeId) {
+                let node = graph.nodes.get(nodeId);
+                if (!node || node.type !== 'GATE') return 90; // Standardbreite eines Kontakts
+                let inEdges = graph.edges.filter(e => e.targetId === nodeId);
+                if (inEdges.length === 0) return 90;
+                if (node.label === '&') return Math.max(90, ...inEdges.map(e => getTreeW(e.sourceId))); // Serie
+                else return Math.max(90, inEdges.reduce((sum, e) => sum + getTreeW(e.sourceId), 0));    // Parallel
+            }
+
+            function drawTree(nodeId, cx, y, w, isTargetInverted, basePathNum, baseCond) {
+                let node = graph.nodes.get(nodeId);
+                // Basis-Fall: Ein echter Kontakt (oder ein erzwungenes Relais wie Timer/RS)
+                if (!node || node.type !== 'GATE') {
+                    let name = symMap[nodeId] || nodeId;
+                    let type = contactTypeMap[nodeId] || 'relais';
+                    let cT = componentTypes[nodeId];
+                    let physNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc';
+                    let isNC = physNC ? !isTargetInverted : isTargetInverted;
+                    let col = getNodeColor(nodeId);
+                    let myCond = (isTargetInverted ? "!" : "") + `state['${nodeId}']`;
+                    let totalCond = baseCond === "true" ? myCond : `(${baseCond}) && ${myCond}`;
+
+                    setPower(drawLine(cx, y, cx, y + 15, 2, nodeId, col, isNC), baseCond);
+                    let g = drawContact(cx, y + 30, name, isNC, type, nodeId, col, basePathNum);
+                    setPower(g, "true"); 
+                    setPower(drawLine(cx, y + 45, cx, y + 60, 2, nodeId, col, isNC), totalCond);
+                    return { bottomY: y + 60, cond: totalCond };
+                }
+
+                let inEdges = graph.edges.filter(e => e.targetId === nodeId);
+                let col = node.color;
+
+                if (node.label === '&') { // REIHENSCHALTUNG
+                    let currY = y;
+                    let currCond = baseCond;
+                    inEdges.forEach(edge => {
+                        let res = drawTree(edge.sourceId, cx, currY, w, edge.inverted, basePathNum, currCond);
+                        currY = res.bottomY;
+                        currCond = res.cond;
+                    });
+                    return { bottomY: currY, cond: currCond };
+                } else if (node.label === '>=1') { // PARALLELSCHALTUNG
+                    let branches = inEdges.length;
+                    let startXArray = [];
+                    let totalW = getTreeW(nodeId);
+                    let startX = cx - totalW/2;
+                    let currX = startX;
+                    
+                    inEdges.forEach(edge => {
+                        let bw = getTreeW(edge.sourceId);
+                        startXArray.push(currX + bw/2);
+                        currX += bw;
+                    });
+                    
+                    let firstX = startXArray[0]; let lastX = startXArray[branches - 1];
+                    setPower(drawLine(cx, y, cx, y + 10, 2, nodeId, col), baseCond);
+                    setPower(drawLine(firstX, y + 10, lastX, y + 10, 2, nodeId, col), baseCond);
+
+                    let maxBottomY = y + 10;
+                    let outConds = [];
+                    let branchResults = [];
+
+                    inEdges.forEach((edge, idx) => {
+                        let bx = startXArray[idx]; let bw = getTreeW(edge.sourceId);
+                        setPower(drawLine(bx, y + 10, bx, y + 20, 2, edge.sourceId, getNodeColor(edge.sourceId)), baseCond);
+                        let res = drawTree(edge.sourceId, bx, y + 20, bw, edge.inverted, basePathNum, baseCond);
+                        branchResults.push({ x: bx, bottomY: res.bottomY, cond: res.cond });
+                        if (res.bottomY > maxBottomY) maxBottomY = res.bottomY;
+                        outConds.push(res.cond);
+                    });
+
+                    let totalCond = outConds.join(' || ') || 'false';
+                    if (baseCond !== "true") totalCond = `(${baseCond}) && (${totalCond})`;
+
+                    branchResults.forEach(res => setPower(drawLine(res.x, res.bottomY, res.x, maxBottomY + 10, 2, nodeId, col), res.cond));
+                    setPower(drawLine(firstX, maxBottomY + 10, lastX, maxBottomY + 10, 2, nodeId, col), totalCond);
+                    setPower(drawLine(cx, maxBottomY + 10, cx, maxBottomY + 20, 2, nodeId, col), totalCond);
+
+                    return { bottomY: maxBottomY + 20, cond: totalCond };
+                }
+            }
+
+            function calcPinW(edge) {
+                if (window.configEconMode && edge && graph.nodes.get(edge.sourceId) && graph.nodes.get(edge.sourceId).type === 'GATE') return getTreeW(edge.sourceId);
+                return 90;
+            }
+
+            // Universal-Helfer für alle Bauteil-Eingänge (Entscheidet live zwischen Einzelkontakt oder Baum)
+            function drawInputPin(edge, cx, yStart, yEnd, pNum, baseCond = "true", forceInvertNC = false) {
+                if (!edge) { setPower(drawLine(cx, yStart, cx, yEnd, 2, 'NONE', '#000'), baseCond); return baseCond; }
+                let sourceNode = graph.nodes.get(edge.sourceId);
+                let col = getNodeColor(edge.sourceId);
+
+                // Im Wirtschaftlichen Modus lösen wir reine Logikgatter in Kontaktbäume auf
+                if (window.configEconMode && sourceNode && sourceNode.type === 'GATE') {
+                    let totalW = getTreeW(edge.sourceId);
+                    setPower(drawLine(cx, yStart, cx, yStart + 15, 2, edge.sourceId, col), baseCond);
+                    let res = drawTree(edge.sourceId, cx, yStart + 15, totalW, edge.inverted, pNum, baseCond);
+                    setPower(drawLine(cx, res.bottomY, cx, yEnd, 2, edge.sourceId, col), res.cond);
+                    return res.cond;
+                } else {
+                    let name = symMap[edge.sourceId] || edge.sourceId;
+                    let type = contactTypeMap[edge.sourceId] || 'relais';
+                    let isNC = getContactNC(edge);
+                    if (forceInvertNC) isNC = !isNC; // Speziell für Latch-Resets
+
+                    let cy = (yStart + yEnd) / 2;
+                    setPower(drawLine(cx, yStart, cx, cy - 15, 2, edge.sourceId, col, isNC), baseCond);
+                    setPower(drawContact(cx, cy, name, isNC, type, edge.sourceId, col, pNum), "true");
+                    let myCond = getCond(edge);
+                    let totalCond = baseCond === "true" ? myCond : `(${baseCond}) && ${myCond}`;
+                    setPower(drawLine(cx, cy + 15, cx, yEnd, 2, edge.sourceId, col, isNC), totalCond);
+                    return totalCond;
+                }
+            }
+
             nodesToDraw.forEach(node => {
                 let inEdges = graph.edges.filter(e => e.targetId === node.id);
                 let col = node.color;
-                if (node.type === 'GATE' && node.label === '&') { 
+
+                if (node.type === 'GATE') {
+                    if (window.configEconMode) return; // Im wirtschaftlichen Modus zeichnen wir Gatter NICHT mehr einzeln!
+                    
                     let p = pathCounter++;
                     drawText(currX, yTop - 25, p.toString(), true);
-                    let y = 110, dy = 260 / Math.max(1, inEdges.length);
-                    let pCond = "true";
-                    setPower(drawLine(currX, yTop, currX, y - 15, 2, node.id, col), pCond);
-                    inEdges.forEach((edge, idx) => {
-                        let name = symMap[edge.sourceId] || edge.sourceId;
-                        let type = contactTypeMap[edge.sourceId] || 'relais';
-                        let isNC = getContactNC(edge);
-                        let srcCol = getNodeColor(edge.sourceId);
-                        setPower(drawContact(currX, y, name, isNC, type, edge.sourceId, srcCol, p), pCond);
-                        let thisCond = getCond(edge);
-                        pCond = pCond === "true" ? thisCond : `(${pCond}) && ${thisCond}`;
-                        if (idx < inEdges.length - 1) setPower(drawLine(currX, y + 15, currX, y + dy - 15, 2, node.id, col), pCond);
-                        y += dy;
-                    });
-                    setPower(drawLine(currX, (y - dy) + 15, currX, 430, 2, node.id, col), pCond); 
-                    setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
-                    setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
-                    currX += 130;
-                }
-                else if (node.type === 'GATE' && node.label === '>=1') { 
-                    let branches = inEdges.length;
-                    if(branches > 0) {
-                        let startP = pathCounter++;
-                        drawText(currX, yTop - 25, startP.toString(), true);
-                        let startX = currX, endX = currX + (branches - 1) * 90;
-                        setPower(drawLine(startX, yTop, startX, 90, 2, node.id, col), "true"); 
-                        setPower(drawLine(startX, 90, endX, 90, 2, node.id, col), "true"); 
+                    
+                    if (node.label === '&') { 
+                        let y = 110, dy = 260 / Math.max(1, inEdges.length);
+                        let pCond = "true";
+                        setPower(drawLine(currX, yTop, currX, y - 15, 2, node.id, col), pCond);
                         inEdges.forEach((edge, idx) => {
-                            let bx = currX + idx * 90;
-                            let bp = (idx === 0) ? startP : pathCounter++;
-                            if (idx > 0) drawText(bx, yTop - 25, bp.toString(), true);
                             let name = symMap[edge.sourceId] || edge.sourceId;
                             let type = contactTypeMap[edge.sourceId] || 'relais';
-                            let cTypeSrc = componentTypes[edge.sourceId];
-                            let physNC = cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc';
-                            let isNC = physNC ? !edge.inverted : edge.inverted;
+                            let isNC = getContactNC(edge);
                             let srcCol = getNodeColor(edge.sourceId);
-                            setPower(drawLine(bx, 90, bx, 220 - 15, 2, edge.sourceId, srcCol, isNC), "true");
-                            setPower(drawContact(bx, 220, name, isNC, type, edge.sourceId, srcCol, bp), "true");
+                            setPower(drawContact(currX, y, name, isNC, type, edge.sourceId, srcCol, p), pCond);
                             let thisCond = getCond(edge);
-                            setPower(drawLine(bx, 235, bx, 350, 2, edge.sourceId, srcCol, isNC), thisCond);
+                            pCond = pCond === "true" ? thisCond : `(${pCond}) && ${thisCond}`;
+                            if (idx < inEdges.length - 1) setPower(drawLine(currX, y + 15, currX, y + dy - 15, 2, node.id, col), pCond);
+                            y += dy;
                         });
-                        let outCond = `state['${node.id}']`;
-                        setPower(drawLine(startX, 350, endX, 350, 2, node.id, col), outCond); 
-                        setPower(drawLine(startX, 350, startX, 430, 2, node.id, col), outCond); 
-                        setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'relais', col, startP), outCond);
-                        setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), outCond); 
-                        currX = endX + 130;
+                        setPower(drawLine(currX, (y - dy) + 15, currX, 430, 2, node.id, col), pCond); 
+                        setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
+                        setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
+                        currX += 130;
+                    }
+                    else if (node.label === '>=1') { 
+                        let branches = inEdges.length;
+                        if(branches > 0) {
+												   
+																			
+                            let startX = currX, endX = currX + (branches - 1) * 90;
+                            setPower(drawLine(startX, yTop, startX, 90, 2, node.id, col), "true"); 
+                            setPower(drawLine(startX, 90, endX, 90, 2, node.id, col), "true"); 
+                            inEdges.forEach((edge, idx) => {
+                                let bx = currX + idx * 90;
+                                let bp = (idx === 0) ? p : pathCounter++;
+                                if (idx > 0) drawText(bx, yTop - 25, bp.toString(), true);
+                                let name = symMap[edge.sourceId] || edge.sourceId;
+                                let type = contactTypeMap[edge.sourceId] || 'relais';
+                                let isNC = getContactNC(edge);
+																														  
+																			   
+                                let srcCol = getNodeColor(edge.sourceId);
+                                setPower(drawLine(bx, 90, bx, 220 - 15, 2, edge.sourceId, srcCol, isNC), "true");
+                                setPower(drawContact(bx, 220, name, isNC, type, edge.sourceId, srcCol, bp), "true");
+                                let thisCond = getCond(edge);
+                                setPower(drawLine(bx, 235, bx, 350, 2, edge.sourceId, srcCol, isNC), thisCond);
+                            });
+                            let outCond = `state['${node.id}']`;
+                            setPower(drawLine(startX, 350, endX, 350, 2, node.id, col), outCond); 
+                            setPower(drawLine(startX, 350, startX, 430, 2, node.id, col), outCond); 
+                            setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'relais', col, p), outCond);
+                            setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), outCond); 
+                            currX = endX + 130;
+                        }
                     }
                 }
                 else if (node.type === 'RS' || node.type === 'SR') { 
                     let p1 = pathCounter++; let p2 = pathCounter++;
                     let sEdge = inEdges.find(e => e.targetPin === 'S'); let rEdge = inEdges.find(e => e.targetPin === 'R');
-                    let sName = sEdge ? (symMap[sEdge.sourceId] || sEdge.sourceId) : 'N/A';
-                    let rName = rEdge ? (symMap[rEdge.sourceId] || rEdge.sourceId) : 'N/A';
-                    let sType = sEdge ? (contactTypeMap[sEdge.sourceId] || 'relais') : 'relais';
-                    let rType = rEdge ? (contactTypeMap[rEdge.sourceId] || 'relais') : 'relais';
-                    let sInverted = getContactNC(sEdge);
-					let rInverted = getContactNC(rEdge);												  
-                    let startX = currX, parX = currX + 90;
+
+                    let w1 = calcPinW(sEdge); let w2 = calcPinW(rEdge);
+                    let startX = currX + (w1 > 90 ? (w1-90)/2 : 0);
+                    let gap = Math.max(90, w1/2 + w2/2 + 20);
+														
+																														   
+                    let parX = startX + gap;
+
                     drawText(startX, yTop - 25, p1.toString(), true); drawText(parX, yTop - 25, p2.toString(), true);
                     setPower(drawLine(startX, yTop, startX, 90, 2, node.id, col), "true"); 
                     setPower(drawLine(startX, 90, parX, 90, 2, node.id, col), "true");
-                    let sCol = sEdge ? getNodeColor(sEdge.sourceId) : col;
-                    let rCol = rEdge ? getNodeColor(rEdge.sourceId) : col;
-                    let sCond = getCond(sEdge); let qCond = `state['${node.id}']`;
+
+																		  
+                    let qCond = `state['${node.id}']`;
+
                     if (node.type === 'RS') {
-                        setPower(drawLine(startX, 90, startX, 150 - 15, 2, sEdge ? sEdge.sourceId : node.id, sCol, sInverted), "true"); 
-                        setPower(drawContact(startX, 150, sName, sInverted, sType, sEdge ? sEdge.sourceId : 'NONE', sCol, p1), "true"); 
-                        setPower(drawLine(startX, 165, startX, 230, 2, node.id, col), sCond); 
+																																		
+                        let sCond = drawInputPin(sEdge, startX, 90, 230, p1, "true");
+																							  
                         setPower(drawLine(parX, 90, parX, 150 - 15, 2, node.id, col), "true"); 
                         setPower(drawContact(parX, 150, symMap[node.id], false, 'relais', node.id, col, p2), "true"); 
                         setPower(drawLine(parX, 165, parX, 230, 2, node.id, col), qCond); 
                         let joinCond = `(${sCond} || ${qCond})`;
                         setPower(drawLine(startX, 230, parX, 230, 2, node.id, col), joinCond); 
-                        setPower(drawLine(startX, 230, startX, 300 - 15, 2, node.id, col), joinCond); 
-                        setPower(drawContact(startX, 300, rName, !rInverted, rType, rEdge ? rEdge.sourceId : 'NONE', rCol, p1), joinCond); 
-                        setPower(drawLine(startX, 315, startX, 430, 2, node.id, col), qCond); 
-                        setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'relais', col, p1), qCond); 
-                        setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), qCond);
+                        
+                        let rCond = drawInputPin(rEdge, startX, 230, 430, p1, joinCond, true); 
+																							  
+                        setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'relais', col, p1), rCond); 
+                        setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), rCond);
                     } else { // SR
                         setPower(drawLine(startX, 90, startX, 150 - 15, 2, node.id, col), "true"); 
                         setPower(drawContact(startX, 150, symMap[node.id], false, 'relais', node.id, col, p1), "true"); 
                         setPower(drawLine(startX, 165, startX, 230, 2, node.id, col), qCond); 
-                        setPower(drawLine(startX, 230, startX, 300 - 15, 2, node.id, col), qCond); 
-                        setPower(drawContact(startX, 300, rName, !rInverted, rType, rEdge ? rEdge.sourceId : 'NONE', rCol, p1), qCond); 
-                        setPower(drawLine(startX, 315, startX, 380, 2, node.id, col), `(${qCond} && ${getCond(rEdge)})`); 
-                        setPower(drawLine(parX, 90, parX, 225 - 15, 2, sEdge ? sEdge.sourceId : node.id, sCol, sInverted), "true"); 
-                        setPower(drawContact(parX, 225, sName, sInverted, sType, sEdge ? sEdge.sourceId : 'NONE', sCol, p2), "true"); 
-                        setPower(drawLine(parX, 240, parX, 380, 2, node.id, col), sCond); 
+                        
+                        let rCond = drawInputPin(rEdge, startX, 230, 380, p1, qCond, true); 
+																														  
+                        let sCond = drawInputPin(sEdge, parX, 90, 380, p2, "true");
+                        
+																						  
                         setPower(drawLine(startX, 380, parX, 380, 2, node.id, col), qCond); 
                         setPower(drawLine(startX, 380, startX, 430, 2, node.id, col), qCond); 
                         setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'relais', col, p1), qCond); 
                         setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), qCond);
                     }
-                    currX = parX + 130;
+                    currX = parX + (w2 > 90 ? (w2-90)/2 : 0) + 80;
                 }
                 else if (node.type === 'CTU') {
                     let p1 = pathCounter++; let p2 = pathCounter++;
                     let cuEdge = inEdges.find(e => e.targetPin === 'CU'); let rEdge = inEdges.find(e => e.targetPin === 'R');
-                    let cuName = cuEdge ? (symMap[cuEdge.sourceId] || cuEdge.sourceId) : 'N/A';
-                    let rName = rEdge ? (symMap[rEdge.sourceId] || rEdge.sourceId) : 'N/A';
-                    let cuType = cuEdge ? (contactTypeMap[cuEdge.sourceId] || 'relais') : 'relais';
-                    let rType = rEdge ? (contactTypeMap[rEdge.sourceId] || 'relais') : 'relais';
-                    let cuInverted = getContactNC(cuEdge);
-                    if (cuEdge) { let cTypeSrc = componentTypes[cuEdge.sourceId]; if (cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc') cuInverted = !cuInverted; }
-                    let rInverted = getContactNC(rEdge);
-                    if (rEdge) { let cTypeSrc = componentTypes[rEdge.sourceId]; if (cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc') rInverted = !rInverted; }
-                    let startX = currX, parX = currX + 90;
+
+                    let w1 = calcPinW(cuEdge); let w2 = calcPinW(rEdge);
+                    let startX = currX + (w1 > 90 ? (w1-90)/2 : 0);
+                    let gap = Math.max(90, w1/2 + w2/2 + 20);
+														  
+																																																																	
+														
+																																																															  
+                    let parX = startX + gap;
+
                     drawText(startX, yTop - 25, p1.toString(), true); drawText(parX, yTop - 25, p2.toString(), true);
                     setPower(drawLine(startX, yTop, startX, 90, 2, node.id, col), "true"); 
                     setPower(drawLine(startX, 90, parX, 90, 2, node.id, col), "true");
-                    let cuCol = cuEdge ? getNodeColor(cuEdge.sourceId) : col;
-                    let rCol = rEdge ? getNodeColor(rEdge.sourceId) : col;
-                    let cuCond = getCond(cuEdge); let rCond = getCond(rEdge);
-                    setPower(drawLine(startX, 90, startX, 220 - 15, 2, cuEdge ? cuEdge.sourceId : node.id, cuCol, cuInverted), "true"); 
-                    setPower(drawContact(startX, 220, cuName, cuInverted, cuType, cuEdge ? cuEdge.sourceId : 'NONE', cuCol, p1), "true"); 
-                    setPower(drawLine(startX, 235, startX, 430, 2, node.id, col), cuCond); 
-                    setPower(drawLine(parX, 90, parX, 220 - 15, 2, rEdge ? rEdge.sourceId : node.id, rCol, rInverted), "true"); 
-                    setPower(drawContact(parX, 220, rName, rInverted, rType, rEdge ? rEdge.sourceId : 'NONE', rCol, p2), "true"); 
-                    setPower(drawLine(parX, 235, parX, 430, 2, node.id, col), rCond); 
+
+																		  
+																			 
+                    let cuCond = drawInputPin(cuEdge, startX, 90, 430, p1, "true");
+                    let rCond = drawInputPin(rEdge, parX, 90, 430, p2, "true", true); 
+
+																																
+																																  
+																					  
                     setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'ctu', col, p1), cuCond); 
                     setPower(drawCoil(parX, 450, symMap[node.id] + ' (R)', node.id, 'relais', col, p2), rCond); 
                     setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), cuCond); 
                     setPower(drawLine(parX, 470, parX, yBot, 2, node.id, col), rCond); 
-                    currX = parX + 130;
+                    currX = parX + (w2 > 90 ? (w2-90)/2 : 0) + 80;
                 }
                 else if (node.type === 'OUTPUT') { 
                     let p = pathCounter++;
+                    let edge = inEdges[0]; // Kann undefined sein, wenn noch nichts zugewiesen wurde!
+                    
+                    let w1 = calcPinW(edge);
+                    currX += (w1 > 90 ? (w1-90)/2 : 0);
+
                     drawText(currX, yTop - 25, p.toString(), true);
-                    let edge = inEdges[0];
-                    let pCond = getCond(edge);
+                    
+                    let pCond = "false"; // Standardmäßig ist der Stromfluss FALSE
                     if (edge) {
-                        let name = symMap[edge.sourceId] || edge.sourceId;
-                        let type = contactTypeMap[edge.sourceId] || 'relais';
-                        let cTypeSrc = componentTypes[edge.sourceId];
-                        let physNC = cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc';
-                        let isNC = physNC ? !edge.inverted : edge.inverted;
-                        let srcCol = getNodeColor(edge.sourceId);
-                        setPower(drawLine(currX, yTop, currX, 220 - 15, 2, edge.sourceId, srcCol, isNC), "true");
-                        setPower(drawContact(currX, 220, name, isNC, type, edge.sourceId, srcCol, p), "true");
-                        setPower(drawLine(currX, 235, currX, 430, 2, node.id, col), pCond); 
-                    } else { 
-                        setPower(drawLine(currX, yTop, currX, 430, 2, node.id, col), "true"); 
+                        // Es gibt eine Verbindung, also zeichnen wir den Ast (oder Kontakt) ganz normal
+																			 
+																	 
+																													  
+																		   
+																 
+                        pCond = drawInputPin(edge, currX, yTop, 430, p, "true");
+																											  
+																							
+                    } else {
+                        // Keine Verbindung! Wir zeichnen einfach eine tote Linie (ohne Variablen-Verknüpfung)
+                        setPower(drawLine(currX, yTop, currX, 430, 2, node.id, col), "false"); 
                     }
+
                     if (node.isRelay) setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
                     else if (node.outType === 'valve') setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'valve', col, p), pCond);
                     else setPower(drawLED(currX, 450, symMap[node.id], node.id, col, p), pCond);
+                    
                     setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
-                    currX += 130;
+                    currX += (w1 > 90 ? (w1-90)/2 : 0) + 130;
                 }
                 else if (['TON', 'TOF', 'TP'].includes(node.type)) { 
                     let p1 = pathCounter++;
                     let inEdge = inEdges.find(e => e.targetPin === 'IN');
-                    let sName = inEdge ? (symMap[inEdge.sourceId] || inEdge.sourceId) : 'N/A';
-                    let sType = inEdge ? (contactTypeMap[inEdge.sourceId] || 'relais') : 'relais';
-                    let sInverted = getContactNC(inEdge);
-                    if (inEdge) { let cTypeSrc = componentTypes[inEdge.sourceId]; if (cTypeSrc === 'nothalt' || cTypeSrc === 'taster_nc' || cTypeSrc === 'schalter_nc') sInverted = !sInverted; }
+
+                    let w1 = calcPinW(inEdge);
+                    currX += (w1 > 90 ? (w1-90)/2 : 0);
+
                     drawText(currX, yTop - 25, p1.toString(), true);
-                    let sCol = inEdge ? getNodeColor(inEdge.sourceId) : col;
-                    let pCond = getCond(inEdge);
-                    setPower(drawLine(currX, yTop, currX, 220 - 15, 2, inEdge ? inEdge.sourceId : node.id, sCol, sInverted), "true"); 
-                    setPower(drawContact(currX, 220, sName, sInverted, sType, inEdge ? inEdge.sourceId : 'NONE', sCol, p1), "true"); 
-                    setPower(drawLine(currX, 235, currX, 430, 2, node.id, col), pCond); 
+                    let pCond = drawInputPin(inEdge, currX, yTop, 430, p1, "true");
+
+																																	  
+																																	 
+																						
                     setPower(drawCoil(currX, 450, symMap[node.id], node.id, node.type.toLowerCase(), col, p1), pCond); 
                     setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
-                    currX += 130;
+                    currX += (w1 > 90 ? (w1-90)/2 : 0) + 130;
                 }
             });
-            // Zeichne die Hauptschienen L+ und M
+			// Zeichne die Hauptschienen L+ und M									 
             let totalWidth = Math.max(1000, currX + 50);
             let lPlus = drawLine(20, yTop, totalWidth - 20, yTop, 3);
             lPlus.setAttribute('stroke', '#f58231'); lPlus.classList.remove('circ-wire');
