@@ -20,10 +20,10 @@
         /* Obere Leiste darf in der Höhe atmen, Buttons bleiben aber in einer Reihe */
         .graph-top-bar { 
             display: flex; justify-content: space-between; align-items: center; gap: 5px; 
-            width: 100%; z-index: 10; padding: 5px 10px; box-sizing: border-box; 
+            width: 100%; z-index: 1050; padding: 5px 10px; box-sizing: border-box; /* FIX: z-index von 10 auf 1050 erhöht! */
             background: #f8f9fa; border-bottom: 1px solid #ddd; 
             flex-wrap: nowrap !important; /* Kein Untereinanderspringen der Boxen! */
-            min-height: 50px; height: auto; /* NEU: Darf sich für zweizeilige Buttons dehnen */
+            min-height: 50px; height: auto; /* Darf sich für zweizeilige Buttons dehnen */
         }
         /* Buttons dürfen ihren Text mehrzeilig machen, um Platz zu sparen */
         .btn-export { 
@@ -547,10 +547,10 @@
     </div>
     <div id="graph-container">
         <div class="graph-top-bar">
-            <div class="info-box" title="Virtual Automation, Logic & Industrial Simulator">
-                <strong>⚙️ Willkommen bei VALIS:</strong> Logik links tippen • "Simulation starten" für Live-Test.
-            </div>
-            <div style="display: flex; gap: 5px;">
+																						   
+																														 
+				  
+            <div style="display: flex; gap: 5px; align-items: center;">
                 <button id="btn-view-fbs" class="btn-export view-btn active" onclick="toggleWorkspaceView('fbs-wrapper')">Logikplan</button>
                 <button id="btn-view-iec" class="btn-export view-btn" onclick="toggleWorkspaceView('circuit-wrapper')">Schaltplan</button>
                 <button id="btn-view-fac" class="btn-export view-btn" onclick="toggleWorkspaceView('factory-wrapper')">2D Anlage</button>
@@ -567,21 +567,28 @@
                     </optgroup>
                 </select>
             </div>
-            <button id="btn-toggle-sim" class="btn-export" style="background-color: #e6194B; margin-left: 10px;" onclick="toggleSimulation()">Simulation starten</button>
-            <button class="btn-export" style="background-color: #9c27b0; margin-left: 10px;" onclick="openAnalyzerModal()">📊 Oszilloskop</button>
-            <button id="btn-toggle-sound" class="btn-export" style="background-color: #555; margin-left: 10px;" onclick="toggleSound()">🔇 Ton: AUS</button>
-            
-            <div class="tb-dropdown" style="margin-left: 10px;">
-                <button class="btn-export" style="background-color: #607d8b; cursor: pointer;">🪟 Multi-Monitor ▼</button>
-                <div class="tb-dropdown-content" style="right: 0; left: auto;">
-                    <div onclick="detachPanel('fbs-wrapper', 'Logikplan')">⏏️ Logikplan abkoppeln</div>
-                    <div onclick="detachPanel('circuit-wrapper', 'Schaltplan')">⏏️ Schaltplan abkoppeln</div>
-                    <div onclick="detachPanel('factory-wrapper', '2D-Anlage')">⏏️ 2D-Anlage abkoppeln</div>
-                    <div onclick="detachPanel('analyzer-modal', 'Oszilloskop')">⏏️ Oszilloskop abkoppeln</div>
-                </div>
+
+            <div class="info-box" title="Virtual Automation, Logic & Industrial Simulator" style="margin: 0 10px; text-align: center;">
+                <strong>⚙️ Willkommen bei VALIS:</strong> Logik links tippen • "Simulation starten" für Live-Test.
             </div>
 
-            <button class="btn-export" style="margin-left: 10px;" onclick="exportSVG()">Als SVG speichern</button>
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <button id="btn-toggle-sim" class="btn-export" style="background-color: #e6194B;" onclick="toggleSimulation()">Simulation starten</button>
+                <button id="btn-toggle-sound" class="btn-export" style="background-color: #555;" onclick="toggleSound()">🔇 Ton: AUS</button>
+                
+                <div class="tb-dropdown">
+                    <button class="btn-export" style="background-color: #607d8b; cursor: pointer;">🛠️ Extras ▼</button>
+                    <div class="tb-dropdown-content" style="right: 0; left: auto; min-width: 240px; text-align: left;">
+                        <div onclick="openAnalyzerModal()">📊 Oszilloskop öffnen</div>
+                        <div onclick="exportSVG()">📸 Ansicht als SVG speichern</div>
+                        <div style="border-top: 1px solid #555; margin: 2px 0;"></div>
+                        <div onclick="detachPanel('fbs-wrapper', 'Logikplan')">⏏️ Logikplan abkoppeln (Multi-Screen)</div>
+                        <div onclick="detachPanel('circuit-wrapper', 'Schaltplan')">⏏️ Schaltplan abkoppeln (Multi-Screen)</div>
+                        <div onclick="detachPanel('factory-wrapper', '2D-Anlage')">⏏️ 2D-Anlage abkoppeln (Multi-Screen)</div>
+                        <div onclick="detachPanel('analyzer-modal', 'Oszilloskop')">⏏️ Oszilloskop abkoppeln (Multi-Screen)</div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="workspace-container">
             <div id="fbs-wrapper" class="workspace-panel" style="display: flex; grid-area: fbs; background-image: radial-gradient(#e0e0e0 1px, transparent 1px); background-size: 20px 20px;">
@@ -613,8 +620,12 @@
                             <div onclick="addFactoryDevice('taster')">🟢 Taster (Schließer)</div>
                             <div onclick="addFactoryDevice('schalter')">🎚️ Schalter (rastend)</div>
                             <div onclick="addFactoryDevice('nothalt')">🍄 Not-Halt (Öffner)</div>
+																													
+																															
                             <div style="border-top: 1px solid #555; margin: 2px 0;"></div>
                             <div onclick="addFactoryDevice('led')">💡 Meldeleuchte (LED)</div>
+																												
+																											
                         </div>
                     </div>
                     <div class="tb-dropdown">
@@ -1726,11 +1737,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             // FIX: Timeout gibt dem Browser Zeit, die SVG-Kästen zu rendern, bevor die Größe abgefragt wird!
             // NEU: Nicht zerstören! Wir aktualisieren stattdessen einfach die Bounding-Boxen der bestehenden Instanz.
             setTimeout(() => {
-                if (document.getElementById('fbs-wrapper').offsetWidth > 0) {
+                let pFbs = customSvg.closest('.workspace-panel') || document.getElementById('fbs-wrapper');
+                if (pFbs && pFbs.offsetWidth > 0) {
                     panZoomInstance = svgPanZoom(customSvg, { zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true });
                 }
             }, 15);
-        }
+		} 
         function loadFromStorage() {
             const saved = localStorage.getItem('logikEditorCode');
             if (saved !== null && saved.trim() !== "") {
@@ -2052,34 +2064,61 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         };
 		// --- NEU: WORKSPACE PANEL MANAGEMENT ---
         function updateWorkspace() {
-            const panels = [
-                document.getElementById('fbs-wrapper'),
-                document.getElementById('circuit-wrapper'),
-                document.getElementById('factory-wrapper')
-            ];
+            const pFbs = customSvg.closest('.workspace-panel') || document.getElementById('fbs-wrapper');
+													   
+            const pCirc = circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
+            const pFac = factoryScrollArea.closest('.workspace-panel') || document.getElementById('factory-wrapper');
+            
+            const panels = [pFbs, pCirc, pFac];
             const resizer1 = document.getElementById('ws-resizer-1');
             const resizer2 = document.getElementById('ws-resizer-2');
-            let p0 = panels[0].style.display !== 'none';
-            let p1 = panels[1].style.display !== 'none';
-            let p2 = panels[2].style.display !== 'none';
-            resizer1.style.display = (p0 && (p1 || p2)) ? 'block' : 'none';
-            resizer2.style.display = (p1 && p2) ? 'block' : 'none';
+            
+            let p0 = (panels[0] && panels[0].style.display !== 'none') || currentLayout.startsWith('grid-');
+            let p1 = (panels[1] && panels[1].style.display !== 'none') || currentLayout.startsWith('grid-');
+            let p2 = (panels[2] && panels[2].style.display !== 'none') || currentLayout.startsWith('grid-');
+            
+            if (currentLayout.startsWith('grid-')) {
+                if (resizer1) resizer1.style.display = 'none';
+                if (resizer2) resizer2.style.display = 'none';
+            } else {
+                if (resizer1) resizer1.style.display = (p0 && (p1 || p2)) ? 'block' : 'none';
+                if (resizer2) resizer2.style.display = (p1 && p2) ? 'block' : 'none';
+            }
+            
             document.getElementById('btn-view-fbs').classList.toggle('active', p0);
             document.getElementById('btn-view-iec').classList.toggle('active', p1);
             document.getElementById('btn-view-fac').classList.toggle('active', p2);
+            
             requestAnimationFrame(() => {
-                if(p0 && panZoomInstance && panels[0].offsetWidth > 0) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
-                if(p1 && panZoomCircuitInstance && panels[1].offsetWidth > 0) { panZoomCircuitInstance.resize(); panZoomCircuitInstance.fit(); panZoomCircuitInstance.center(); }
+                if(p0 && panZoomInstance && panels[0] && panels[0].offsetWidth > 0) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
+                if(p1 && panZoomCircuitInstance && panels[1] && panels[1].offsetWidth > 0) { panZoomCircuitInstance.resize(); panZoomCircuitInstance.fit(); panZoomCircuitInstance.center(); }
             });
         }
+
         window.toggleWorkspaceView = function(panelId) {
-            const panel = document.getElementById(panelId);
+            let panel;
+            if (panelId === 'fbs-wrapper') panel = customSvg.closest('.workspace-panel') || document.getElementById(panelId);
+            else if (panelId === 'circuit-wrapper') panel = circuitSvg.closest('.workspace-panel') || document.getElementById(panelId);
+            else if (panelId === 'factory-wrapper') panel = factoryScrollArea.closest('.workspace-panel') || document.getElementById(panelId);
+            else panel = document.getElementById(panelId);
+            
+            if (!panel) return;
+
             const visiblePanels = document.querySelectorAll('.workspace-panel[style*="display: flex"], .workspace-panel:not([style*="display: none"])');
-            // Verhindert, dass man das absolut letzte sichtbare Fenster schließt
+																				  
             if (visiblePanels.length === 1 && panel.style.display !== 'none') return;
+            
+            if (currentLayout.startsWith('grid-') && panel.style.display !== 'none') {
+                document.getElementById('layout-selector').value = 'flex-row';
+                currentLayout = 'flex-row';
+                const wc = document.getElementById('workspace-container');
+                wc.classList.remove('layout-grid', 'grid-sim-bottom', 'grid-sim-top', 'grid-sim-right', 'grid-sim-left');
+                wc.style.flexDirection = 'row';
+            }
+            
             if (panel.style.display === 'none') {
                 panel.style.display = 'flex';
-                // Aus Version 1: Zeichnet Graphen und Anlage sauber im nächsten Frame
+																					   
                 requestAnimationFrame(() => {
                     if (panelId === 'fbs-wrapper' && currentGraph) drawGraph(currentGraph);
                     if (panelId === 'circuit-wrapper' && currentGraph) drawCircuitPlan(currentGraph, globalInputs, globalOutputs);
@@ -2088,22 +2127,26 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 });
             } else {
                 panel.style.display = 'none';
-                // Aus Version 1: Zerstört die SVG-Instanzen, um NaN-Bugs beim Hintergrund-Skalieren zu vermeiden
-                if (panelId === 'fbs-wrapper' && panZoomInstance) { 
-                    panZoomInstance.destroy(); panZoomInstance = null; 
-                }
-                if (panelId === 'circuit-wrapper' && panZoomCircuitInstance) { 
-                    panZoomCircuitInstance.destroy(); panZoomCircuitInstance = null; 
-                }
+																												  
+																	
+                if (panelId === 'fbs-wrapper' && panZoomInstance) { panZoomInstance.destroy(); panZoomInstance = null; }
+				 
+																			   
+                if (panelId === 'circuit-wrapper' && panZoomCircuitInstance) { panZoomCircuitInstance.destroy(); panZoomCircuitInstance = null; }
+				 
             }
-            // Aus Version 2: Nach jedem Klick den Platz wieder GERECHT auf alle SICHTBAREN aufteilen
-            document.querySelectorAll('.workspace-panel').forEach(p => {
-                if (p.style.display !== 'none') {
-                    p.style.flex = '1 1 0%';
-                }
-            });
-            // UI Buttons (grau/orange) aktualisieren, wenn ein Panel geschlossen wird
-            if (panel.style.display === 'none') updateWorkspace();
+            
+            if (!currentLayout.startsWith('grid-')) {
+                // Auch hier per direkter Node-Referenz
+                [customSvg.closest('.workspace-panel') || document.getElementById('fbs-wrapper'), 
+                 circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper'), 
+                 factoryScrollArea.closest('.workspace-panel') || document.getElementById('factory-wrapper')].forEach(p => {
+                    if (p && p.style.display !== 'none') p.style.flex = '1 1 0%';
+											
+				 
+                });
+            }
+            updateWorkspace();
         };
         // --- NEU: WORKSPACE PANEL MANAGEMENT ---
         let currentLayout = 'flex-row'; // Speichert das aktive Layout
@@ -2338,8 +2381,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 });
             });		
             // 4. Schaltplan (IEC) aktualisieren
-            if (document.getElementById('circuit-wrapper').style.display !== 'none') {
-                document.querySelectorAll('.circ-colored-group, .circ-wire').forEach(el => {
+            // 4. Schaltplan (IEC) aktualisieren
+            let pCirc = circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
+            if (pCirc && pCirc.style.display !== 'none') {
+                // FIX: circuitSvg statt document nutzen, da document nur im Hauptfenster sucht!
+                circuitSvg.querySelectorAll('.circ-colored-group, .circ-wire').forEach(el => {
                     let varClass = Array.from(el.classList).find(c => c.startsWith('circ-var-'));
                     if (!varClass) return;
                     let varName = varClass.replace('circ-var-', '');
@@ -3008,7 +3054,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
             });
             setTimeout(() => {
-                if (document.getElementById('circuit-wrapper').offsetWidth > 0) {
+                let pCirc = circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
+                if (pCirc && pCirc.offsetWidth > 0) {
                     panZoomCircuitInstance = svgPanZoom(circuitSvg, { zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true });
                     // Wenn der Befehl kam, setzen wir nach dem Generieren die Kamera wieder exakt auf die alten Werte!
                     if (keepView && oldZoom !== null && oldPan !== null) {
@@ -3038,10 +3085,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 globalOutputs = parsed.outputs;
                 currentGraph = parsed.graph; 
                 calculateLayout(parsed.graph);
-                if (document.getElementById('fbs-wrapper').style.display !== 'none') {
+                let pFbs = customSvg.closest('.workspace-panel') || document.getElementById('fbs-wrapper');
+                if (pFbs && pFbs.style.display !== 'none') {
                     drawGraph(parsed.graph);
                 }
-                if (document.getElementById('circuit-wrapper').style.display !== 'none') {
+                let pCirc = circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
+                if (pCirc && pCirc.style.display !== 'none') {
                     drawCircuitPlan(parsed.graph, globalInputs, globalOutputs);
                 }
                 runSimulationTick();
