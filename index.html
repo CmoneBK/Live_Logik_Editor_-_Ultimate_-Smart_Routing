@@ -322,7 +322,8 @@
         .range-ind { width: 15px; height: 10px; top: 15px; left: 20px; border-radius: 0 10px 10px 0; }
         .range-kap { width: 25px; height: 20px; top: 10px; left: 20px; border-radius: 0 10px 10px 0; }
         .range-opt { width: 80px; height: 10px; top: 15px; left: 20px; background: rgba(255,0,0,0.1); border-color: rgba(255,0,0,0.5); border-radius: 0 10px 10px 0; }
-        .range-mag { width: 30px; height: 30px; top: 5px; left: -5px; background: rgba(33,150,243,0.2); border-color: rgba(33,150,243,0.5); border-radius: 50%; } 
+        .range-mag { width: 30px; height: 30px; top: 5px; left: -5px; background: rgba(33,150,243,0.2); border-color: rgba(33,150,243,0.5); border-radius: 50%; }
+ 
         /* Zylinder skalierbar machen */
         .f2d-zylinder-wrapper { height: 30px; box-sizing: border-box; }
         .f2d-zylinder { position: absolute; width: 100%; height: 30px; background: rgba(144, 164, 174, 0.9); border: 2px solid #546e7a; border-radius: 4px; display: flex; align-items: center; z-index: 2; box-sizing: border-box; }
@@ -338,7 +339,23 @@
         /* NEU: HMI Bedienelemente & LEDs */
         .f2d-taster, .f2d-schalter, .f2d-nothalt { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; color: white; border: 3px solid #333; z-index: 20; cursor: pointer; box-shadow: 2px 2px 5px rgba(0,0,0,0.4); text-align: center; transition: all 0.1s;}
 		/* NEU: Rotations-Anfasser und Förderband-Fix */
-        .f2d-conveyor { overflow: visible !important; } /* Wichtig für den Rotations-Anfasser */
+        /* CSS Update für den Motor am Band */
+        .f2d-conveyor { overflow: visible !important; }
+        .f2d-motor-block {
+            position: absolute; left: -25px; top: 5px; width: 25px; height: 30px;
+            background: #455a64; border: 2px solid #263238; border-right: none;
+            border-radius: 4px 0 0 4px; z-index: -1;
+        }
+        .f2d-motor-shaft {
+            position: absolute; left: 5px; top: 8px; width: 14px; height: 14px;
+            background: #90a4ae; border-radius: 50%; border: 1px solid #263238;
+        }
+        .f2d-motor-shaft::after {
+            content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
+            background: #263238; transform: translateY(-50%);
+        }
+        .f2d-conveyor.active .f2d-motor-shaft { animation: f2d-spin 0.3s linear infinite; }
+        @keyframes f2d-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .f2d-belt-clip { position: absolute; width: 100%; height: 100%; left: 0; top: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
         .f2d-rotate-handle {
             position: absolute; left: 50%; top: -25px; width: 16px; height: 16px; margin-left: -8px;
@@ -738,11 +755,11 @@
                 <div id="factory-context-menu"></div>
                 <div id="factory-canvas-area">
                     <div id="factory-content"></div>
-                    <div class="factory-zoom-controls">
-                        <button onclick="factoryZoomIn()" title="Vergrößern">+</button>
-                        <button onclick="factoryZoomOut()" title="Verkleinern">−</button>
-                        <button onclick="factoryZoomReset()" title="Ansicht zurücksetzen" style="font-size: 12px;">🏠</button>
-                    </div>
+                </div>
+                <div class="factory-zoom-controls">
+                    <button onclick="factoryZoomIn()" title="Vergrößern">+</button>
+                    <button onclick="factoryZoomOut()" title="Verkleinern">−</button>
+                    <button onclick="factoryZoomReset()" title="Ansicht zurücksetzen" style="font-size: 12px;">🏠</button>
                 </div>
             </div>
         </div>
@@ -1291,8 +1308,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             // NEU: Wenn zwischen Öffner (NC) und Schließer (NO) gewechselt wird, 
             // invertieren wir das Signal sofort. Ein unbetätigter Schließer (FALSE) 
             // wird so automatisch zu einem unbetätigten Öffner (TRUE).
-            let wasNC = oldVal === 'nothalt' || oldVal === 'taster_nc' || oldVal === 'schalter_nc';
-            let isNC = val === 'nothalt' || val === 'taster_nc' || val === 'schalter_nc';
+            let wasNC = oldVal === 'nothalt' || oldVal === 'taster_nc' || oldVal === 'schalter_nc' || oldVal === 'light_curtain';
+            let isNC = val === 'nothalt' || val === 'taster_nc' || val === 'schalter_nc' || val === 'light_curtain';
             if (wasNC !== isNC && spsState.hasOwnProperty(id)) {
                 spsState[id] = !spsState[id];
             }
@@ -2207,7 +2224,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     componentTypes[name] = isNotHalt ? 'nothalt' : (isSchalter ? 'schalter' : 'taster');
                 }
                 let cType = componentTypes[name];
-                let isNCContact = cType === 'nothalt' || cType === 'taster_nc' || cType === 'schalter_nc';
+                let isNCContact = cType === 'nothalt' || cType === 'taster_nc' || cType === 'schalter_nc' || cType === 'light_curtain';
                 // NEU: Zustand übernehmen oder Initial-Zustand (NC = TRUE, NO = FALSE) setzen
                 if (oldState.hasOwnProperty(name)) {
                     spsState[name] = oldState[name];
@@ -2216,17 +2233,20 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
                 // Berechnen, ob das Bauteil aktuell physikalisch "betätigt" ist
                 let isActuated = isNCContact ? !spsState[name] : spsState[name];
-                let isSwitchUI = (cType === 'schalter' || cType === 'schalter_nc' || cType === 'nothalt' || cType.startsWith('sensor_'));
+                let isSwitchUI = (cType === 'schalter' || cType === 'schalter_nc' || cType === 'nothalt' || cType === 'key_switch' || cType === 'light_curtain' || cType.startsWith('sensor_'));
                 let selectHTML = `<select class="type-select" onchange="changeType('${name}', this.value)">
                     <option value="taster" ${cType==='taster'?'selected':''}>Taster (Schließer/NO)</option>
                     <option value="taster_nc" ${cType==='taster_nc'?'selected':''}>Taster (Öffner/NC)</option>
                     <option value="schalter" ${cType==='schalter'?'selected':''}>Schalter (Schließer/NO)</option>
                     <option value="schalter_nc" ${cType==='schalter_nc'?'selected':''}>Schalter (Öffner/NC)</option>
                     <option value="nothalt" ${cType==='nothalt'?'selected':''}>Not-Halt (Öffner/NC)</option>
+                    <option value="key_switch" ${cType==='key_switch'?'selected':''}>Schlüssel (NO)</option>
                     <option value="sensor_ind" ${cType==='sensor_ind'?'selected':''}>Sensor (Ind.)</option>
                     <option value="sensor_kap" ${cType==='sensor_kap'?'selected':''}>Sensor (Kap.)</option>
                     <option value="sensor_opt" ${cType==='sensor_opt'?'selected':''}>Sensor (Opt.)</option>
                     <option value="sensor_mag" ${cType==='sensor_mag'?'selected':''}>Sensor (Mag.)</option>
+                    <option value="mech_sensor" ${cType==='mech_sensor'?'selected':''}>Pos.-Schalter (Mech.)</option>
+                    <option value="light_curtain" ${cType==='light_curtain'?'selected':''}>Lichtgitter (NC)</option>
                 </select>`;
                 let controlHTML = isSwitchUI 
                     ? `<label class="switch"><input type="checkbox" id="sim_in_${name}" ${isActuated ? 'checked' : ''} onchange="toggleInput('${name}')"><span class="slider"></span></label>`
@@ -2253,7 +2273,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         let cType = componentTypes[name];
                         selectHTML = `<select class="type-select" onchange="changeType('${name}', this.value)">
                             <option value="led" ${cType==='led'?'selected':''}>LED (-P)</option>
-                            <option value="valve" ${cType==='valve'?'selected':''}>Magnetventil (-MB)</option>
+							<option value="valve" ${cType==='valve'?'selected':''}>Magnetventil (-MB)</option>
+							<option value="contactor" ${cType==='contactor'?'selected':''}>Schütz (-K)</option>
+							<option value="motor" ${cType==='motor'?'selected':''}>Motor (-M)</option>
+							<option value="siren" ${cType==='siren'?'selected':''}>Sirene (-H)</option>
                         </select>`;
                     }
                     simOutputsContainer.innerHTML += `<div class="led-row flex-col">
@@ -2279,7 +2302,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
 			if (isActionDown) SoundEngine.click();
             if (event && typeof event.preventDefault === 'function') event.preventDefault(); 
             let cType = componentTypes[varName] || 'taster';
-            let isNCContact = cType === 'nothalt' || cType === 'taster_nc' || cType === 'schalter_nc';
+            let isNCContact = cType === 'nothalt' || cType === 'taster_nc' || cType === 'schalter_nc' || cType === 'light_curtain';
             if (event && (event.ctrlKey || event.metaKey)) {
                 if (isActionDown) {
                     if (latchedTasters.has(varName)) {
@@ -2823,7 +2846,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         function drawCircuitPlan(graph, inputsList, outputsList, keepView = false) {
             let isFirstRun = !panZoomCircuitInstance;
             circuitContent.innerHTML = '';
-            let sfCount = 1, kfCount = 1, bgCount = 1, mbCount = 1, pCount = 1;
+            let sfCount = 1, kfCount = 1, bgCount = 1, mbCount = 1, pCount = 1, hCount = 1, mCount = 1, kCount = 1;
             let symMap = {};
             let contactTypeMap = {};
             let pathCounter = 1; 
@@ -2893,8 +2916,14 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         }
                         contactTypeMap[n.id] = srcType;
                     } else {
-                        // Ausgangs-Details ab Stufe 1 (E/A) anzeigen
-                        let prefix = (cType === 'valve') ? `-MB${mbCount++}` : `-P${pCount++}`;
+                        // Ausgangs-Details mit korrekten Norm-Präfixen
+                        let prefix = "";
+                        if (cType === 'valve') prefix = `-MB${mbCount++}`;
+                        else if (cType === 'siren') prefix = `-H${hCount++}`;
+                        else if (cType === 'motor') prefix = `-M${window.mCount++ || (window.mCount=1, window.mCount++)}`; // Motor
+                        else if (cType === 'contactor') prefix = `-K${window.kCount++ || (window.kCount=1, window.kCount++)}`; // Schütz
+                        else prefix = `-P${pCount++}`;
+                        
                         symMap[n.id] = prefix + (window.configDetails >= 1 ? ` (${n.label})` : '');
                         n.isRelay = false;
                         n.outType = cType;
@@ -2987,15 +3016,34 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
                 drawSmallText(g, x - 5, y - 10, pinTop, 'end');
                 drawSmallText(g, x - 5, y + 15, pinBot, 'end');
-                if (type === 'taster' || type === 'schalter' || type === 'nothalt') {
-                    // FIX: Mechanischer Drücker kommt immer von links. 
-                    // Die offene NO-Klinge liegt bei ca. x-5, die geschlossene NC-Klinge bei ca. x+3.
+                if (type === 'taster' || type === 'schalter' || type === 'nothalt' || type === 'mech_sensor' || type === 'key_switch' || type === 'light_curtain') {
                     let dashEndX = isNC ? x + 3 : x - 5; 
                     g.appendChild(createSvgElement('line', {x1: dashEndX, y1: y + 2.5, x2: x - 18, y2: y + 2.5, stroke: '#000', 'stroke-width': 1.5, 'stroke-dasharray': '2,2'}));
+                    
                     if (type === 'nothalt') {
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5}));
                         g.appendChild(createSvgElement('path', {d: `M ${x - 18} ${y - 2.5} A 5 5 0 0 0 ${x - 18} ${y + 7.5} Z`, fill: '#000'}));
                         g.appendChild(createSvgElement('path', {d: `M ${x - 12} ${y - 0.5} L ${x - 9} ${y + 2.5} L ${x - 12} ${y + 5.5}`, fill: 'none', stroke: '#000', 'stroke-width': 1.5}));
+                    } else if (type === 'mech_sensor') {
+                        g.appendChild(createSvgElement('circle', {cx: x - 21, cy: y + 2.5, r: 3, fill: 'none', stroke: '#000', 'stroke-width': 1.5}));
+                        g.appendChild(createSvgElement('line', {x1: x - 24, y1: y - 2.5, x2: x - 24, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5}));
+                    } else if (type === 'key_switch') {
+                        // NEU: IEC Schlüsselschalter (Normale Schalter-Raste + Schloss-Symbol auf der Linie)
+                        g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5})); 
+                        g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 14, y2: y - 2.5, stroke: '#000', 'stroke-width': 1.5})); 
+                        g.appendChild(createSvgElement('line', {x1: x - 18, y1: y + 7.5, x2: x - 14, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5})); 
+                        g.appendChild(createSvgElement('path', {d: `M ${x - 12} ${y - 0.5} L ${x - 9} ${y + 2.5} L ${x - 12} ${y + 5.5}`, fill: 'none', stroke: '#000', 'stroke-width': 1.5})); // V-Raste
+                        g.appendChild(createSvgElement('rect', {x: x - 20.5, y: y - 4, width: 5, height: 7, fill: '#fff', stroke: '#000', 'stroke-width': 1})); // Schloss-Kasten
+                        g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2, x2: x - 18, y2: y + 1, stroke: '#000', 'stroke-width': 1})); // Schlüsselloch
+                    } else if (type === 'light_curtain') {
+                        // NEU: IEC Symbol für Optoelektronische Schutzeinrichtung (Lichtgitter)
+                        g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5}));
+                        // Rechteck für den Sensor
+                        g.appendChild(createSvgElement('rect', {x: x - 24, y: y - 1.5, width: 6, height: 8, fill: 'none', stroke: '#000', 'stroke-width': 1}));
+                        // 3 parallele Laserstrahlen, die in den Sensor fallen
+                        g.appendChild(createSvgElement('line', {x1: x - 30, y1: y, x2: x - 25, y2: y, stroke: '#000', 'stroke-width': 1}));
+                        g.appendChild(createSvgElement('line', {x1: x - 30, y1: y + 2.5, x2: x - 25, y2: y + 2.5, stroke: '#000', 'stroke-width': 1}));
+                        g.appendChild(createSvgElement('line', {x1: x - 30, y1: y + 5, x2: x - 25, y2: y + 5, stroke: '#000', 'stroke-width': 1}));
                     } else {
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5})); 
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 14, y2: y - 2.5, stroke: '#000', 'stroke-width': 1.5})); 
@@ -3053,6 +3101,40 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 drawSmallText(g, x - 5, y + 24, 'X2', 'end');
                 circuitContent.appendChild(g);
 				return g; // <--- NEU: Diese Zeile einfügen
+            };
+			const drawSiren = (x, y, label, id, color) => {
+                let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
+                if (color) g.style.setProperty('--logic-color', color);
+                // Drähte
+                g.appendChild(createSvgElement('line', {x1: x, y1: y - 20, x2: x, y2: y - 10, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
+                g.appendChild(createSvgElement('line', {x1: x, y1: y + 10, x2: x, y2: y + 20, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
+                // IEC Hupe Symbol
+                let sirenPath = `M ${x-10} ${y-10} A 10 10 0 0 0 ${x-10} ${y+10} L ${x+10} ${y+15} L ${x+10} ${y-15} Z`;
+                g.appendChild(createSvgElement('path', {d: sirenPath, class: 'circ-component', fill: '#fff', stroke: '#000', 'stroke-width': 2}));
+                addLabelText(g, x + 20, y, label, true);
+                drawSmallText(g, x - 5, y - 12, 'X1', 'end');
+                drawSmallText(g, x - 5, y + 18, 'X2', 'end');
+                circuitContent.appendChild(g);
+                return g;
+            };
+			const drawMotor = (x, y, label, id, color) => {
+                let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
+                if (color) g.style.setProperty('--logic-color', color);
+                // Zuleitungen
+                g.appendChild(createSvgElement('line', {x1: x, y1: y - 20, x2: x, y2: y - 15, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
+                g.appendChild(createSvgElement('line', {x1: x, y1: y + 15, x2: x, y2: y + 20, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
+                // Motorkreis
+                let circle = createSvgElement('circle', {cx: x, cy: y, r: 15, class: 'circ-component', fill: '#fff', stroke: '#000', 'stroke-width': 2});
+                g.appendChild(circle);
+                // Das "M"
+                let txt = createSvgElement('text', {x: x, y: y + 5, 'font-size': '14px', 'font-weight': '900', 'text-anchor': 'middle', 'font-family': 'Arial'});
+                txt.textContent = 'M'; g.appendChild(txt);
+                
+                addLabelText(g, x + 25, y, label, true);
+                drawSmallText(g, x - 5, y - 18, 'U1', 'end');
+                drawSmallText(g, x - 5, y + 24, 'U2', 'end');
+                circuitContent.appendChild(g);
+                return g;
             };
 			// NEU: Helfer für das Stromfluss-Routing
             const setPower = (el, condStr) => {
@@ -3322,23 +3404,34 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
                 else if (node.type === 'OUTPUT') { 
                     let p = pathCounter++;
-                    let edge = inEdges[0]; // Kann undefined sein, wenn noch nichts zugewiesen wurde!
+                    let edge = inEdges[0]; 
                     let w1 = calcPinW(edge);
+                    
+                    // 1. Start-X für diesen Pfad festlegen
                     currX += (w1 > 90 ? (w1-90)/2 : 0);
                     drawText(currX, yTop - 25, p.toString(), true);
-                    let pCond = "false"; // Standardmäßig ist der Stromfluss FALSE
+                    
+                    let pCond = "false";
                     if (edge) {
-                        // Es gibt eine Verbindung, also zeichnen wir den Ast (oder Kontakt) ganz normal
                         pCond = drawInputPin(edge, currX, yTop, 430, p, "true");
                     } else {
-                        // Keine Verbindung! Wir zeichnen einfach eine tote Linie (ohne Variablen-Verknüpfung)
                         setPower(drawLine(currX, yTop, currX, 430, 2, node.id, col), "false"); 
                     }
+
+                    // 2. Das Bauteil zeichnen
                     if (node.isRelay) setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
                     else if (node.outType === 'valve') setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'valve', col, p), pCond);
+                    else if (node.outType === 'siren') setPower(drawSiren(currX, 450, symMap[node.id], node.id, col), pCond);
+                    else if (node.outType === 'motor') setPower(drawMotor(currX, 450, symMap[node.id], node.id, col), pCond);
+                    else if (node.outType === 'contactor') setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
                     else setPower(drawLED(currX, 450, symMap[node.id], node.id, col, p), pCond);
+
+                    // 3. Verbindung zur Masseschiene (M)
                     setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
-                    currX += (w1 > 90 ? (w1-90)/2 : 0) + 130;
+
+                    // 🌟 WICHTIG: Den X-Abstand zum NÄCHSTEN Bauteil festlegen
+                    // Wir rechnen hier den Platzbedarf des Bauteils ein
+                    currX += Math.max(130, w1 + 40); 
                 }
                 else if (['TON', 'TOF', 'TP'].includes(node.type)) { 
                     let p1 = pathCounter++;
@@ -3799,26 +3892,47 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 },
 				// NEU: Präzise Raycast-Kollision für den L-Schieber (Luft wird ignoriert!)
                 customSensorHit: function(targetObj, sensorObj, lx, ly, lw, lh) {
+                    // Schneller Pre-Check (Kreiskollision), spart 99% der Rechenleistung!
+                    let tCx = targetObj.x + targetObj.width/2;
+                    let tCy = targetObj.y + targetObj.height/2;
+                    let sCx = sensorObj.x + sensorObj.width/2;
+                    let sCy = sensorObj.y + (sensorObj.height||sensorObj.width)/2;
+                    let maxR = Math.max(targetObj.width, targetObj.height) + Math.max(sensorObj.width, (sensorObj.height||sensorObj.width));
+                    if (Math.hypot(tCx - sCx, tCy - sCy) > maxR) return false;
+
                     let sRad = (sensorObj.rotation || 0) * Math.PI / 180;
-                    let steps = sensorObj.type === 'sensor_opt' ? 5 : 2;
-                    for(let i=0; i<=steps; i++) {
-                        let stepX = lx + (lw/steps)*i; 
-                        let stepY = ly + lh/2;
-                        let distX = stepX - sensorObj.width/2;
-                        let distY = stepY - (sensorObj.height||sensorObj.width)/2;
-                        let px = sensorObj.x + sensorObj.width/2 + distX * Math.cos(sRad) - distY * Math.sin(sRad);
-                        let py = sensorObj.y + (sensorObj.height||sensorObj.width)/2 + distX * Math.sin(sRad) + distY * Math.cos(sRad);
-                        let tRad = (targetObj.rotation || 0) * Math.PI / 180;
-                        let dx = px - (targetObj.x + targetObj.width/2);
-                        let dy = py - (targetObj.y + targetObj.height/2);
-                        let localX = dx * Math.cos(tRad) + dy * Math.sin(tRad);
-                        let localY = -dx * Math.sin(tRad) + dy * Math.cos(tRad);
-                        let tk = targetObj.thickness || 20;
-                        let halfW = targetObj.width/2; let halfH = targetObj.height/2;
-                        // Prüft exakt nur den vertikalen und den horizontalen Schenkel des "L"
-                        let inVert = (localX >= -halfW) && (localX <= -halfW + tk) && (localY >= -halfH) && (localY <= halfH);
-                        let inHoriz = (localX >= -halfW) && (localX <= halfW) && (localY >= halfH - tk) && (localY <= halfH);
-                        if(inVert || inHoriz) return true;
+                    
+                    // 🌟 DER FIX: High-Density Abtastung! 
+                    // Das Gitter skaliert dynamisch mit, sodass die Lücken maximal 5 Pixel groß sind!
+                    let stepsX = Math.max(1, Math.ceil(lw / 5));
+                    let stepsY = Math.max(1, Math.ceil(lh / 5)); 
+
+                    let tk = targetObj.thickness || 20;
+                    let halfW = targetObj.width/2; 
+                    let halfH = targetObj.height/2;
+
+                    for (let x=0; x<=stepsX; x++) {
+                        let stepX = lx + (lw/stepsX)*x; 
+                        for (let y=0; y<=stepsY; y++) {
+                            let stepY = ly + (lh/stepsY)*y;
+                            
+                            let distX = stepX - sensorObj.width/2;
+                            let distY = stepY - (sensorObj.height||sensorObj.width)/2;
+                            let px = sCx + distX * Math.cos(sRad) - distY * Math.sin(sRad);
+                            let py = sCy + distX * Math.sin(sRad) + distY * Math.cos(sRad);
+                            
+                            let tRad = (targetObj.rotation || 0) * Math.PI / 180;
+                            let dx = px - tCx;
+                            let dy = py - tCy;
+                            
+                            let localX = dx * Math.cos(tRad) + dy * Math.sin(tRad);
+                            let localY = -dx * Math.sin(tRad) + dy * Math.cos(tRad);
+                            
+                            let inVert = (localX >= -halfW) && (localX <= -halfW + tk) && (localY >= -halfH) && (localY <= halfH);
+                            let inHoriz = (localX >= -halfW) && (localX <= halfW) && (localY >= halfH - tk) && (localY <= halfH);
+                            
+                            if(inVert || inHoriz) return true;
+                        }
                     }
                     return false;
                 }
@@ -3841,6 +3955,45 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 physics: function(obj, item) {
                     let ocx = obj.x + obj.width / 2, ocy = obj.y + obj.height / 2;
                     resolveOBBCollision(item, ocx, ocy, obj.width / 2, obj.height / 2, obj.rotation, 'wall', false);
+                },
+				// NEU: Exakte Hitbox für den Stempel (Viereck) statt schwammigem Kreis
+                customSensorHit: function(targetObj, sensorObj, lx, ly, lw, lh) {
+                    let tCx = targetObj.x + targetObj.width/2;
+                    let tCy = targetObj.y + targetObj.height/2;
+                    let sCx = sensorObj.x + sensorObj.width/2;
+                    let sCy = sensorObj.y + (sensorObj.height||sensorObj.width)/2;
+                    let maxR = Math.max(targetObj.width, targetObj.height) + Math.max(sensorObj.width, (sensorObj.height||sensorObj.width));
+                    if (Math.hypot(tCx - sCx, tCy - sCy) > maxR) return false;
+
+                    let sRad = (sensorObj.rotation || 0) * Math.PI / 180;
+                    
+                    let stepsX = Math.max(1, Math.ceil(lw / 5));
+                    let stepsY = Math.max(1, Math.ceil(lh / 5)); 
+
+                    let halfW = targetObj.width/2; 
+                    let halfH = targetObj.height/2;
+
+                    for (let x=0; x<=stepsX; x++) {
+                        let stepX = lx + (lw/stepsX)*x; 
+                        for (let y=0; y<=stepsY; y++) {
+                            let stepY = ly + (lh/stepsY)*y;
+                            
+                            let distX = stepX - sensorObj.width/2;
+                            let distY = stepY - (sensorObj.height||sensorObj.width)/2;
+                            let px = sCx + distX * Math.cos(sRad) - distY * Math.sin(sRad);
+                            let py = sCy + distX * Math.sin(sRad) + distY * Math.cos(sRad);
+                            
+                            let tRad = (targetObj.rotation || 0) * Math.PI / 180;
+                            let dx = px - tCx;
+                            let dy = py - tCy;
+                            
+                            let localX = dx * Math.cos(tRad) + dy * Math.sin(tRad);
+                            let localY = -dx * Math.sin(tRad) + dy * Math.cos(tRad);
+                            
+                            if(localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH) return true;
+                        }
+                    }
+                    return false;
                 },
                 // 🌟 NEU: Das Plugin bringt seinen eigenen, mathematisch erzeugten Sound mit!
                 playSound: function(obj, engine) {
@@ -3954,8 +4107,276 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 // Die reguläre Trigger-Funktion leeren wir. 
                 // So wird auch das Standard-Pneumatik-Zischen der Engine elegant unterdrückt.
                 playSound: function(obj, engine) { }
+            },
+			'mech_sensor': {
+                meta: { name: 'Mech. Positionsschalter', icon: '⚙️', desc: 'Rollenhebelschalter (Kollision am Hebel)' },
+                modalConfig: { t: 'Mechanischer Schalter:', l1: 'SPS Eingangsvariable', out: false },
+                menuTarget: '#menu-sensoren',
+                menuHtml: `<div onclick="addFactoryDevice('mech_sensor')">⚙️ Mechanisch (Rolle)</div>`,
+                css: `
+                    .f2d-mech-sensor { width: 20px; height: 30px; background: #757575; border: 2px solid #424242; border-radius: 2px; display: flex; align-items: flex-end; justify-content: center; font-size: 8px; font-weight: bold; color: white; z-index: 10; }
+                    .f2d-mech-lever { position: absolute; top: -12px; left: 8px; width: 4px; height: 14px; background: #bdbdbd; border: 1px solid #424242; transform-origin: bottom center; transition: transform 0.2s ease-out; box-sizing: border-box; }
+                    .f2d-mech-roller { position: absolute; top: -16px; left: 6px; width: 8px; height: 8px; background: #eceff1; border: 1px solid #000; border-radius: 50%; transition: transform 0.2s ease-out; box-sizing: border-box; }
+                    .f2d-mech-sensor.active .f2d-mech-lever { transform: rotate(35deg); transition: transform 0.05s ease-in; }
+                    .f2d-mech-sensor.active .f2d-mech-roller { transform: translate(7px, 3px) rotate(35deg); transition: transform 0.05s ease-in; }
+                `,
+                build: function(obj, el, var1) {
+                    obj.linkedVar = var1; obj.width = 20; obj.height = 30; 
+                    el.className = 'f2d-obj f2d-mech-sensor';
+                    el.innerHTML = `<div class="f2d-mech-lever"></div><div class="f2d-mech-roller"></div><span style="padding-bottom: 2px;">MEC</span>`;
+                    let label = document.createElement('div'); label.className = 'f2d-label'; label.textContent = var1; el.appendChild(label);
+                    let rotator = document.createElement('div'); rotator.className = 'f2d-rotate-handle'; el.appendChild(rotator);
+                },
+                animate: function(obj, spsState) {
+                    let isTriggered = false;
+                    
+                    // Hitbox um den Schalter (Groß genug für seitliches Streifen)
+                    let hX = -10, hY = -20, hW = 40, hH = 60;
+
+                    // 1. Werkstücke
+                    factoryItems.forEach(item => {
+                        if (isBlockInLocalRect(item, obj, hX, hY, hW, hH)) isTriggered = true;
+                    });
+                    
+                    // 2. Zylinderkolben (Das gesamte ausgefahrene Rohr abtasten!)
+                    factoryObjects.forEach(cyl => {
+                        if (cyl.type && cyl.type.startsWith('zylinder')) {
+                            let extPixels = (cyl.extension / 100) * cyl.width;
+                            if (extPixels > 2) { // Nur wenn er aus dem Gehäuse schaut
+                                let cRad = (cyl.rotation || 0) * Math.PI / 180;
+                                
+                                // Wir tasten die gesamte ausgefahrene Stange in 10px-Schritten ab
+                                let steps = Math.ceil(extPixels / 10);
+                                for (let i = 0; i <= steps; i++) {
+                                    // Startet am Rand des Gehäuses (cyl.width/2) und geht bis zur Spitze
+                                    let dist = (cyl.width / 2) + (i / steps) * extPixels;
+                                    let ptX = cyl.x + cyl.width/2 + dist * Math.cos(cRad);
+                                    let ptY = cyl.y + 15 + dist * Math.sin(cRad);
+                                    
+                                    // Simuliere einen kleinen Punkt auf der Stange
+                                    let dummyPt = { x: ptX - 5, y: ptY - 5, width: 10, height: 10, isMetallic: true };
+                                    if (isBlockInLocalRect(dummyPt, obj, hX, hY, hW, hH)) {
+                                        isTriggered = true;
+                                        break; // Ein Treffer reicht, Hebel ist gedrückt!
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 3. Anbauteile (Schieber, Stempel)
+                        if (cyl.type === 'pusher' || cyl.type === 'press') {
+                            let cItem = { x: cyl.x, y: cyl.y, width: cyl.width, height: cyl.height, isMetallic: true };
+                            if (isBlockInLocalRect(cItem, obj, hX, hY, hW, hH)) isTriggered = true;
+                        }
+                    });
+                    
+                    // Logik synchronisieren
+                    if (spsState[obj.linkedVar] !== isTriggered) { 
+                        spsState[obj.linkedVar] = isTriggered; 
+                    }
+                    
+                    // Visueller Latch (Lässt den Hebel nicht stottern, wenn er hart getroffen wird)
+                    if (isTriggered) {
+                        obj.visualDwell = 15; 
+                        obj.el.classList.add('active'); 
+                    } else {
+                        if (obj.visualDwell > 0) {
+                            obj.visualDwell--;
+                        } else {
+                            obj.el.classList.remove('active');
+                        }
+                    }
+                }
+            },
+			'key_switch': {
+                meta: { name: 'Schlüsselschalter', icon: '🔑', desc: 'Rastender Schalter mit Schlüssel (Override)' },
+                modalConfig: { t: 'Schlüsselschalter (Eingang):', l1: 'SPS Eingangsvariable', out: false },
+                menuTarget: '#menu-bedienpult',
+                menuHtml: `<div onclick="addFactoryDevice('key_switch')">🔑 Schlüsselschalter</div>`,
+                css: `
+                    .f2d-key-switch { width: 40px; height: 40px; border-radius: 50%; background: #e0e0e0; border: 3px solid #757575; position: relative; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.4); }
+                    .f2d-key-cylinder { width: 24px; height: 24px; border-radius: 50%; background: #212121; position: relative; display: flex; justify-content: center; align-items: center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 0 4px #000; }
+                    .f2d-key { position: absolute; width: 4px; height: 18px; background: #cfd8dc; top: -8px; border-radius: 2px; box-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+                    .f2d-key::before { content: ''; position: absolute; top: -10px; left: -6px; width: 16px; height: 12px; border: 3px solid #cfd8dc; border-radius: 8px 8px 0 0; box-sizing: border-box; }
+                    .f2d-key-switch.active .f2d-key-cylinder { transform: rotate(90deg); }
+                `,
+                build: function(obj, el, var1) {
+                    obj.linkedVar = var1; obj.width = 40; obj.height = 40; 
+                    el.className = 'f2d-obj f2d-key-switch';
+                    el.innerHTML = `<div class="f2d-key-cylinder"><div class="f2d-key"></div></div><div class="f2d-label" style="top:-18px;">${var1.length > 5 ? var1.substring(0,4)+'..' : var1}</div>`;
+                },
+                // Die reine Logik wird über 'makeDraggable' (Klick) verarbeitet, 
+                // das Plugin kümmert sich hier nur um die Darstellung des 90°-Dreh-Schlüssels!
+                animate: function(obj, spsState) {
+                    let isActuated = !!spsState[obj.linkedVar];
+                    if (isActuated) obj.el.classList.add('active');
+                    else obj.el.classList.remove('active');
+                }
+            },
+			'light_curtain': {
+                meta: { name: 'Sicherheits-Lichtgitter', icon: '🚨', desc: 'Schützt einen ganzen Bereich (Fail-Safe NC)' },
+                modalConfig: { t: 'Lichtgitter (Sicherheit):', l1: 'SPS Eingangsvariable', out: false },
+                menuTarget: '#menu-sensoren',
+                menuHtml: `<div onclick="addFactoryDevice('light_curtain')">🚨 Sicherheits-Lichtgitter</div>`,
+                hasHeight: true, // Zwingend nötig für das freie 2D-Skalieren!
+                css: `
+                    .f2d-light-curtain {
+                        position: absolute;
+                        box-sizing: border-box;
+                        border-left: 8px solid #212121; /* Sender-Säule */
+                        border-right: 8px solid #212121; /* Empfänger-Säule */
+                        background: repeating-linear-gradient(180deg, transparent, transparent 10px, rgba(255, 0, 0, 0.3) 10px, rgba(255, 0, 0, 0.3) 12px);
+                        z-index: 5;
+                        transition: background 0.1s, border-color 0.1s;
+                        display: flex; justify-content: center; align-items: center;
+                    }
+                    /* Alarm-Flackern beim Durchbrechen */
+                    .f2d-light-curtain.broken {
+                        background: rgba(255, 0, 0, 0.6); 
+                        border-left-color: #ff1744;
+                        border-right-color: #ff1744;
+                        box-shadow: inset 0 0 15px rgba(255,0,0,0.8), 0 0 15px rgba(255,0,0,0.8);
+                    }
+                `,
+                build: function(obj, el, var1) {
+                    obj.linkedVar = var1; obj.width = 100; obj.height = 60;
+                    el.className = 'f2d-obj f2d-light-curtain';
+                    el.style.width = obj.width + 'px'; el.style.height = obj.height + 'px';
+                    let label = document.createElement('div'); label.className = 'f2d-label'; label.style.top = '-20px'; label.textContent = var1; el.appendChild(label);
+                    let resizer = document.createElement('div'); resizer.className = 'f2d-resize-handle-xy'; obj.resizerEl = resizer; el.appendChild(resizer);
+                    let rotator = document.createElement('div'); rotator.className = 'f2d-rotate-handle'; el.appendChild(rotator);
+                    obj.useCollision = false; // Licht ist physisch durchlässig!
+                },
+                animate: function(obj, spsState) {
+                    let isBroken = false;
+                    let lx = 0, ly = 0, lw = obj.width, lh = obj.height;
+                    
+                    // 1. Test auf Werkstücke
+                    factoryItems.forEach(item => {
+                        if (isBlockInLocalRect(item, obj, lx, ly, lw, lh)) isBroken = true;
+                    });
+                    
+                    // 2. Test auf Zylinder und Anbauteile
+                    factoryObjects.forEach(cyl => {
+                        if (cyl.type && cyl.type.startsWith('zylinder')) {
+                            let extPixels = (cyl.extension / 100) * cyl.width;
+                            let cRad = (cyl.rotation || 0) * Math.PI / 180;
+                            let tipX = cyl.x + cyl.width/2 + (cyl.width/2 + extPixels) * Math.cos(cRad);
+                            let tipY = cyl.y + 15 + (cyl.width/2 + extPixels) * Math.sin(cRad);
+                            let tipItem = { x: tipX - 5, y: tipY - 5, width: 10, height: 10, isMetallic: true };
+                            if (isBlockInLocalRect(tipItem, obj, lx, ly, lw, lh)) isBroken = true;
+                        }
+                        if (cyl.type === 'pusher' || cyl.type === 'press') {
+                            // 🌟 DER FIX: Wir zwingen das Lichtgitter, die präzisen Hitboxen der Bauteile zu nutzen!
+                            if (ComponentRegistry[cyl.type] && ComponentRegistry[cyl.type].customSensorHit) {
+                                if (ComponentRegistry[cyl.type].customSensorHit(cyl, obj, lx, ly, lw, lh)) {
+                                    isBroken = true;
+                                }
+                            } else {
+                                let cItem = { x: cyl.x, y: cyl.y, width: cyl.width, height: cyl.height, isMetallic: true };
+                                if (isBlockInLocalRect(cItem, obj, lx, ly, lw, lh)) isBroken = true;
+                            }
+                        }
+                    });
+
+                    // DIE FAIL-SAFE LOGIK
+                    let isClear = !isBroken;
+                    if (spsState[obj.linkedVar] !== isClear) spsState[obj.linkedVar] = isClear;
+
+                    if (isBroken) obj.el.classList.add('broken');
+                    else obj.el.classList.remove('broken');
+                }
+            },
+			'siren': {
+                meta: { name: 'Sirene / Hupe', icon: '📢', desc: 'Akustischer Alarm (Wackelt und tönt bei Aktivierung)' },
+                modalConfig: { t: 'Sirene (Ausgang) zuweisen:', l1: 'SPS Ausgangsvariable', out: true },
+                menuTarget: '#menu-aktoren',
+                menuHtml: `<div onclick="addFactoryDevice('siren')">📢 Sirene / Hupe</div>`,
+                css: `
+                    .f2d-siren { position: absolute; width: 40px; height: 40px; z-index: 5; display: flex; align-items: center; justify-content: center; }
+                    .f2d-siren-base { width: 12px; height: 20px; background: #424242; border-radius: 2px; position: relative; z-index: 2; }
+                    .f2d-siren-horn { 
+                        width: 0; height: 0; 
+                        border-top: 15px solid transparent; 
+                        border-bottom: 15px solid transparent; 
+                        border-right: 25px solid #757575; 
+                        position: absolute; left: 10px;
+                        transition: transform 0.05s;
+                    }
+                    /* Schallwellen-Animation */
+                    .f2d-siren-wave {
+                        position: absolute; left: 35px; width: 10px; height: 10px;
+                        border: 2px solid rgba(255, 0, 0, 0.7); border-radius: 50%;
+                        opacity: 0; pointer-events: none;
+                    }
+                    .f2d-siren.active .f2d-siren-horn { animation: f2d-shake 0.1s infinite; }
+                    .f2d-siren.active .f2d-siren-wave { animation: f2d-ping 1s infinite; }
+                    @keyframes f2d-shake { 0% { transform: translateY(0); } 50% { transform: translateY(-2px); } 100% { transform: translateY(0); } }
+                    @keyframes f2d-ping {
+                        0% { transform: scale(1); opacity: 1; }
+                        100% { transform: scale(4); opacity: 0; }
+                    }
+                `,
+                build: function(obj, el, var1) {
+                    obj.linkedVar = var1; obj.width = 40; obj.height = 40;
+                    el.className = 'f2d-obj f2d-siren';
+                    el.innerHTML = `
+                        <div class="f2d-siren-base"></div>
+                        <div class="f2d-siren-horn"></div>
+                        <div class="f2d-siren-wave"></div>
+                        <div class="f2d-siren-wave" style="animation-delay: 0.5s"></div>
+                    `;
+                    let label = document.createElement('div'); label.className = 'f2d-label'; label.textContent = `Hupe (${var1})`; el.appendChild(label);
+                    let rotator = document.createElement('div'); rotator.className = 'f2d-rotate-handle'; el.appendChild(rotator);
+                    obj.useCollision = false;
+                },
+                animate: function(obj, spsState) {
+                    let isActive = !!spsState[obj.linkedVar];
+                    if (isActive !== obj.isActive) {
+                        obj.isActive = isActive;
+                        obj.el.classList.toggle('active', isActive);
+                        
+                        // SOUND LOGIK: Wir starten einen oszillierenden Sirenenton
+                        if (isActive && (window.soundMode === 2 || window.soundMode === 3) && SoundEngine.ctx) {
+                            let ctx = SoundEngine.ctx;
+                            let osc = ctx.createOscillator();
+                            let gain = ctx.createGain();
+                            osc.type = 'square'; // Aggressiver Industrie-Sound
+                            
+                            // Die Frequenz schwingt zwischen 400Hz und 600Hz hin und her
+                            osc.frequency.setValueAtTime(400, ctx.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.2);
+                            osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.4);
+                            
+                            // Loop der Frequenz-Modulation
+                            let mod = ctx.createOscillator();
+                            mod.frequency.value = 5; // 5Hz Schwingung (Sirene)
+                            let modGain = ctx.createGain();
+                            modGain.gain.value = 100;
+                            mod.connect(modGain);
+                            modGain.connect(osc.frequency);
+                            mod.start();
+
+                            gain.gain.value = 0.1;
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start();
+                            
+                            obj.audioNodes = { osc, mod, gain };
+                        } else if (!isActive && obj.audioNodes) {
+                            // Sanftes Ausblenden gegen Knacken
+                            let nodes = obj.audioNodes;
+                            nodes.gain.gain.exponentialRampToValueAtTime(0.001, SoundEngine.ctx.currentTime + 0.1);
+                            setTimeout(() => {
+                                nodes.osc.stop(); nodes.mod.stop();
+                                nodes.osc.disconnect(); nodes.mod.disconnect(); nodes.gain.disconnect();
+                            }, 150);
+                            obj.audioNodes = null;
+                        }
+                    }
+                }
             }
-        };
+        }; //Ende von Component Registry 
         window.toggleGlobalViewMode = function() {
             const btn = document.getElementById('btn-viewmode');
             if (globalViewMode === 'side') {
@@ -4028,8 +4449,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 let groupMatch = document.createElement('optgroup'); groupMatch.label = "Passende Komponenten";
                 let groupOther = document.createElement('optgroup'); groupOther.label = "Andere Variablen";
                 const validMatches = {
-                    'led': ['led'], 'taster': ['taster', 'taster_nc'], 'schalter': ['schalter', 'schalter_nc'],
-                    'nothalt': ['nothalt'], 'zylinder_single': ['valve'], 'zylinder_double': ['valve'], 'conveyor': ['valve']
+                    'conveyor': ['motor', 'contactor', 'valve'],'led': ['led'], 'taster': ['taster', 'taster_nc'], 'schalter': ['schalter', 'schalter_nc'],
+                    'nothalt': ['nothalt'], 'zylinder_single': ['valve'], 'zylinder_double': ['valve'], 'conveyor': ['valve'],
+                    'mech_sensor': ['mech_sensor'], 'key_switch': ['key_switch', 'schalter'],
+                    'light_curtain': ['light_curtain'],
+                    'siren': ['siren', 'led'] // Hupe passt zu Siren oder LED Variablen
                 };
                 list.forEach(v => {
                     // FIX: Die Regex hier wurde an deine neuen SR/RS Glieder angepasst, 
@@ -4138,7 +4562,15 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 housing.appendChild(magnet); el.appendChild(rod); el.appendChild(housing); el.appendChild(resizer); el.appendChild(valve);
                 let label = document.createElement('div'); label.className = 'f2d-label'; label.textContent = `Zyl (${var1})`; el.appendChild(label);
             } else if (type === 'conveyor') {
-                obj.linkedVar = var1; obj.width = 200; obj.height = 40; obj.beltOffset = 0; el.className = 'f2d-obj f2d-conveyor'; el.style.width = obj.width + 'px';
+                obj.linkedVar = var1; obj.width = 200; obj.height = 40; obj.beltOffset = 0; 
+                el.className = 'f2d-obj f2d-conveyor'; el.style.width = obj.width + 'px';
+                el.innerHTML = `
+                    <div class="f2d-motor-block"><div class="f2d-motor-shaft"></div></div>
+                    <div class="f2d-belt-clip"><div class="f2d-conveyor-belt"></div></div>
+                    <div class="f2d-resize-handle"></div>
+                    <div class="f2d-label">Band (${var1})</div>
+                `;
+                obj.beltEl = el.querySelector('.f2d-conveyor-belt');
                 let clip = document.createElement('div'); clip.className = 'f2d-belt-clip';
                 let belt = document.createElement('div'); belt.className = 'f2d-conveyor-belt'; obj.beltEl = belt;
                 clip.appendChild(belt); el.appendChild(clip);
@@ -4203,7 +4635,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             el.addEventListener('mousedown', (e) => {
                 if (e.button !== 0) return; 
                 // 1. Klicks im Simulationsmodus (Taster/Schalter)
-                if (isSimulationActive && (dataObj.type === 'taster' || dataObj.type === 'schalter' || dataObj.type === 'nothalt')) {
+                // 1. Klicks im Simulationsmodus (Taster/Schalter)
+                if (isSimulationActive && (dataObj.type === 'taster' || dataObj.type === 'schalter' || dataObj.type === 'nothalt' || dataObj.type === 'key_switch')) {
                     e.stopPropagation(); 
                     let varName = dataObj.linkedVar; 
                     let domBox = document.getElementById(`sim_in_${varName}`);
@@ -4384,7 +4817,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     };
                     wrapper.appendChild(sel); ctxMenu.appendChild(wrapper);
                 };
-                let isInput = ['taster', 'schalter', 'nothalt', 'sensor_ind', 'sensor_kap', 'sensor_opt', 'sensor_mag'].includes(obj.type);
+                let isInput = ['taster', 'schalter', 'nothalt', 'sensor_ind', 'sensor_kap', 'sensor_opt', 'sensor_mag', 'mech_sensor', 'key_switch', 'light_curtain'].includes(obj.type);
                 let isOutput = ['led', 'conveyor', 'zylinder_single', 'zylinder_double', 'turntable', 'stacklight', 'spawner_metall', 'spawner_kunststoff'].includes(obj.type);
                 if (isInput) addVarSelect('Variable (Eingang)', obj.linkedVar, 'in', 'linkedVar');
                 if (isOutput) {
@@ -4686,7 +5119,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (obj.type.startsWith('spawner_')) {
                         let isActive = obj.linkedVar ? !!spsState[obj.linkedVar] : true;
                         if (isActive) {
-                            // FIX: Die Zeit muss hochgezählt werden!
+																	  
                             obj.timeAccum = (obj.timeAccum || 0) + deltaMs;
                             if (obj.timeAccum >= obj.interval * 1000) { 
                                 obj.timeAccum -= obj.interval * 1000; 
@@ -4704,7 +5137,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                 });
                 factoryObjects.forEach(obj => {
-                    // 1. Plugin-Animationen
+                    // 1. Plugin-Animationen (Hier feuert der Mechanische Schalter!)
                     if (ComponentRegistry[obj.type] && ComponentRegistry[obj.type].animate) {
                         ComponentRegistry[obj.type].animate(obj, spsState);
                     }
@@ -4719,12 +5152,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 });
                 // Schleife für alle Aktoren (Zylinder und Förderbänder)
                 factoryObjects.forEach(obj => {
-                    // --- ZYLINDER LOGIK ---
+											 
                     if (obj.type.startsWith('zylinder')) {
-                        // FIX: Dynamische Geschwindigkeit (Standard ist 10, falls noch nichts eingestellt wurde)
+																												 
                         let baseSpeed = obj.speed !== undefined ? obj.speed : 10;
                         let zylSpeed = baseSpeed * window.simSpeed; 
-                        let oldExtension = obj.extension || 0; // Alte Position merken
+                        let oldExtension = obj.extension || 0; 
                         if (obj.type === 'zylinder_single') {
                             if (spsState[obj.linkedVarExt]) obj.extension += zylSpeed; else obj.extension -= zylSpeed;
                         } else {
@@ -4744,7 +5177,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         let mdx = magPos - (obj.width / 2); let mdy = -2;
                         obj.magnetX = obj.x + (obj.width / 2) + mdx * Math.cos(rad) - mdy * Math.sin(rad);
                         obj.magnetY = obj.y + 15 + mdx * Math.sin(rad) + mdy * Math.cos(rad);
-                        // Montierte Bauteile am Kolben synchron mitverschieben
+																			   
                         let deltaExt = obj.extension - oldExtension;
                         if (deltaExt !== 0 && obj.children) {
                             let movePixels = (deltaExt / 100) * obj.width;
@@ -4757,7 +5190,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             });
                         }
                     }
-                    // --- FÖRDERBAND LOGIK (Wiederhergestellt) ---
+																	
                     if (obj.type === 'conveyor') {
                         obj.isRunning = !!spsState[obj.linkedVar];
                         if (obj.isRunning) {
@@ -4785,12 +5218,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (item.useCollision !== false) {
                         factoryObjects.forEach(obj => {
                             if (obj.useCollision === false) return; 
-                            // Plugin-Physik ansteuern
+													  
                             if (ComponentRegistry[obj.type] && ComponentRegistry[obj.type].physics) {
                                 let rad = (obj.rotation || 0) * Math.PI / 180;
                                 ComponentRegistry[obj.type].physics(obj, item, obj.isActive, rad);
                             }
-                            // Alte Förderband-Physik
+													  
                             else if (obj.type === 'conveyor') {
                                 if (item.activeMode === 'side') {
                                     let ocx = obj.x + obj.width / 2, ocy = obj.y + obj.height / 2;
@@ -4822,7 +5255,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                     if (item.y > 2000) item.el.remove(); 
                 });
-				// --- NEU: Item vs Item Kollision ---
+										  
                 for (let i = 0; i < factoryItems.length; i++) {
                     let itA = factoryItems[i];
                     if (!itA.isSolid) continue;
@@ -4834,19 +5267,19 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         let dy = (itA.y + r) - (itB.y + r);
                         let distSq = dx*dx + dy*dy;
                         let minDistSq = (r * 2) * (r * 2); 
-                        // Wenn sie sich überlappen...
+													   
                         if (distSq < minDistSq && distSq > 0) {
                             let dist = Math.sqrt(distSq);
                             let overlap = (r * 2) - dist;
                             let nx = dx / dist; let ny = dy / dist;
-                            // 1. Auseinanderdrücken (sofortige Struktur-Korrektur!)
+																					 
                             itA.x += nx * overlap / 2; itA.y += ny * overlap / 2;
                             itB.x -= nx * overlap / 2; itB.y -= ny * overlap / 2;
-                            // 2. Abprallen (Elastischer Stoß)
+															   
                             let rvx = itA.vx - itB.vx; let rvy = itA.vy - itB.vy;
                             let velAlongNormal = rvx * nx + rvy * ny;
                             if (velAlongNormal < 0) {
-                                let bounce = -(1 + 0.2) * velAlongNormal / 2; // 0.2 = Bounciness
+                                let bounce = -(1 + 0.2) * velAlongNormal / 2; 
                                 itA.vx += bounce * nx; itA.vy += bounce * ny;
                                 itB.vx -= bounce * nx; itB.vy -= bounce * ny;
                             }
@@ -4855,7 +5288,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
                 factoryItems.forEach(item => updateObjTransform(item));
                 factoryObjects.forEach(obj => {
-                    if (obj.type.startsWith('sensor_')) {
+                    // 🌟 HIER IST DER FIX: Die alte Sensor-Logik ignoriert den mechanischen Schalter rigoros!
+                    if (obj.type.startsWith('sensor_') && obj.type !== 'sensor_mech') {
                         let isTriggered = false;
                         let lx=0, ly=0, lw=0, lh=0;
                         if(obj.type==='sensor_ind'){ lx=20; ly=15; lw=15; lh=10; }
@@ -4869,9 +5303,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                 if (obj.type === 'sensor_kap') isTriggered = true; 
                             }
                         });
-                        // NEU: Sensoren erkennen jetzt auch Anlagen-Bauteile extrem präzise (Raycast!)
+																										
                         if (!isTriggered && obj.type !== 'sensor_mag') {
-                            // Raycast vorbereiten: Wir testen 5 Punkte auf dem Laser-Strahl (Optisch) oder 2 (Induktiv/Kapazitiv)
+																																  
                             let sRad = (obj.rotation || 0) * Math.PI / 180;
                             let steps = obj.type === 'sensor_opt' ? 5 : 2;
                             let testPoints = [];
@@ -4886,15 +5320,15 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                 });
                             }
                             factoryObjects.forEach(targetObj => {
-                                // Sich selbst, Zonen, Spawner und Despawner ignorieren
+																					   
                                 if (targetObj === obj || targetObj.type.startsWith('zone_') || targetObj.type === 'despawner' || targetObj.type.startsWith('spawner_') || targetObj.type === 'led') return;
-                                // 1. Wenn das Zielobjekt eine spezielle Sensor-Logik (wie Schieber oder Schutztür) hat:
+																														 
                                 if (ComponentRegistry[targetObj.type] && ComponentRegistry[targetObj.type].customSensorHit) {
                                     if (ComponentRegistry[targetObj.type].customSensorHit(targetObj, obj, lx, ly, lw, lh)) {
                                         isTriggered = true;
                                     }
                                 } else {
-                                    // 2. Standard-Logik: Präziser OBB-Check (Oriented Bounding Box) mit Raycast!
+																												  
                                     let tRad = (targetObj.rotation || 0) * Math.PI / 180;
                                     let halfW = targetObj.width / 2;
                                     let halfH = (targetObj.height || targetObj.width) / 2;
@@ -4922,13 +5356,13 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                 }
                             });
                         }
-                        // FIX 3A: Hier wird der manuelle Tick-Aufruf (runSimulationTick) entfernt!
+																								   
                         if (spsState[obj.linkedVar] !== isTriggered) { spsState[obj.linkedVar] = isTriggered; }
                         obj.el.style.borderColor = isTriggered ? '#fff' : ''; obj.el.style.boxShadow = isTriggered ? '0 0 10px yellow' : '2px 2px 5px rgba(0,0,0,0.3)';
                     }
                 });
-                // FIX 3B: ECHTER ZYKLISCHER SPS-DURCHLAUF!
-                // Die SPS rechnet nun permanent 60 Mal pro Sekunde, auch wenn sich kein Sensor ändert.
+														   
+																										
                 runSimulationTick();
             }
             requestAnimationFrame(factoryLoop);
