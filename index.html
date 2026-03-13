@@ -5836,7 +5836,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 version: "1.0",
                 code: textarea.value,
                 types: componentTypes,
-                factory: getFactoryStateObj()
+                factory: getFactoryStateObj(),
+                plugins: activePlugins // 🌟 NEU: Aktueller Plugin-Status
             };
             let jsonString = JSON.stringify(saveData);
             textArea.value = JSON.stringify(saveData, null, 2);
@@ -5934,6 +5935,18 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 if (data.types !== undefined) componentTypes = data.types;
                 // Speichert sofort in den LocalStorage
                 localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
+                
+                // 🌟 NEU: Plugin-Konfiguration laden und Menüs updaten
+                if (data.plugins !== undefined) {
+                    activePlugins = { ...activePlugins, ...data.plugins }; // Mergen (schützt neue Plugins)
+                    localStorage.setItem('valisPlugins', JSON.stringify(activePlugins));
+                    Object.keys(ComponentRegistry).forEach(k => {
+                        let menuEl = document.getElementById('plugin-menu-' + k);
+                        if (menuEl) menuEl.style.display = activePlugins[k] ? 'block' : 'none';
+                    });
+                    updateMenuVisibility(); // Trennstriche und leere Menüs aufräumen
+                }
+                
                 saveToStorage();
                 // Update Logik & UI
                 spsState = {};
@@ -5972,6 +5985,18 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (data.code !== undefined) textarea.value = data.code;
                     if (data.types !== undefined) componentTypes = data.types;
                     localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
+                    
+                    // 🌟 NEU: Plugin-Konfiguration aus dem Link laden
+                    if (data.plugins !== undefined) {
+                        activePlugins = { ...activePlugins, ...data.plugins };
+                        localStorage.setItem('valisPlugins', JSON.stringify(activePlugins));
+                        Object.keys(ComponentRegistry).forEach(k => {
+                            let menuEl = document.getElementById('plugin-menu-' + k);
+                            if (menuEl) menuEl.style.display = activePlugins[k] ? 'block' : 'none';
+                        });
+                        updateMenuVisibility();
+                    }
+                    
                     saveToStorage();
                     spsState = {};
                     updateHighlighting(); 
