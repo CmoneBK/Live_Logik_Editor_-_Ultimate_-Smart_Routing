@@ -1,6 +1,118 @@
 🌍 *Read this in other languages: [English](#english-version) | [Deutsch](#deutsche-version)*
 
 ---
+# <a id="deutsche-version"></a>Virtueller Automatisierungs-, Logik- & Industrie-Simulator (VALIS) ⚡
+
+🚀 **[Live Demo / Im Browser testen](https://cmonebk.github.io/Virtual-Automation-Logic-and-Industrial-Simulator-VALIS/)**
+
+Eine leistungsstarke, browserbasierte Logik-IDE, Schaltplangenerator und 2D-Physik-Anlagensimulator. Dieses Tool wandelt textbasierte Boolesche Ausdrücke automatisch in interaktive Funktionsbausteinpläne (FBP/FBS) und IEC-Stromlaufpläne um und koppelt sie mit einer Live-2D-Simulations-Sandbox.
+
+<p align="center">
+  <a href="https://cmonebk.github.io/Virtual-Automation-Logic-and-Industrial-Simulator-VALIS/" target="_blank">
+    <img src="/VALIS3.png" alt="Startbildschirm" width="600">
+  </a>
+</p>
+
+## ✨ Funktionen
+
+
+
+### 🧠 Logik-Engine & Code-Editor
+* **Native RS- & SR-Flip-Flop Unterstützung:** Der Compiler erkennt Variablen mit `S`, `R` und `Q` (gefolgt von einer Zahl) automatisch und fasst sie in speziellen Speicherbausteinen zusammen. Über die Suffixe `_RS` und `_SR` können Sie explizit zwischen rücksetzdominanten und setzdominanten Gliedern wählen.
+* **Syntax-Hervorhebung:** Benutzerdefiniertes Highlighting für Operatoren, Zuweisungen und RS-Glieder.
+* **Pulse-Catch / Afterglow:** Extrem kurze Logik-Impulse (die für das menschliche Auge zu schnell wären) erzeugen in den Plänen einen atmosphärischen "Nachleucht"-Effekt (Fade-Out), sodass kein Signal unbemerkt bleibt.
+
+### 📐 Smart Auto-Routing (3 Ansichten)
+1. **Logikplan (FBS):** Sofortige Generierung von knotenbasierten Logikgattern mit intelligenter, überlappungsfreier Kabelführung.
+2. **Schaltplan (IEC):** Automatische Erstellung von klassischen Stromlaufplänen (Relais, Kontakte, Ventile, Meldeleuchten). Passt sich dynamisch an Öffner (NC) und Schließer (NO) an.
+3. **SVG-Export:** Laden Sie die Pläne als saubere `.svg`-Dateien herunter.
+
+### 🎛️ Interaktiver Visueller Editor (Two-Way Binding)
+* **Klicken & Bearbeiten:** Per Rechtsklick auf Bausteine im Logikplan (FBS) können Sie direkt in die Logik eingreifen. Variablen umbenennen, Gatter-Typen tauschen (UND <-> ODER), Timer-Zeiten ändern oder Knoten löschen.
+* **Smart Reverse-Parsing:** Jede visuelle Änderung wird in Millisekunden in den Quellcode links zurückgeschrieben. Abgeklemmte Variablen gehen nicht verloren, sondern werden sicher im Limbus (`INPUT`) geparkt.
+
+### 🏭 2D Anlagen-Physiksimulator (Digitaler Zwilling)
+* **Hintergrund-Simulation:** Die Physikengine läuft nahtlos im Hintergrund weiter. Löst ein Sensor in der 2D-Fabrik aus, schaltet das Logikgatter und zieht den IEC-Schütz an – alles synchron in Echtzeit.
+* **Kinematik & Anbauteile:** Montieren Sie Objekte (wie Schieber, Schutztüren oder Sensoren) per Rechtsklick an Zylinderkolben. Fährt der Zylinder aus, bewegen sich alle montierten Bauteile physikalisch korrekt mit.
+* **Physik & Kollision:** Echte Mathematik-Engine. Werkstücke fallen auf Förderbänder, werden transportiert und kollidieren mit Wänden, L-Schiebern und Pressen.
+* **Erweiterte Sensorik:**
+* * `Induktiv`: Erkennt nur metallische Objekte (Metallblöcke, Riffelblech, Alu-Rahmen von Türen).
+  * `Kapazitiv` / `Optisch`: Erkennt alle physischen Objekte.
+  * `Magnetisch (Reed)`: Lässt sich an Zylinder anheften, um die Endlagen des internen Magneten abzufragen.
+* **Sandbox-Steuerung:** Multi-Select (Auswahlrahmen), Kopieren/Einfügen (Strg+C / Strg+V), Drehen, Skalieren und Löschen von Bauteilen.
+* **Web Audio API Synthesizer:** Prozedurale Sound-Engine (0 Bytes!). Hören Sie das mechanische Klackern von Relais, das Zischen von Pneumatik-Zylindern und das Klicken von Tastern passend zum physikalischen Zustand.
+* **Plugin-Architektur:** Erweitern Sie die Anlage über den Plugin-Manager mit Sonderbauteilen (Signalsäulen, 7-Segment-Anzeigen, Drehtischen oder Pressstempeln).
+* **Erweiterte Physik:** Werkstücke besitzen nun elastische Hitboxen und prallen realistisch voneinander ab.
+
+### 📊 Logik-Analysator (Oszilloskop)
+* **Echtzeit-Signalverfolgung:** Öffnen Sie das Oszilloskop, um Signalflanken (High/Low) aller Ein- und Ausgänge wie bei einem EKG präzise über die Zeit aufzuzeichnen und auszuwerten.
+
+### 🖥️ Multi-Panel IDE Workspace & Tools
+* **Dynamisches Layout:** Öffnen Sie bis zu 3 Ansichten gleichzeitig (Logik, Schaltplan, 2D Anlage). Verschieben Sie die Zwischenräume (Splitter) stufenlos oder wechseln Sie zwischen flexibler Anordnung und festen Profi-Rastern.
+* **Auto-Save & Projektdateien:** Der Editor speichert kontinuierlich im `localStorage`. Projekte (inkl. Code, Bauteilzuweisungen und der kompletten 2D-Matrix) können als `.valisave`-Datei exportiert/importiert oder als Raw-JSON kopiert werden. Alte Speicherstände sind aufwärtskompatibel.
+* **Multi-Monitor Support (Pop-Outs):** Koppeln Sie beliebige Fenster (Logik, Schaltplan, Anlage oder Oszilloskop) als eigenständige Browser-Fenster ab, um auf mehreren Bildschirmen zu arbeiten. Alles bleibt in Echtzeit synchronisiert.
+* **Deep Links & QR Codes:** Teilen Sie Ihre komplette Anlage inkl. Code als einfachen Link. Die integrierte LZString-Komprimierung erzeugt winzige URLs und scanbare QR-Codes direkt im Tool.
+* **KI-Prompt Generator:** Ein integrierter Assistent, der maßgeschneiderte Prompts für ChatGPT/Claude/Gemini erstellt, um textuelle Aufgabenstellungen sofort in VALIS-kompatiblen Code übersetzen zu lassen.
+
+## 🚀 Schnellstart
+
+Da es sich um eine reine HTML/JS/CSS-Anwendung handelt, sind keine Build-Schritte erforderlich.
+
+1. Klonen oder laden Sie das Repository herunter.
+2. Öffnen Sie die Datei `index.html` in einem beliebigen modernen Webbrowser oder [testen Sie die Live Demo](https://cmonebk.github.io/Virtual-Automation-Logic-and-Industrial-Simulator-VALIS/).
+3. Beginnen Sie, Ihre Logik einzutippen, oder klicken Sie auf **"Beispiele..."**, um eine voll funktionsfähige Sortieranlage zu laden.
+
+## 📖 Syntax & Logik-Regeln
+
+Der Editor verwendet eine einfache Syntax im Pseudocode-Stil, um Logikgatter und Zuweisungen zu definieren.
+
+### Operatoren
+* **`:=`** : Zuweisung (Aliase: `=`, `<-`, `IST`)
+* **`&&`** : UND-Gatter (Aliase: `&`, `∧`, `AND`)
+* **`||`** : ODER-Gatter (Aliase: `|`, `∨`, `OR`)
+* **`¬`** : NICHT / Invertierung (Aliase: `!`, `NOT`)
+* **`()`** : Klammern für Ausführungsreihenfolge
+
+### Spezielle Variablen (RS- & SR-Flip-Flops)
+Wenn Sie Ihre Variablen mit `S`, `R` und `Q` gefolgt von einer Zahl (z.B. `1`) benennen, gruppiert die Engine diese automatisch in einen **Flip-Flop-Baustein**. Über Suffixe bestimmen Sie das Dominanz-Verhalten:
+* **RS (Rücksetz-dominant, Standard):** `S1` / `S1_RS` und `R1` / `R1_RS` erzeugen ein RS-Glied mit dem Ausgang `Q1` / `Q1_RS`. Liegen beide Signale an, gewinnt das Rücksetzen (Industrieller Sicherheitsstandard).
+* **SR (Setz-dominant):** `S1_SR` und `R1_SR` erzeugen ein SR-Glied mit dem Ausgang `Q1_SR`. Liegen beide Signale an, gewinnt das Setzen.
+
+### Zeit- und Zählglieder (Timers & Counters)
+Die Engine unterstützt industrielle Standard-Funktionen out-of-the-box:
+* **`TON(Signal, Sekunden)`**: Einschaltverzögert. Schaltet den Ausgang erst ein, wenn das Signal für die angegebene Zeit anliegt.
+* **`TOF(Signal, Sekunden)`**: Ausschaltverzögert. Hält den Ausgang nach Abfall des Signals noch für die angegebene Zeit aktiv.
+* **`TP(Signal, Sekunden)`**: Impuls. Ein kurzer Trigger erzeugt ein Signal mit exakt der angegebenen Dauer.
+* **`CTU(Zähl_Signal, Reset, Limit)`**: Vorwärtszähler. Zählt bei positiver Flanke hoch. Der Ausgang schaltet, sobald das Limit erreicht ist.
+
+*Beispiel:* `WARN_LED := TON(FEHLER_SENSOR, 2.5)`
+
+### Beispielcode
+
+```text
+// Rücksetz-dominantes Flip-Flop (Standard)
+S1 := START_BTN
+R1 := STOP_BTN || EMERGENCY_STOP
+
+// Setz-dominantes Flip-Flop
+S2_SR := ZWANGS_START
+R2_SR := ZEITABLAUF
+
+SYSTEM_AKTIV := Q1 && Q2_SR
+```
+
+## 🎮 UI-Konfiguration & Steuerung
+
+1. Schreiben Sie Ihre Logik im Editor.
+2. Das UI füllt die Panels **Eingänge** und **Ausgänge** automatisch ab.
+3. Nutzen Sie die **Dropdown-Menüs** neben den Variablen, um physische Hardware zuzuweisen:
+   * **Eingänge:** Taster (NO/NC), rastende Schalter (NO/NC), Not-Halt oder diverse Sensoren.
+   * **Ausgänge:** LEDs, Magnetventile, Hilfsrelais.
+   *(Tipp: Ein Wechsel zwischen Öffner (NC) und Schließer (NO) invertiert automatisch den Ruhezustand der Hardware in den Plänen und der Simulation!)*
+4. Drücken Sie **"Simulation starten"** und bedienen Sie die Schalter im Panel oder interagieren Sie mit der 2D-Anlage.
+
+---
+---
 
 # <a id="english-version"></a>Virtual Automation, Logic & Industrial Simulator (VALIS) ⚡
 
@@ -115,118 +227,7 @@ SYSTEM_ACTIVE := Q1 && Q2_SR
 * Custom OBB Kinematics Physics Engine
 * [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom) (v3.6.1) for canvas manipulation.
 
----
----
 
-# <a id="deutsche-version"></a>Virtueller Automatisierungs-, Logik- & Industrie-Simulator (VALIS) ⚡
-
-🚀 **[Live Demo / Im Browser testen](https://cmonebk.github.io/Virtual-Automation-Logic-and-Industrial-Simulator-VALIS/)**
-
-Eine leistungsstarke, browserbasierte Logik-IDE, Schaltplangenerator und 2D-Physik-Anlagensimulator. Dieses Tool wandelt textbasierte Boolesche Ausdrücke automatisch in interaktive Funktionsbausteinpläne (FBP/FBS) und IEC-Stromlaufpläne um und koppelt sie mit einer Live-2D-Simulations-Sandbox.
-
-<p align="center">
-  <a href="https://cmonebk.github.io/Virtual-Automation-Logic-and-Industrial-Simulator-VALIS/" target="_blank">
-    <img src="/VALIS3.png" alt="Startbildschirm" width="600">
-  </a>
-</p>
-
-## ✨ Funktionen
-
-
-
-### 🧠 Logik-Engine & Code-Editor
-* **Native RS- & SR-Flip-Flop Unterstützung:** Der Compiler erkennt Variablen mit `S`, `R` und `Q` (gefolgt von einer Zahl) automatisch und fasst sie in speziellen Speicherbausteinen zusammen. Über die Suffixe `_RS` und `_SR` können Sie explizit zwischen rücksetzdominanten und setzdominanten Gliedern wählen.
-* **Syntax-Hervorhebung:** Benutzerdefiniertes Highlighting für Operatoren, Zuweisungen und RS-Glieder.
-* **Pulse-Catch / Afterglow:** Extrem kurze Logik-Impulse (die für das menschliche Auge zu schnell wären) erzeugen in den Plänen einen atmosphärischen "Nachleucht"-Effekt (Fade-Out), sodass kein Signal unbemerkt bleibt.
-
-### 📐 Smart Auto-Routing (3 Ansichten)
-1. **Logikplan (FBS):** Sofortige Generierung von knotenbasierten Logikgattern mit intelligenter, überlappungsfreier Kabelführung.
-2. **Schaltplan (IEC):** Automatische Erstellung von klassischen Stromlaufplänen (Relais, Kontakte, Ventile, Meldeleuchten). Passt sich dynamisch an Öffner (NC) und Schließer (NO) an.
-3. **SVG-Export:** Laden Sie die Pläne als saubere `.svg`-Dateien herunter.
-
-### 🎛️ Interaktiver Visueller Editor (Two-Way Binding)
-* **Klicken & Bearbeiten:** Per Rechtsklick auf Bausteine im Logikplan (FBS) können Sie direkt in die Logik eingreifen. Variablen umbenennen, Gatter-Typen tauschen (UND <-> ODER), Timer-Zeiten ändern oder Knoten löschen.
-* **Smart Reverse-Parsing:** Jede visuelle Änderung wird in Millisekunden in den Quellcode links zurückgeschrieben. Abgeklemmte Variablen gehen nicht verloren, sondern werden sicher im Limbus (`INPUT`) geparkt.
-
-### 🏭 2D Anlagen-Physiksimulator (Digitaler Zwilling)
-* **Hintergrund-Simulation:** Die Physikengine läuft nahtlos im Hintergrund weiter. Löst ein Sensor in der 2D-Fabrik aus, schaltet das Logikgatter und zieht den IEC-Schütz an – alles synchron in Echtzeit.
-* **Kinematik & Anbauteile:** Montieren Sie Objekte (wie Schieber, Schutztüren oder Sensoren) per Rechtsklick an Zylinderkolben. Fährt der Zylinder aus, bewegen sich alle montierten Bauteile physikalisch korrekt mit.
-* **Physik & Kollision:** Echte Mathematik-Engine. Werkstücke fallen auf Förderbänder, werden transportiert und kollidieren mit Wänden, L-Schiebern und Pressen.
-* **Erweiterte Sensorik:**
-* * `Induktiv`: Erkennt nur metallische Objekte (Metallblöcke, Riffelblech, Alu-Rahmen von Türen).
-  * `Kapazitiv` / `Optisch`: Erkennt alle physischen Objekte.
-  * `Magnetisch (Reed)`: Lässt sich an Zylinder anheften, um die Endlagen des internen Magneten abzufragen.
-* **Sandbox-Steuerung:** Multi-Select (Auswahlrahmen), Kopieren/Einfügen (Strg+C / Strg+V), Drehen, Skalieren und Löschen von Bauteilen.
-* **Web Audio API Synthesizer:** Prozedurale Sound-Engine (0 Bytes!). Hören Sie das mechanische Klackern von Relais, das Zischen von Pneumatik-Zylindern und das Klicken von Tastern passend zum physikalischen Zustand.
-* **Plugin-Architektur:** Erweitern Sie die Anlage über den Plugin-Manager mit Sonderbauteilen (Signalsäulen, 7-Segment-Anzeigen, Drehtischen oder Pressstempeln).
-* **Erweiterte Physik:** Werkstücke besitzen nun elastische Hitboxen und prallen realistisch voneinander ab.
-
-### 📊 Logik-Analysator (Oszilloskop)
-* **Echtzeit-Signalverfolgung:** Öffnen Sie das Oszilloskop, um Signalflanken (High/Low) aller Ein- und Ausgänge wie bei einem EKG präzise über die Zeit aufzuzeichnen und auszuwerten.
-
-### 🖥️ Multi-Panel IDE Workspace & Tools
-* **Dynamisches Layout:** Öffnen Sie bis zu 3 Ansichten gleichzeitig (Logik, Schaltplan, 2D Anlage). Verschieben Sie die Zwischenräume (Splitter) stufenlos oder wechseln Sie zwischen flexibler Anordnung und festen Profi-Rastern.
-* **Auto-Save & Projektdateien:** Der Editor speichert kontinuierlich im `localStorage`. Projekte (inkl. Code, Bauteilzuweisungen und der kompletten 2D-Matrix) können als `.valisave`-Datei exportiert/importiert oder als Raw-JSON kopiert werden. Alte Speicherstände sind aufwärtskompatibel.
-* **Multi-Monitor Support (Pop-Outs):** Koppeln Sie beliebige Fenster (Logik, Schaltplan, Anlage oder Oszilloskop) als eigenständige Browser-Fenster ab, um auf mehreren Bildschirmen zu arbeiten. Alles bleibt in Echtzeit synchronisiert.
-* **Deep Links & QR Codes:** Teilen Sie Ihre komplette Anlage inkl. Code als einfachen Link. Die integrierte LZString-Komprimierung erzeugt winzige URLs und scanbare QR-Codes direkt im Tool.
-* **KI-Prompt Generator:** Ein integrierter Assistent, der maßgeschneiderte Prompts für ChatGPT/Claude/Gemini erstellt, um textuelle Aufgabenstellungen sofort in VALIS-kompatiblen Code übersetzen zu lassen.
-
-## 🚀 Schnellstart
-
-Da es sich um eine reine HTML/JS/CSS-Anwendung handelt, sind keine Build-Schritte erforderlich.
-
-1. Klonen oder laden Sie das Repository herunter.
-2. Öffnen Sie die Datei `index.html` in einem beliebigen modernen Webbrowser oder [testen Sie die Live Demo](https://cmonebk.github.io/Virtual-Automation-Logic-and-Industrial-Simulator-VALIS/).
-3. Beginnen Sie, Ihre Logik einzutippen, oder klicken Sie auf **"Beispiele..."**, um eine voll funktionsfähige Sortieranlage zu laden.
-
-## 📖 Syntax & Logik-Regeln
-
-Der Editor verwendet eine einfache Syntax im Pseudocode-Stil, um Logikgatter und Zuweisungen zu definieren.
-
-### Operatoren
-* **`:=`** : Zuweisung (Aliase: `=`, `<-`, `IST`)
-* **`&&`** : UND-Gatter (Aliase: `&`, `∧`, `AND`)
-* **`||`** : ODER-Gatter (Aliase: `|`, `∨`, `OR`)
-* **`¬`** : NICHT / Invertierung (Aliase: `!`, `NOT`)
-* **`()`** : Klammern für Ausführungsreihenfolge
-
-### Spezielle Variablen (RS- & SR-Flip-Flops)
-Wenn Sie Ihre Variablen mit `S`, `R` und `Q` gefolgt von einer Zahl (z.B. `1`) benennen, gruppiert die Engine diese automatisch in einen **Flip-Flop-Baustein**. Über Suffixe bestimmen Sie das Dominanz-Verhalten:
-* **RS (Rücksetz-dominant, Standard):** `S1` / `S1_RS` und `R1` / `R1_RS` erzeugen ein RS-Glied mit dem Ausgang `Q1` / `Q1_RS`. Liegen beide Signale an, gewinnt das Rücksetzen (Industrieller Sicherheitsstandard).
-* **SR (Setz-dominant):** `S1_SR` und `R1_SR` erzeugen ein SR-Glied mit dem Ausgang `Q1_SR`. Liegen beide Signale an, gewinnt das Setzen.
-
-### Zeit- und Zählglieder (Timers & Counters)
-Die Engine unterstützt industrielle Standard-Funktionen out-of-the-box:
-* **`TON(Signal, Sekunden)`**: Einschaltverzögert. Schaltet den Ausgang erst ein, wenn das Signal für die angegebene Zeit anliegt.
-* **`TOF(Signal, Sekunden)`**: Ausschaltverzögert. Hält den Ausgang nach Abfall des Signals noch für die angegebene Zeit aktiv.
-* **`TP(Signal, Sekunden)`**: Impuls. Ein kurzer Trigger erzeugt ein Signal mit exakt der angegebenen Dauer.
-* **`CTU(Zähl_Signal, Reset, Limit)`**: Vorwärtszähler. Zählt bei positiver Flanke hoch. Der Ausgang schaltet, sobald das Limit erreicht ist.
-
-*Beispiel:* `WARN_LED := TON(FEHLER_SENSOR, 2.5)`
-
-### Beispielcode
-
-```text
-// Rücksetz-dominantes Flip-Flop (Standard)
-S1 := START_BTN
-R1 := STOP_BTN || EMERGENCY_STOP
-
-// Setz-dominantes Flip-Flop
-S2_SR := ZWANGS_START
-R2_SR := ZEITABLAUF
-
-SYSTEM_AKTIV := Q1 && Q2_SR
-```
-
-## 🎮 UI-Konfiguration & Steuerung
-
-1. Schreiben Sie Ihre Logik im Editor.
-2. Das UI füllt die Panels **Eingänge** und **Ausgänge** automatisch ab.
-3. Nutzen Sie die **Dropdown-Menüs** neben den Variablen, um physische Hardware zuzuweisen:
-   * **Eingänge:** Taster (NO/NC), rastende Schalter (NO/NC), Not-Halt oder diverse Sensoren.
-   * **Ausgänge:** LEDs, Magnetventile, Hilfsrelais.
-   *(Tipp: Ein Wechsel zwischen Öffner (NC) und Schließer (NO) invertiert automatisch den Ruhezustand der Hardware in den Plänen und der Simulation!)*
-4. Drücken Sie **"Simulation starten"** und bedienen Sie die Schalter im Panel oder interagieren Sie mit der 2D-Anlage.
 
 ## 🛠️ Erstellt mit
 * **HTML5 / CSS3 / Vanilla JavaScript**
