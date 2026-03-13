@@ -1050,11 +1050,23 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             code: `// --- 1. HAUPTSCHALTER (RS-Glied) ---\nS1 := START && FREIGABE\nR1 := ¬STOP || Q2_SR\nSYS_ON := Q1\n\n// --- 2. NOT-HALT SPEICHER (SR-Glied) ---\nS2_SR := ¬NOTHALT\nR2_SR := RESET\nALARM := Q2_SR\n\n// --- 3. MATERIALFLUSS & ZÄHLER ---\nBAND := SYS_ON && ¬STAMP_PULSE && ¬BOX_FULL\nBOX_FULL := CTU(S_ENDE, RESET, 5)\n\n// --- 4. BEARBEITUNG (TP & TOF) ---\nSTAMP_REQ := S_MITTE && SYS_ON\nSTAMP_PULSE := TP(STAMP_REQ, 1.5)\nSTEMPEL := STAMP_PULSE\nLUEFTER := TOF(STAMP_PULSE, 3.0)\n\n// --- 5. ABTRANSPORT (TON) ---\nEJECT_READY := TON(S_ENDE, 1.0)\nAUSWERFER := EJECT_READY && SYS_ON`,
             types: {
                 "START": "taster", "STOP": "taster_nc", "NOTHALT": "nothalt", "RESET": "taster",
+									
+									 
+								  
                 "S_MITTE": "sensor_ind", "S_ENDE": "sensor_opt", "SYS_ON": "relais",
+									   
+								   
+									  
                 "ALARM": "siren", "BOX_FULL": "relais", "LUEFTER": "motor",
                 "BAND": "motor", "STEMPEL": "valve", "AUSWERFER": "valve",
+								   
+											 
+											   
+							   
+								  
                 "Q1": "relais", "Q2_SR": "relais", "STAMP_REQ": "relais",
                 "STAMP_PULSE": "relais", "EJECT_READY": "relais", "FREIGABE": "key_switch"
+									   
             },
             factory: {
                 globalViewMode: "side",
@@ -2914,6 +2926,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         else if (cType === 'contactor') prefix = `-K${window.kCount++ || (window.kCount=1, window.kCount++)}`; // Schütz
                         else prefix = `-P${pCount++}`;
                         
+	  
                         symMap[n.id] = prefix + (window.configDetails >= 1 ? ` (${n.label})` : '');
                         n.isRelay = false;
                         n.outType = cType;
@@ -3128,6 +3141,33 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 circuitContent.appendChild(g);
                 return g;
             };
+																																					  
+																															   
+			  
+				
+				
+			 
+	   
+	 
+			  
+					   
+					
+		 
+																																  
+																																  
+		
+																																  
+		   
+		
+																																		
+				
+	
+			  
+				
+				
+			 
+	   
+	 
 			// NEU: Helfer für das Stromfluss-Routing
             const setPower = (el, condStr) => {
                 if (el) el._checkPower = new Function('state', `return !!(${condStr || 'true'});`);
@@ -3402,6 +3442,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     // 1. Start-X für diesen Pfad festlegen
                     currX += (w1 > 90 ? (w1-90)/2 : 0);
                     drawText(currX, yTop - 25, p.toString(), true);
+																					
                     
                     let pCond = "false";
                     if (edge) {
@@ -3895,6 +3936,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (Math.hypot(tCx - sCx, tCy - sCy) > maxR) return false;
 
                     let sRad = (sensorObj.rotation || 0) * Math.PI / 180;
+																		
+												 
                     
                     // 🌟 DER FIX: High-Density Abtastung! 
                     // Das Gitter skaliert dynamisch mit, sodass die Lücken maximal 5 Pixel groß sind!
@@ -3906,6 +3949,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     let halfH = targetObj.height/2;
 
                     for (let x=0; x<=stepsX; x++) {
+				
+			   
+			   
+
+			   
                         let stepX = lx + (lw/stepsX)*x; 
                         for (let y=0; y<=stepsY; y++) {
                             let stepY = ly + (lh/stepsY)*y;
@@ -3930,6 +3978,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             if(inVert || inHoriz) return true;
                         }
                     }
+	  
                     return false;
                 }
             },
@@ -3991,6 +4040,32 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                     return false;
                 },
+
+			   
+			   
+
+			   
+			  
+				
+				 
+	   
+				  
+					   
+						 
+						 
+	   
+					 
+			 
+			 
+	   
+					   
+					 
+	   
+																																								  
+	   
+	  
+		 
+	  
                 // 🌟 NEU: Das Plugin bringt seinen eigenen, mathematisch erzeugten Sound mit!
                 playSound: function(obj, engine) {
                     if (!engine.ctx) return;
@@ -4371,8 +4446,246 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         }
                     }
                 }
+	 
+					  
+			   
+					
+					 
+						
+					  
+		
+						  
+				   
+				  
+							
+					   
+						
+					 
+		 
+					   
+																																						  
+						 
+				 
+						
             }
         }; //Ende von Component Registry 
+		
+	   
+	  
+			   
+				   
+																																								  
+						   
+	   
+		
+	 
+		   
+				   
+				  
+	  
+	 
+						  
+		   
+			 
+			  
+	   
+			  
+			 
+		
+				 
+	   
+	  
+	 
+	 
+	  
+																																						  
+						   
+			  
+						  
+	   
+																																																															  
+																																																																							
+																																					  
+																													  
+						
+	  
+			
+					 
+			   
+																																																													  
+	  
+					   
+						  
+			  
+				  
+				   
+				 
+	 
+	 
+	  
+																																								   
+						  
+			
+							
+					
+	   
+		  
+			 
+			  
+					 
+					
+																																		
+		   
+					
+					 
+	  
+				
+			  
+				
+			   
+			 
+						 
+	  
+	  
+			
+					 
+				  
+						 
+																																				
+																																		
+																																										   
+					 
+	  
+			  
+		   
+				  
+	 
+			 
+			  
+						 
+		
+	 
+				
+			   
+					
+					 
+					 
+						  
+						  
+		  
+						  
+	   
+				   
+																																					  
+							
+						   
+			 
+		 
+		 
+																																								   
+						 
+		
+	   
+		
+
+			
+		   
+						  
+
+				 
+				 
+	 
+	 
+	
+																																								  
+						  
+		   
+						 
+	   
+																																	   
+																														   
+		   
+			
+			   
+				  
+				
+				
+			 
+	  
+			
+		  
+					  
+					   
+			   
+	  
+						
+						
+																															   
+		   
+				  
+				 
+	  
+	  
+			
+					
+				
+		 
+				
+				
+				
+					  
+	   
+																																	   
+																																										   
+			
+	  
+			  
+				
+			 
+			
+				 
+	  
+					   
+							
+			   
+				
+			  
+					  
+	   
+					   
+					  
+						   
+						   
+	   
+				 
+				
+					  
+				 
+			  
+			 
+				 
+		  
+
+			  
+			 
+				
+		  
+	   
+				
+				 
+				  
+				
+							   
+			 
+				   
+						  
+		 
+			  
+	   
+	  
+	 
+	
+		   
         window.toggleGlobalViewMode = function() {
             const btn = document.getElementById('btn-viewmode');
             if (globalViewMode === 'side') {
@@ -4558,6 +4871,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 housing.appendChild(magnet); el.appendChild(rod); el.appendChild(housing); el.appendChild(resizer); el.appendChild(valve);
                 let label = document.createElement('div'); label.className = 'f2d-label'; label.textContent = `Zyl (${var1})`; el.appendChild(label);
             } else if (type === 'conveyor') {
+					   
                 obj.linkedVar = var1; obj.width = 200; obj.height = 40; obj.beltOffset = 0; 
                 el.className = 'f2d-obj f2d-conveyor'; el.style.width = obj.width + 'px';
                 el.innerHTML = `
@@ -4632,6 +4946,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 if (e.button !== 0) return; 
                 // 1. Klicks im Simulationsmodus (Taster/Schalter)
                 // 1. Klicks im Simulationsmodus (Taster/Schalter)
+				  
                 if (isSimulationActive && (dataObj.type === 'taster' || dataObj.type === 'schalter' || dataObj.type === 'nothalt' || dataObj.type === 'key_switch')) {
                     e.stopPropagation(); 
                     let varName = dataObj.linkedVar; 
@@ -5988,36 +6303,125 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             if (activePlugins[k] === undefined) activePlugins[k] = true;
         });
         window.openPluginModal = function() {
+            const modal = document.getElementById('plugin-modal');
+            // Modal breiter machen, damit das Grid Platz hat
+            modal.style.width = '1000px'; 
+            modal.style.maxWidth = '95vw';
+
             const list = document.getElementById('plugin-list');
             list.innerHTML = '';
+            // NEU: CSS Grid für den Listen-Container
+            list.style.display = 'grid';
+            list.style.gridTemplateColumns = 'repeat(auto-fit, minmax(320px, 1fr))';
+            list.style.gap = '15px';
+            list.style.alignItems = 'start'; // Verhindert, dass kurze Karten künstlich in die Länge gezogen werden
+
+            const catNames = {
+                '#menu-bedienpult': '🕹️ HMI & Bedienpult',
+                '#menu-sensoren': '📡 Sensorik',
+                '#menu-aktoren': '⚙️ Aktoren & Antriebe',
+                '#menu-anbauteile': '🧩 Anbauteile & Mechanik',
+                '#menu-struktur': '🏗️ Struktur & Umgebung',
+                '#menu-werkstuecke': '📦 Werkstücke & Logistik'
+            };
+
+            // Gruppiere alle Plugins
+            let groups = {};
             Object.keys(ComponentRegistry).forEach(key => {
                 let p = ComponentRegistry[key];
-                let m = p.meta || { name: key, icon: '❓', desc: '[Keine Beschreibung]' };
-                let isActive = activePlugins[key];
-                let row = document.createElement('div');
-                row.style.cssText = "display: flex; align-items: center; background: #1e1e1e; border: 1px solid #444; padding: 10px; border-radius: 4px; margin-bottom: 10px;";
-                let previewBox = document.createElement('div');
-                previewBox.style.cssText = "width: 45px; height: 45px; background: #252526; border: 1px solid #555; border-radius: 4px; position: relative; overflow: hidden; margin-right: 15px; flex-shrink: 0; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;";
-                if (p.build) {
-                    let dummyEl = document.createElement('div');
-                    let dummyObj = { id: 'prev', el: dummyEl, children: [] };
-                    p.build(dummyObj, dummyEl, '', '', '', '#4caf50', 3);
-                    dummyEl.querySelectorAll('.f2d-resize-handle, .f2d-resize-handle-xy, .f2d-rotate-handle, .f2d-label').forEach(r => r.remove());
-                    let w = dummyObj.width || 40; let h = dummyObj.height || 40;
-                    let scale = Math.min(1, 35 / w, 35 / h);
-                    dummyEl.style.position = 'absolute'; dummyEl.style.left = '50%'; dummyEl.style.top = '50%';
-                    dummyEl.style.transform = `translate(-50%, -50%) scale(${scale})`; dummyEl.style.pointerEvents = 'none'; 
-                    if (key === 'stacklight') { dummyEl.children[0].classList.add('on'); dummyEl.children[1].classList.add('on'); dummyEl.children[2].classList.add('on'); } 
-                    else if (key === 'display') { dummyEl.textContent = '88.8'; }
-                    previewBox.appendChild(dummyEl);
-                } else { previewBox.innerHTML = `<span style="font-size: 20px;">${m.icon}</span>`; }
-                let textBox = document.createElement('div'); textBox.style.flexGrow = '1';
-                textBox.innerHTML = `<strong style="color: #fff; font-size: 14px;">${m.name}</strong><p style="color: #aaa; font-size: 11px; margin: 4px 0 0 0; line-height: 1.3;">${m.desc}</p>`;
-                let switchBox = document.createElement('label'); switchBox.className = 'switch'; switchBox.style.marginLeft = '15px';
-                switchBox.innerHTML = `<input type="checkbox" class="plugin-toggle-cb" ${isActive ? 'checked' : ''} onchange="togglePlugin('${key}', this.checked)"><span class="slider"></span>`;
-                row.appendChild(previewBox); row.appendChild(textBox); row.appendChild(switchBox); list.appendChild(row);
+                let t = p.menuTarget;
+                let catId = catNames[t] ? t : 'other';
+                if (!groups[catId]) groups[catId] = [];
+                groups[catId].push({ key: key, data: p });
             });
-            document.getElementById('plugin-modal').style.display = 'flex';
+
+            // Feste Reihenfolge definieren
+            let renderOrder = ['#menu-bedienpult', '#menu-sensoren', '#menu-aktoren', '#menu-anbauteile', '#menu-struktur', '#menu-werkstuecke', 'other'];
+
+            renderOrder.forEach(catId => {
+                if (!groups[catId] || groups[catId].length === 0) return;
+
+                // NEU: Eine "Karte" (Card) für jede Kategorie erstellen
+                let catCard = document.createElement('div');
+                catCard.style.cssText = "background: #252526; border: 1px solid #444; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 2px 2px 8px rgba(0,0,0,0.3);";
+
+                // Kategorie-Titel IN der Karte
+                let header = document.createElement('div');
+                header.style.cssText = "color: #2196f3; font-weight: bold; font-size: 13px; border-bottom: 2px solid #2196f3; padding-bottom: 6px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;";
+                header.textContent = catNames[catId] || '📦 Sonstiges / Ungruppiert';
+                catCard.appendChild(header);
+
+                // Plugins in diese Karte einfügen
+                groups[catId].forEach(item => {
+                    let key = item.key;
+                    let p = item.data;
+                    let m = p.meta || { name: key, icon: '❓', desc: '' };
+                    let isActive = activePlugins[key];
+
+                    let row = document.createElement('div');
+                    row.style.cssText = "display: flex; align-items: center; background: #1e1e1e; border: 1px solid #333; padding: 8px; border-radius: 4px; transition: border-color 0.2s;";
+                    row.onmouseover = () => row.style.borderColor = '#555';
+                    row.onmouseout = () => row.style.borderColor = '#333';
+                    
+                    let previewBox = document.createElement('div');
+                    previewBox.style.cssText = "width: 40px; height: 40px; background: #2d2d30; border: 1px solid #555; border-radius: 4px; position: relative; overflow: hidden; margin-right: 12px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.5);";
+                    
+                    try {
+                        if (p.build) {
+                            let dummyEl = document.createElement('div');
+                            let dummyObj = { id: 'prev', el: dummyEl, children: [] };
+                            
+                            p.build(dummyObj, dummyEl, 'DEMO', '', '', '#4caf50', 3);
+                            
+                            let toRemove = dummyEl.querySelectorAll('.f2d-resize-handle, .f2d-resize-handle-xy, .f2d-rotate-handle, .f2d-label');
+                            for (let i = 0; i < toRemove.length; i++) toRemove[i].remove();
+
+                            let w = dummyObj.width || 40; 
+                            let h = dummyObj.height || 40;
+                            let scale = Math.min(1, 30 / w, 30 / h);
+                            
+                            dummyEl.style.position = 'absolute'; 
+                            dummyEl.style.left = '50%'; 
+                            dummyEl.style.top = '50%';
+                            dummyEl.style.transform = `translate(-50%, -50%) scale(${scale})`; 
+                            dummyEl.style.pointerEvents = 'none'; 
+                            
+                            if (key === 'stacklight' && dummyEl.children.length >= 3) { 
+                                dummyEl.children[0].classList.add('on'); 
+                                dummyEl.children[1].classList.add('on'); 
+                                dummyEl.children[2].classList.add('on'); 
+                            } 
+                            if (key === 'display') dummyEl.textContent = '88.8';
+                            if (key === 'light_curtain') dummyEl.classList.add('broken');
+                            
+                            previewBox.appendChild(dummyEl);
+                        } else {
+                            previewBox.innerHTML = `<span style="font-size: 18px;">${m.icon}</span>`;
+                        }
+                    } catch (e) {
+                        console.error(`Fehler im Plugin-Manager bei [${key}]:`, e);
+                        previewBox.innerHTML = `<span style="font-size: 18px; color: #ff5252;" title="Fehler: ${e.message}">⚠️</span>`;
+                    }
+
+                    let textBox = document.createElement('div'); 
+                    textBox.style.flexGrow = '1';
+                    textBox.innerHTML = `<strong style="color: #fff; font-size: 12px;">${m.name}</strong><p style="color: #aaa; font-size: 10px; margin: 2px 0 0 0; line-height: 1.2;">${m.desc}</p>`;
+                    
+                    let switchBox = document.createElement('label'); 
+                    switchBox.className = 'switch'; 
+                    switchBox.style.marginLeft = '10px';
+                    switchBox.innerHTML = `<input type="checkbox" class="plugin-toggle-cb" ${isActive ? 'checked' : ''} onchange="togglePlugin('${key}', this.checked)"><span class="slider"></span>`;
+                    
+                    row.appendChild(previewBox); 
+                    row.appendChild(textBox); 
+                    row.appendChild(switchBox); 
+                    catCard.appendChild(row); // Reihe in die Karte legen
+                });
+
+                list.appendChild(catCard); // Karte in den Grid-Container legen
+            });
+
+            modal.style.display = 'flex';
         };
         window.closePluginModal = function() { document.getElementById('plugin-modal').style.display = 'none'; };
         window.togglePlugin = function(key, state) {
