@@ -315,7 +315,7 @@
         .tb-drop-btn:hover { background: #555; border-color: #888; }																																																																  														
         #factory-canvas-area { flex-grow: 1; position: relative; width: 100%; height: 100%; background-image: linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd), linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
         /* 2D Objekte */
-        .f2d-obj { position: absolute; box-sizing: border-box; cursor: move; user-select: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+        .f2d-obj { position: absolute; top: 0; left: 0; box-sizing: border-box; cursor: move; user-select: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
         .f2d-sensor { width: 20px; height: 40px; border-radius: 3px; color: white; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 2px; font-weight: bold; border: 2px solid; z-index: 10; }
         /* NEU: Sichtbare Sensor-Reichweiten (Detektionskeulen) */
         .f2d-range { position: absolute; pointer-events: none; background: rgba(255, 255, 0, 0.2); border: 1px dashed rgba(255, 200, 0, 0.8); box-sizing: border-box; }
@@ -5091,11 +5091,14 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btnDetach.onclick = () => { 
                     obj.parent.children = obj.parent.children.filter(c => c !== obj);
                     obj.parent = null; obj.attachmentType = null;
+                    obj.el.classList.remove('is-child'); // Visuelles Feedback (Pfeil kommt zurück)
                     saveFactoryState(); 
+                    ctxMenu.style.display = 'none'; // Menü sofort schließen!
                 }; 
                 ctxMenu.appendChild(btnDetach);
-            } else if (obj.type !== 'item' && obj.type !== 'sensor_mag') {
-                let nearestCyl = null; let minDist = 200;
+            } else if (obj.type !== 'item' && obj.type !== 'sensor_mag' && !obj.type.startsWith('zylinder') && !obj.type.startsWith('spawner') && obj.type !== 'despawner' && !obj.type.startsWith('zone')) {
+                // Nur sinnvolle Anbauteile erlauben!
+                let nearestCyl = null; let minDist = 800; // 🌟 Such-Radius massiv auf 800px erhöht!
                 let objCx = obj.x + obj.width/2; let objCy = obj.y + (obj.height||obj.width)/2;
                 factoryObjects.forEach(cyl => {
                     if (cyl.type && cyl.type.startsWith('zylinder') && cyl !== obj) {
@@ -5113,7 +5116,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         obj.parent = nearestCyl; obj.attachmentType = 'rod';
                         if (!nearestCyl.children) nearestCyl.children = [];
                         nearestCyl.children.push(obj);
+                        obj.el.classList.add('is-child'); // Visuelles Feedback (Versteckt den Pfeil)
                         saveFactoryState(); 
+                        ctxMenu.style.display = 'none'; // Menü sofort schließen!
                     }; 
                     ctxMenu.appendChild(btnAttach);
                 }
@@ -5788,6 +5793,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 factoryObjects.forEach(o => {
                     if (o._savedParentId && idMap[o._savedParentId]) {
                         o.parent = idMap[o._savedParentId];
+                        o.el.classList.add('is-child'); // 🌟 GIBT DEM BAUTEIL BEIM LADEN SEINE OPTIK ZURÜCK!
                         if (!o.parent.children) o.parent.children = [];
                         o.parent.children.push(o);
                     }
