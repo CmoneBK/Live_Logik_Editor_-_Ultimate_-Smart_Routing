@@ -7620,6 +7620,67 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             // Feines Klicken als Audio-Feedback, falls der Ton an ist
             if (typeof SoundEngine !== 'undefined') SoundEngine.click();
         };
+		// ==========================================
+        // NEU: GLOBALER TOUCH-TO-RIGHTCLICK (Long-Press Polyfill)
+        // ==========================================
+        let touchTimer = null;
+        let touchStartPos = null;
+        let wasLongPress = false;
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY, target: e.touches[0].target };
+                wasLongPress = false;
+                
+                // Nach 600ms den Rechtsklick auslösen
+                touchTimer = setTimeout(() => {
+                    touchTimer = null;
+                    wasLongPress = true;
+                    
+                    // Premium-App Feeling: Kurzes haptisches Feedback, falls das Gerät das unterstützt
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    
+                    // Wir feuern ein echtes, synthetisches 'contextmenu'-Event ab.
+                    // Dadurch triggern völlig automatisch alle vorhandenen Rechtsklick-Funktionen in VALIS!
+                    const contextEvent = new MouseEvent('contextmenu', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window,
+                        clientX: touchStartPos.x,
+                        clientY: touchStartPos.y,
+                        button: 2
+                    });
+                    touchStartPos.target.dispatchEvent(contextEvent);
+                }, 600);
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            // Wenn der Finger zu weit rutscht, war es ein Scrollen oder Ziehen -> Timer abbrechen!
+            if (touchTimer && e.touches.length > 0) {
+                let dx = Math.abs(e.touches[0].clientX - touchStartPos.x);
+                let dy = Math.abs(e.touches[0].clientY - touchStartPos.y);
+                if (dx > 10 || dy > 10) {
+                    clearTimeout(touchTimer);
+                    touchTimer = null;
+                }
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => { 
+            if (touchTimer) clearTimeout(touchTimer); 
+            // Wenn das Menü erfolgreich aufging, verhindern wir, dass beim Finger-Loslassen 
+            // versehentlich ein Klick ausgelöst wird, der das Menü sofort wieder schließt!
+            if (wasLongPress) {
+                e.preventDefault();
+                setTimeout(() => wasLongPress = false, 100); // Reset nach kurzem Cooldown
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchcancel', () => { if (touchTimer) clearTimeout(touchTimer); });
+
+        // 3. Engine zünden
+        startFactoryEngine();
         // 3. Engine zünden
         startFactoryEngine();
     </script>
