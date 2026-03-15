@@ -9,9 +9,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; margin: 0; background-color: #1e1e1e; color: #d4d4d4; }
-        #left-panel { width: 35%; padding: 20px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
+        /* Panel bekommt eine Mindestbreite, damit der Code-Editor nutzbar bleibt */
+        #left-panel { width: clamp(320px, 35%, 600px); flex-shrink: 0; padding: 15px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; transition: width 0.3s; }
         #graph-container { flex: 1; min-width: 0; padding: 0; display: flex; flex-direction: column; background: #ffffff; overflow: hidden; position: relative; box-sizing: border-box; }
-        .header-area { display: flex; justify-content: space-between; align-items: baseline; }
+        /* Header darf umbrechen, wenn das Display schmal wird */
+        .header-area { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header-area > div:last-child { display: flex; flex-wrap: wrap; gap: 5px; width: 100%; } /* Buttons & Select umbrechen */
+        .btn-reset { max-width: 100%; text-overflow: ellipsis; overflow: hidden; } /* Verhindert Abschneiden des Dropdowns */
         .header-title-wrapper { display: flex; align-items: baseline; gap: 12px; }
         h2 { margin: 0; color: #fff; font-size: 18px; }
         h3 { margin: 0 0 10px 0; color: #fff; font-size: 15px; border-bottom: 1px solid #444; padding-bottom: 5px; }
@@ -19,13 +23,15 @@
         .btn-reset { background: none; border: none; color: #569CD6; font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0; }
         .btn-reset:hover { color: #9CDCFE; }
         /* Obere Leiste darf in der Höhe atmen, Buttons bleiben aber in einer Reihe */
+        /* Obere Leiste flexibel machen (Erlaubt Umbruch auf Tablets!) */
         .graph-top-bar { 
             display: flex; justify-content: space-between; align-items: center; gap: 5px; 
-            width: 100%; z-index: 1050; padding: 5px 10px; box-sizing: border-box; /* FIX: z-index von 10 auf 1050 erhöht! */
+            width: 100%; z-index: 1050; padding: 5px 10px; box-sizing: border-box; 
             background: #f8f9fa; border-bottom: 1px solid #ddd; 
-            flex-wrap: nowrap !important; /* Kein Untereinanderspringen der Boxen! */
-            min-height: 50px; height: auto; /* Darf sich für zweizeilige Buttons dehnen */
+            flex-wrap: wrap !important; 
+            min-height: 50px; height: auto; 
         }
+        .graph-top-bar > div { flex-wrap: wrap; justify-content: center; } /* Inhalt der Leiste darf ebenfalls atmen */
         /* Buttons dürfen ihren Text mehrzeilig machen, um Platz zu sparen */
         .btn-export { 
             background-color: #007acc; color: white; border: none; 
@@ -46,6 +52,10 @@
             color: #0d47a1; border-radius: 4px; flex-grow: 1; flex-shrink: 2; margin: 0; 
             white-space: normal; /* NEU: Textumbruch erlaubt */
         }
+        /* NEU: Unabhängiges Hover-Menü für den Info-Button (wird nicht vom JS gelöscht) */
+        .info-hover-wrapper { position: relative; display: inline-block; z-index: 1100; }
+        .info-hover-content { display: none; position: absolute; left: 50%; transform: translateX(-50%); top: 100%; margin-top: 5px; min-width: 260px; padding: 12px; cursor: default; background: #e3f2fd; border: 2px solid #17a2b8; color: #0d47a1; text-align: center; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 12px; }
+        .info-hover-wrapper:hover .info-hover-content { display: block; }
         .legend-box { background-color: #1e1e1e; border: 1px solid #444; padding: 10px; font-size: 12px; line-height: 1.4; color: #ccc; border-radius: 4px; display: flex; flex-direction: column; gap: 8px; }
         .legend-grid { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 5px 15px; align-items: center; }
         .legend-code { font-family: 'Courier New', Courier, monospace; background: #2d2d30; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #569CD6; user-select: all; cursor: pointer; border: 1px solid #555; }
@@ -97,13 +107,89 @@
             white-space: normal; /* NEU: Textumbruch erlaubt */
             line-height: 1.1; text-align: center;
         }
+		/* ===================================================================== */
+        /* 🌟 NEU: ANIMATIONEN FÜR BEIDE EINKLAPPBAREN LEISTEN (LOGIK & IEC) 🌟 */
+        /* ===================================================================== */
+        #fbs-button-group, #iec-button-group {
+            display: flex; gap: 5px; overflow: hidden; 
+            max-width: 0; max-height: 38px; opacity: 0; 
+            flex-wrap: wrap; /* 🌟 DER FIX: Erlaubt den Umbruch in die nächste Zeile! */
+            transition: max-width 0.4s ease, max-height 0.4s ease, opacity 0.3s ease; 
+            pointer-events: auto; /* Buttons bleiben klickbar */
+        }
+        
+        #fbs-button-group.expanded, #iec-button-group.expanded {
+            max-width: 800px; 
+            max-height: 300px; /* Gibt der Box Raum, nach unten zu wachsen */
+            opacity: 1;
+            overflow: visible; /* Keine Scrollbalken mehr! */
+        }
+        
+        /* 🌟 DER FIX: Buttons haben exakt dieselbe Höhe und zentrieren ihren Text */
+        #fbs-button-group .tool-btn, #iec-button-group button {
+            flex: 0 0 auto !important; 
+            width: max-content; 
+            white-space: nowrap; 
+            padding: 0 12px; /* Vertikales Padding auf 0, Box-Höhe regelt das */
+            font-size: 11px; 
+            height: 30px; /* Einheitliche Höhe! */
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        /* 🌟 WICHTIG: Damit die Aufklapp-Buttons nicht in die Mitte rutschen */
+        #fbs-toolbar, .circuit-btn-container {
+            align-items: flex-start !important;
+        }
+
+        /* --- Spezifisch: Plus-Button Logikplan --- */
+        #btn-fbs-toggle {
+            flex: 0 0 34px !important; height: 34px !important; margin-top: 2px;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+        }
+        #btn-fbs-toggle.expanded {
+            transform: rotate(45deg); background-color: #f44336 !important;
+        }
+
+        /* --- Spezifisch: Optionen-Button Schaltplan --- */
+        #btn-iec-toggle {
+            flex: 0 0 auto !important; 
+            height: 30px !important; /* 🌟 Selbe Höhe wie die Optionen! */
+            padding: 0 12px !important; /* 🌟 Selbes Padding! */
+            white-space: nowrap;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+        #btn-iec-toggle.expanded {
+            background-color: #f44336 !important; color: #fff !important; border-color: #b71c1c !important;
+        }
+        #btn-iec-toggle {
+            flex: 0 0 auto !important;
+            height: 30px;
+            white-space: nowrap;
+            transition: background-color 0.2s, color 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        #btn-iec-toggle.expanded {
+            background-color: #f44336 !important; /* Wird Rot zum Schließen */
+            color: #fff !important;
+            border-color: #b71c1c !important;
+        }
         * 2D Toolbar: Strikte Höhe auf 50px festnageln */
+        /* 2D Toolbar: Feste Höhe aufheben, damit sie umbrechen kann */
         #factory-toolbar { 
-            flex: 0 0 50px; height: 50px; min-height: 50px;
-            display: flex; flex-wrap: nowrap !important; align-items: center; 
-            background: #333; padding: 0 10px; gap: 5px; 
+            flex: 0 0 auto; min-height: 50px; height: auto;
+            display: flex; flex-wrap: wrap !important; align-items: center; 
+            background: #333; padding: 5px 10px; gap: 5px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 1000;
-            overflow: visible !important; /* Wichtig, damit Menüs nach unten aufklappen können! */
+            overflow: visible !important; 
         }
         #factory-canvas-area {
             flex-grow: 1; position: relative; width: 100%; height: 100%; overflow: auto; /* Erlaubt das Pannen/Scrollen */
@@ -302,32 +388,32 @@
             text-align: center;
             overflow: hidden; 
         }
-		/* NEU: Animationen für die einklappbare Logik-Werkzeugleiste */
-        #fbs-button-group {
-            display: flex; gap: 5px; overflow: hidden; 
-            max-width: 0; opacity: 0; 
-            transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; 
-            pointer-events: auto; /* Buttons bleiben klickbar */
-            -ms-overflow-style: none; scrollbar-width: none; /* Scrollbar verstecken (Firefox/IE) */
-        }
-        #fbs-button-group::-webkit-scrollbar { 
-            display: none; /* Scrollbar verstecken (Chrome/Safari) */
-        }
-        #fbs-button-group.expanded {
-            max-width: 800px; /* Genug Platz für alle Buttons in voller Breite */
-            opacity: 1;
-            overflow-x: auto; /* Erlaubt seitliches Wischen auf sehr schmalen Handys */
-            overflow-y: hidden;
-        }
-        
-        /* 🌟 DER FIX: Buttons behalten IMMER ihre volle Textbreite */
-        #fbs-button-group .tool-btn {
-            flex: 0 0 auto !important; /* Verhindert jegliches Zusammenquetschen */
-            width: max-content; /* Breite passt sich perfekt dem Inhalt an */
-            white-space: nowrap; /* Text bricht nicht um */
-            padding: 4px 10px; /* Wieder vernünftige Abstände für Finger und Maus */
-            font-size: 11px; 
-        }
+																   
+						   
+													   
+									  
+																																																	  
+																
+																																																								 
+		 
+											   
+																	 
+		 
+									
+																																														
+					   
+																																																   
+							   
+		 
+		
+																		
+									 
+																																														  
+																			 
+														   
+																																																   
+							 
+		 
 
         #btn-fbs-toggle {
             flex: 0 0 34px !important; /* Verhindert, dass das Plus-Icon wächst */
@@ -469,7 +555,7 @@
         .f2d-led { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #444; background: #222; z-index: 15; display: flex; justify-content: center; align-items: center; color: rgba(255,255,255,0.4); font-size: 8px; font-weight: bold; text-align: center; transition: all 0.1s; box-shadow: 2px 2px 5px rgba(0,0,0,0.4); }
         .f2d-control-active { transform: scale(0.95); border-color: #fff; }
         /* FIX: 'transition' bei den fallenden Items entfernt! */
-																																													 
+																																																																																																																																																																														   
         .f2d-item { width: 40px; height: 40px; border: 2px solid #000; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; transition: transform 0.1s linear; z-index: 5; }
 		.f2d-item.is-solid { border-width: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); border-color: #333; font-size: 11px; }
         /* NEU: Spawner & Despawner */
@@ -561,6 +647,17 @@
             transform: scale(1.05);
             transition: all 0.1s;
         }
+		/* 🌟 NEU: RESPONSIVE DESIGN FÜR TABLETS & SMARTPHONES 🌟 */
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            #left-panel { 
+                width: 100% !important; 
+                flex: 0 0 45vh; /* Nimmt 45% der Höhe ein */
+                border-right: none; 
+                border-bottom: 2px solid #333; 
+            }
+            #btn-toggle-sidebar { transform: rotate(90deg); } /* Pfeil dreht sich, da das Panel nun oben ist */
+        }
     </style>
 </head>
 <body>
@@ -648,21 +745,40 @@
                 <button id="btn-view-fbs" class="btn-export view-btn active" onclick="toggleWorkspaceView('fbs-wrapper')">Logikplan</button>
                 <button id="btn-view-iec" class="btn-export view-btn" onclick="toggleWorkspaceView('circuit-wrapper')">Schaltplan</button>
                 <button id="btn-view-fac" class="btn-export view-btn" onclick="toggleWorkspaceView('factory-wrapper')">2D Anlage</button>
-                <select id="layout-selector" class="btn-export" style="background:#444; border:none; color:white; outline:none; cursor:pointer; padding: 4px 8px;" onchange="changeWorkspaceLayout(this.value)">
-                    <optgroup label="2er-Layouts">
-                        <option value="flex-row">◫ Nebeneinander</option>
-                        <option value="flex-col">⬒ Untereinander</option>
-                    </optgroup>
-                    <optgroup label="3er-Raster (Flexibel)">
-                        <option value="grid-sim-bottom">🗗 2D-Anlage unten</option>
-                        <option value="grid-sim-top">🗒 2D-Anlage oben</option>
-                        <option value="grid-sim-right">◧ 2D-Anlage rechts</option>
-                        <option value="grid-sim-left">◨ 2D-Anlage links</option>
-                    </optgroup>
-                </select>
+																																																																																																																									   
+												  
+																		   
+																		   
+							   
+															
+																																															  
+																																													 
+																																															 
+																																														
+							   
+						 
             </div>
-            <div class="info-box" title="Virtual Automation, Logic & Industrial Simulator" style="margin: 0 10px; text-align: center;">
-                <strong>⚙️ Willkommen bei VALIS:</strong> Logik links tippen • "Simulation starten" für Live-Test.
+            
+            <div style="display: flex; gap: 5px; align-items: center; margin: 0 auto;">
+                <div class="tb-dropdown">
+                    <button class="btn-export" id="btn-layout-text" style="background:#444; border:none; color:white; outline:none; cursor:pointer;">Layout: ◫</button>
+                    <div class="tb-dropdown-content" style="left: 50%; transform: translateX(-50%); min-width: 180px; text-align: left;">
+                        <div onclick="selectLayout('flex-row', '◫')">◫ Nebeneinander</div>
+                        <div onclick="selectLayout('flex-col', '⬒')">⬒ Untereinander</div>
+                        <div style="border-top: 1px solid #555; margin: 2px 0; padding: 0; pointer-events: none;"></div>
+                        <div onclick="selectLayout('grid-sim-bottom', '🗗')">🗗 2D-Anlage unten</div>
+                        <div onclick="selectLayout('grid-sim-top', '🗒')">🗒 2D-Anlage oben</div>
+                        <div onclick="selectLayout('grid-sim-right', '◧')">◧ 2D-Anlage rechts</div>
+                        <div onclick="selectLayout('grid-sim-left', '◨')">◨ 2D-Anlage links</div>
+                    </div>
+                </div>
+
+                <div class="info-hover-wrapper">
+                    <button class="btn-export" style="background-color: #17a2b8; cursor: help;">ℹ️ Info</button>
+                    <div class="info-hover-content">
+                        <strong>⚙️ Willkommen bei VALIS:</strong><br><br>Logik links tippen • "Simulation starten" für Live-Test.
+                    </div>
+                </div>
             </div>
             <div style="display: flex; gap: 5px; align-items: center;">
                 <button id="btn-toggle-sim" class="btn-export" style="background-color: #e6194B;" onclick="toggleSimulation()">Simulation starten</button>
@@ -705,12 +821,16 @@
             </div>
             <div class="workspace-resizer" id="ws-resizer-1" style="grid-area: r1;"></div>
             <div id="circuit-wrapper" class="workspace-panel" style="display: none; grid-area: iec; background-image: radial-gradient(#e0e0e0 1px, transparent 1px); background-size: 20px 20px;">
-                <div class="circuit-btn-container">
-                    <button id="btn-toggle-econ" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleEconMode()">💼 Modus: Relais (Klassisch)</button>
-                    <button id="btn-toggle-colors" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleCircuitColors()">🌈 Bunte Pfade: AUS</button>
-                    <button id="btn-toggle-wech" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleWechsler()">🔀 Wechslernummerierung: AUS</button>
-                    <button id="btn-toggle-seq" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleSeqNum()">🔢 Fortlaufende Nrn: AUS</button>
-					<button id="btn-toggle-details" class="btn-export" style="background-color: #911eb4; border: 1px solid #333;" onclick="toggleDetails()">🏷️ Details: ALLE</button>
+                <div class="circuit-btn-container" style="align-items: center;">
+                    <button id="btn-iec-toggle" class="btn-export" style="background-color: #607d8b; border: 1px solid #455a64;" onclick="toggleIecToolbar()">⚙️ Optionen</button>
+                    
+                    <div id="iec-button-group">
+                        <button id="btn-toggle-econ" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleEconMode()">💼 Modus: Relais (Klassisch)</button>
+                        <button id="btn-toggle-colors" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleCircuitColors()">🌈 Bunte Pfade: AUS</button>
+                        <button id="btn-toggle-wech" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleWechsler()">🔀 Wechslernummerierung: AUS</button>
+                        <button id="btn-toggle-seq" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleSeqNum()">🔢 Fortlaufende Nrn: AUS</button>
+                        <button id="btn-toggle-details" class="btn-export" style="background-color: #911eb4; border: 1px solid #333;" onclick="toggleDetails()">🏷️ Details: ALLE</button>
+                    </div>
                 </div>
                 <svg id="circuit-svg" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
                     <g id="circuit-content"></g>
@@ -2494,9 +2614,15 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         };
 		// --- BUNTE PFADE LOGIK ---
         window.toggleCircuitColors = function() {
-            const wrapper = document.getElementById('circuit-wrapper');
-            const btn = document.getElementById('btn-toggle-colors');
-            // Toggle fügt die Klasse hinzu, wenn sie fehlt, und entfernt sie, wenn sie da ist
+            // 🌟 DER FIX: Wir suchen im richtigen Fenster!
+            let doc = (window.popOutWindows && window.popOutWindows['circuit-wrapper'] && !window.popOutWindows['circuit-wrapper'].closed) 
+                      ? window.popOutWindows['circuit-wrapper'].document : document;
+            
+            const wrapper = doc.getElementById('circuit-wrapper');
+            const btn = doc.getElementById('btn-toggle-colors');
+            
+            if (!wrapper || !btn) return;
+
             wrapper.classList.toggle('colorful');
             if (wrapper.classList.contains('colorful')) {
                 btn.style.backgroundColor = '#911eb4';
@@ -2505,67 +2631,63 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btn.style.backgroundColor = '#555';
                 btn.textContent = '🌈 Bunte Pfade: AUS';
             }
+            
+            if (typeof SoundEngine !== 'undefined') SoundEngine.click();
         };
 		// --- NEU: SCHALTPLAN DARSTELLUNGS-OPTIONEN ---
         window.configWechsler = false;
         window.configSeqNum = false;
-		window.configDetails = 2; // 0 = Aus, 1 = E/A, 2 = Alle
-		// --- NEU: SCHALTPLAN MODUS (KLASSISCH VS WIRTSCHAFTLICH) ---
+        window.configDetails = 2; // 0 = Aus, 1 = E/A, 2 = Alle
+        
+        // 🌟 HELFER: Sucht immer im abgekoppelten Fenster, falls es offen ist!
+        function getCircDoc() {
+            return (window.popOutWindows && window.popOutWindows['circuit-wrapper'] && !window.popOutWindows['circuit-wrapper'].closed) 
+                   ? window.popOutWindows['circuit-wrapper'].document : document;
+        }
+
         window.configEconMode = false;
         window.toggleEconMode = function() {
             window.configEconMode = !window.configEconMode;
-            const btn = document.getElementById('btn-toggle-econ');
-            if (window.configEconMode) {
-                btn.style.backgroundColor = '#4caf50'; // Grün für Wirtschaftlich
-                btn.textContent = '💼 Modus: Direkt (Wirtschaftlich)';
-            } else {
-                btn.style.backgroundColor = '#555';    // Grau für Klassisch
-                btn.textContent = '💼 Modus: Relais (Klassisch)';
+            const btn = getCircDoc().getElementById('btn-toggle-econ');
+            if (btn) {
+                if (window.configEconMode) {
+                    btn.style.backgroundColor = '#4caf50'; btn.textContent = '💼 Modus: Direkt (Wirtschaftlich)';
+                } else {
+                    btn.style.backgroundColor = '#555'; btn.textContent = '💼 Modus: Relais (Klassisch)';
+                }
             }
-            if (currentGraph) {
-                drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true);
-                runSimulationTick();
-            }
+            if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
         };
+        
         window.toggleDetails = function() {
-            window.configDetails = (window.configDetails + 1) % 3; // Zählt 0, 1, 2, 0, 1...
-            const btn = document.getElementById('btn-toggle-details');
-            if (window.configDetails === 2) {
-                btn.style.backgroundColor = '#911eb4'; // Lila
-                btn.textContent = '🏷️ Details: ALLE';
-            } else if (window.configDetails === 1) {
-                btn.style.backgroundColor = '#007acc'; // Blau
-                btn.textContent = '🏷️ Details: E/A';
-            } else {
-                btn.style.backgroundColor = '#555'; // Grau
-                btn.textContent = '🏷️ Details: AUS';
+            window.configDetails = (window.configDetails + 1) % 3; 
+            const btn = getCircDoc().getElementById('btn-toggle-details');
+            if(btn) {
+                if (window.configDetails === 2) { btn.style.backgroundColor = '#911eb4'; btn.textContent = '🏷️ Details: ALLE'; } 
+                else if (window.configDetails === 1) { btn.style.backgroundColor = '#007acc'; btn.textContent = '🏷️ Details: E/A'; } 
+                else { btn.style.backgroundColor = '#555'; btn.textContent = '🏷️ Details: AUS'; }
             }
-            if (currentGraph) {
-                drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true);
-                runSimulationTick();
-            }
+            if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
         };
+        
         window.toggleWechsler = function() {
             window.configWechsler = !window.configWechsler;
-            const btn = document.getElementById('btn-toggle-wech');
-            btn.style.backgroundColor = window.configWechsler ? '#911eb4' : '#555';
-            btn.textContent = window.configWechsler ? '🔀 Wechslernummerierung: AN' : '🔀 Wechslernummerierung: AUS';
-            if (currentGraph) {
-                // Das 'true' am Ende ist das magische Signal zum Beibehalten der Ansicht!
-                drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true);
-                runSimulationTick(); 
+            const btn = getCircDoc().getElementById('btn-toggle-wech');
+            if(btn){
+                btn.style.backgroundColor = window.configWechsler ? '#911eb4' : '#555';
+                btn.textContent = window.configWechsler ? '🔀 Wechslernummerierung: AN' : '🔀 Wechslernummerierung: AUS';
             }
+            if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
         };
+        
         window.toggleSeqNum = function() {
             window.configSeqNum = !window.configSeqNum;
-            const btn = document.getElementById('btn-toggle-seq');
-            btn.style.backgroundColor = window.configSeqNum ? '#911eb4' : '#555';
-            btn.textContent = window.configSeqNum ? '🔢 Fortlaufende Nrn: AN' : '🔢 Fortlaufende Nrn: AUS';
-            if (currentGraph) {
-                // Das 'true' am Ende ist das magische Signal zum Beibehalten der Ansicht!
-                drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true);
-                runSimulationTick();
+            const btn = getCircDoc().getElementById('btn-toggle-seq');
+            if(btn){
+                btn.style.backgroundColor = window.configSeqNum ? '#911eb4' : '#555';
+                btn.textContent = window.configSeqNum ? '🔢 Fortlaufende Nrn: AN' : '🔢 Fortlaufende Nrn: AUS';
             }
+            if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
         };
 		// --- NEU: WORKSPACE PANEL MANAGEMENT ---
         function updateWorkspace() {
@@ -2625,7 +2747,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             if (mainVisibleCount <= 1 && panel.style.display !== 'none') return;
             // 4. Grid-Layout auflösen, wenn man manuell Fenster schließt
             if (currentLayout.startsWith('grid-') && panel.style.display !== 'none') {
-                document.getElementById('layout-selector').value = 'flex-row';
+                document.getElementById('btn-layout-text').textContent = 'Layout: ◫';
                 currentLayout = 'flex-row';
                 const wc = document.getElementById('workspace-container');
                 wc.classList.remove('layout-grid', 'grid-sim-bottom', 'grid-sim-top', 'grid-sim-right', 'grid-sim-left');
@@ -2656,6 +2778,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         };
         // --- NEU: WORKSPACE PANEL MANAGEMENT ---
         let currentLayout = 'flex-row'; // Speichert das aktive Layout
+        
+        window.selectLayout = function(val, icon) {
+            document.getElementById('btn-layout-text').textContent = 'Layout: ' + icon;
+            changeWorkspaceLayout(val);
+        };
+
         window.changeWorkspaceLayout = function(val) {
             currentLayout = val;
             const wc = document.getElementById('workspace-container');
@@ -2729,7 +2857,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             // INTELLIGENTER FALLBACK: Wenn ein festes Grid aktiv ist und der Nutzer ein Panel schließt, 
             // ergibt das 3er-Grid keinen Sinn mehr. Wir werfen ihn automatisch ins Flexible-Layout zurück!
             if (currentLayout.startsWith('grid-') && panel.style.display !== 'none') {
-                document.getElementById('layout-selector').value = 'flex-row';
+                document.getElementById('btn-layout-text').textContent = 'Layout: ◫';
                 currentLayout = 'flex-row';
                 const wc = document.getElementById('workspace-container');
                 wc.classList.remove('layout-grid', 'grid-sim-bottom', 'grid-sim-top', 'grid-sim-right', 'grid-sim-left');
@@ -5929,7 +6057,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                 }
                 state.items.forEach(i => {
-                    spawnFactoryItem(i.material, i.x, i.y, i.isSolid);
+                    spawnFactoryItem(i.material, i.x, i.y, i.isSolid, i.meltTemp);
                     let created = factoryItems[factoryItems.length - 1];
                     created.vx = i.vx || 0; created.vy = i.vy || 0; 
                     created.useGravity = i.useGravity !== undefined ? i.useGravity : true;
@@ -6194,7 +6322,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         window.detachPanel = function(panelId, titleName) {
 			// Beende Grid-Mode VOR dem Abkoppeln (sonst bricht das CSS-Grid zusammen)
             if (currentLayout.startsWith('grid-')) {
-                document.getElementById('layout-selector').value = 'flex-row';
+                document.getElementById('btn-layout-text').textContent = 'Layout: ◫';
                 changeWorkspaceLayout('flex-row');
             }
             const panel = document.getElementById(panelId);
@@ -6240,9 +6368,20 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 panel._oldCss = panel.style.cssText;
                 panel.style.position = 'relative'; panel.style.width = '100%'; panel.style.height = '100%'; panel.style.top = '0'; panel.style.left = '0'; panel.style.transform = 'none'; panel.style.boxShadow = 'none';
             } else {
-                panel.style.width = '100%'; panel.style.height = '100%';
+                // 🌟 FIX 1: Flexbox-Fesseln lösen, damit das Panel 100% des neuen Bildschirms füllt!
+                panel.style.width = '100vw'; 
+                panel.style.height = '100vh';
+                panel.style.flex = 'none'; 
             }
             extWin.document.body.appendChild(panel);
+
+            // 🌟 FIX 2: Wir machen alle UI-Funktionen im neuen Fenster bekannt!
+            // Dadurch funktionieren die onClick-Befehle der Buttons weiterhin.
+            for (let key in window) {
+                if (typeof window[key] === 'function') {
+                    extWin[key] = window[key];
+                }
+            }
             // SVG-Engines kurz neustarten, da sie beim Frame-Wechsel die Kamera-Koordinaten verlieren
             setTimeout(() => {
                 if (panelId === 'fbs-wrapper' && panZoomInstance) { panZoomInstance.destroy(); panZoomInstance = svgPanZoom(customSvg, svgPanZoomOptions); }
@@ -7610,14 +7749,29 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             }, 15);
         };
 		// ==========================================
-        // NEU: LOGIK-TOOLBAR AUSKLAPPEN
+        // NEU: TOOLBARS AUSKLAPPEN (Multi-Window-Ready)
         // ==========================================
         window.toggleFbsToolbar = function() {
-            const group = document.getElementById('fbs-button-group');
-            const btn = document.getElementById('btn-fbs-toggle');
+            let doc = (window.popOutWindows && window.popOutWindows['fbs-wrapper'] && !window.popOutWindows['fbs-wrapper'].closed) 
+                      ? window.popOutWindows['fbs-wrapper'].document : document;
+            const group = doc.getElementById('fbs-button-group');
+            const btn = doc.getElementById('btn-fbs-toggle');
+            if(!group || !btn) return;
             group.classList.toggle('expanded');
             btn.classList.toggle('expanded');
-            // Feines Klicken als Audio-Feedback, falls der Ton an ist
+            if (typeof SoundEngine !== 'undefined') SoundEngine.click();
+        };
+
+        window.toggleIecToolbar = function() {
+            let doc = (window.popOutWindows && window.popOutWindows['circuit-wrapper'] && !window.popOutWindows['circuit-wrapper'].closed) 
+                      ? window.popOutWindows['circuit-wrapper'].document : document;
+            const group = doc.getElementById('iec-button-group');
+            const btn = doc.getElementById('btn-iec-toggle');
+            if(!group || !btn) return;
+            group.classList.toggle('expanded');
+            btn.classList.toggle('expanded');
+            if (btn.classList.contains('expanded')) btn.textContent = '❌ Schließen';
+            else btn.textContent = '⚙️ Optionen';
             if (typeof SoundEngine !== 'undefined') SoundEngine.click();
         };
 		// ==========================================
