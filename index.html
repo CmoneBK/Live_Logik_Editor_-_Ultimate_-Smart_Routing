@@ -127,14 +127,12 @@
             transition: max-width 0.4s ease, max-height 0.4s ease, opacity 0.3s ease; 
             pointer-events: auto; /* Buttons bleiben klickbar */
         }
-        
         #fbs-button-group.expanded, #iec-button-group.expanded {
             max-width: 800px; 
             max-height: 300px; /* Gibt der Box Raum, nach unten zu wachsen */
             opacity: 1;
             overflow: visible; /* Keine Scrollbalken mehr! */
         }
-        
         /* 🌟 DER FIX: Buttons haben exakt dieselbe Höhe und zentrieren ihren Text */
         #fbs-button-group .tool-btn, #iec-button-group button {
             flex: 0 0 auto !important; 
@@ -148,12 +146,10 @@
             justify-content: center;
             box-sizing: border-box;
         }
-
         /* 🌟 WICHTIG: Damit die Aufklapp-Buttons nicht in die Mitte rutschen */
         #fbs-toolbar, .circuit-btn-container {
             align-items: flex-start !important;
         }
-
         /* --- Spezifisch: Plus-Button Logikplan --- */
         #btn-fbs-toggle {
             flex: 0 0 34px !important; height: 34px !important; margin-top: 2px;
@@ -163,7 +159,6 @@
         #btn-fbs-toggle.expanded {
             transform: rotate(45deg); background-color: #f44336 !important;
         }
-
         /* --- Spezifisch: Optionen-Button Schaltplan --- */
         #btn-iec-toggle {
             flex: 0 0 auto !important; 
@@ -370,6 +365,14 @@
         svg.sim-running .fbs-bubble.inactive { stroke: #333 !important; }
 		/* Schaltplan-spezifische Transitionen */
         .circ-component { transition: fill 0.2s ease; }
+													 
+						   
+														   
+																			  
+														 
+																 
+																									
+		 
         /* Buttons bleiben strikt IN der Leiste, Emojis bekommen mehr Luft! */
         .tool-btn, .tb-drop-btn { 
             background: #555; color: #fff; border: 1px solid #777; 
@@ -394,29 +397,27 @@
 						   
 													   
 									  
-																																																	  
+																						
 																
-																																																								 
+																									
 		 
 											   
 																	 
 		 
 									
-																																														
+																				  
 					   
-																																																   
+																					   
 							   
 		 
-		
 																		
 									 
-																																														  
-																																											
+																				   
+																			 
 														   
-																																																   
+																					   
 							 
 		 
-
         #btn-fbs-toggle {
             flex: 0 0 34px !important; /* Verhindert, dass das Plus-Icon wächst */
             height: 34px !important;
@@ -426,7 +427,6 @@
             transform: rotate(45deg); /* Macht aus dem Plus-Icon ein X */
             background-color: #f44336 !important; /* Wird Rot zum Schließen */
         }
-
         /* Dezenter Bedienhinweis in der Logik-Toolbar */
         .fbs-drag-hint {
             display: flex;
@@ -470,7 +470,6 @@
         .range-kap { width: 25px; height: 20px; top: 10px; left: 20px; border-radius: 0 10px 10px 0; }
         .range-opt { width: 80px; height: 10px; top: 15px; left: 20px; background: rgba(255,0,0,0.1); border-color: rgba(255,0,0,0.5); border-radius: 0 10px 10px 0; }
         .range-mag { width: 30px; height: 30px; top: 5px; left: -5px; background: rgba(33,150,243,0.2); border-color: rgba(33,150,243,0.5); border-radius: 50%; }
- 
         /* Zylinder skalierbar machen */
         .f2d-zylinder-wrapper { height: 30px; box-sizing: border-box; }
         .f2d-zylinder { position: absolute; width: 100%; height: 30px; background: rgba(144, 164, 174, 0.9); border: 2px solid #546e7a; border-radius: 4px; display: flex; align-items: center; z-index: 2; box-sizing: border-box; }
@@ -557,7 +556,6 @@
         .f2d-led { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #444; background: #222; z-index: 15; display: flex; justify-content: center; align-items: center; color: rgba(255,255,255,0.4); font-size: 8px; font-weight: bold; text-align: center; transition: all 0.1s; box-shadow: 2px 2px 5px rgba(0,0,0,0.4); }
         .f2d-control-active { transform: scale(0.95); border-color: #fff; }
         /* FIX: 'transition' bei den fallenden Items entfernt! */
-																																																																																																																																																																														   
         .f2d-item { width: 40px; height: 40px; border: 2px solid #000; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; transition: transform 0.1s linear; z-index: 5; }
 		.f2d-item.is-solid { border-width: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); border-color: #333; font-size: 11px; }
         /* NEU: Spawner & Despawner */
@@ -660,6 +658,64 @@
             }
             #btn-toggle-sidebar { transform: rotate(90deg); } /* Pfeil dreht sich, da das Panel nun oben ist */
         }
+		/* ========================================== */
+        /* 🌟 NEU: PNEUMATIK KOMPONENTEN 🌟 */
+        /* ========================================== */
+        .f2d-pneumatic-zone { background: rgba(3, 169, 244, 0.05); border: 2px dashed #03a9f4; z-index: 1; }
+        .f2d-pneumatic-zone::after { content: '💨 PNEUMATIK-BEREICH'; position: absolute; top: 5px; left: 5px; color: rgba(3, 169, 244, 0.5); font-size: 14px; font-weight: bold; pointer-events: none; }
+        .f2d-compressor { position: absolute; width: 100px; height: 60px; background: #eceff1; border: 3px solid #607d8b; border-radius: 30px; box-sizing: border-box; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 5px; box-shadow: 2px 5px 10px rgba(0,0,0,0.3); }
+        .f2d-comp-motor { position: absolute; top: -15px; width: 40px; height: 25px; background: #37474f; border-radius: 4px; border: 2px solid #263238; }
+        .f2d-comp-gauge { position: absolute; left: 10px; top: -5px; width: 16px; height: 16px; background: #fff; border: 2px solid #b0bec5; border-radius: 50%; }
+        .f2d-manifold { position: absolute; background: #0288d1; border: 2px solid #01579b; border-radius: 2px; z-index: 3; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+        /* ========================================== */
+        /* 🌟 NEU: PNEUMATIK WEGEVENTILE (MIT ECHTEM SCHIEBER) 🌟 */
+        /* ========================================== */
+        /* Der äußere Container (inklusive Spulen und Anschlüssen) */
+        .f2d-valve-pneu { position: absolute; width: 50px; height: 40px; background: transparent; z-index: 4; display: flex; align-items: center; justify-content: center; }
+        /* Das statische Gehäuse (Fenster) - verdeckt die inaktive Kammer! */
+        .f2d-valve-body { width: 50px; height: 40px; border: 2px solid #333; background: #fff; position: relative; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); border-radius: 2px; overflow: hidden; }
+        /* 🌟 DER FIX: Der mechanische Innenschieber (100px breit) */
+        .f2d-valve-slider { width: 100px; height: 100%; display: flex; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(-50px); }
+        /* Wenn aktiv: Schieber rückt nach rechts (0px), sodass die linke Kammer sichtbar wird! */
+        .f2d-valve-pneu.active .f2d-valve-slider { transform: translateX(0px); }
+        /* Die Kammern (verkleinern sich nicht, bleiben starr 50px) */
+        .f2d-valve-chamber { width: 50px; height: 100%; border-right: 1px solid #333; box-sizing: border-box; background: #f8f9fa; display: flex; justify-content: center; align-items: center; transition: all 0.15s ease; color: #333; flex-shrink: 0; }
+        .f2d-valve-chamber:last-child { border-right: none; }
+        /* Magnetspulen bleiben starr außen am Gehäuse */
+        /* Magnetspulen bleiben starr außen am Gehäuse */
+        .f2d-v-solenoid { position: absolute; top: 8px; width: 14px; height: 24px; background: #fff; border: 2px solid #333; z-index: 5; display: flex; align-items: center; justify-content: center; transition: background 0.4s ease-out, box-shadow 0.4s ease-out, border-color 0.4s ease-out; }
+		/* Die winzigen Labels direkt über den Magnetspulen */
+        .f2d-solenoid-label { position: absolute; top: -22px; font-size: 8px; font-family: monospace; color: #333; white-space: nowrap; text-align: center; pointer-events: none; line-height: 1.1; font-weight: bold; }
+        .f2d-v-solenoid::before { content: ''; position: absolute; width: 1px; height: 130%; background: #333; transform: rotate(45deg); transition: background 0.4s ease-out; }
+        .f2d-v-solenoid.left { left: -14px; border-radius: 3px 0 0 3px; border-right: none; }
+        .f2d-v-solenoid.right { right: -14px; border-radius: 0 3px 3px 0; border-left: none; }
+        
+        /* Spulen glühen Orange (Zündet sofort ohne Verzögerung!) */
+        .f2d-v-solenoid.energized { background: #ff9800; border-color: #e65100; box-shadow: 0 0 10px #ff9800; z-index: 6; transition: none; }
+        .f2d-v-solenoid.energized::before { background: #fff; transition: none; }
+        /* Rückstellfeder bleibt starr außen rechts */
+        .f2d-v-spring { position: absolute; top: 10px; right: -16px; width: 16px; height: 20px; z-index: 5; transition: all 0.15s ease; transform-origin: left center; }
+        .f2d-v-spring polyline { transition: all 0.15s ease; }
+        .f2d-valve-pneu.active .f2d-v-spring { transform: scaleX(0.5) translateX(-8px); }
+        .f2d-valve-pneu.active .f2d-v-spring polyline { stroke: #2196f3; filter: drop-shadow(0 0 4px #2196f3); }
+        /* Stutzen für die späteren Druckluftschläuche (bleiben starr am Gehäuse!) */
+        .f2d-v-port { position: absolute; width: 4px; height: 6px; background: #333; z-index: 3; }
+        /* Farb-Highlights für den Durchfluss */
+        .f2d-valve-pneu.active .f2d-valve-chamber.left { background: #e8f5e9; box-shadow: inset 0 0 12px rgba(76, 175, 80, 0.4); color: #2e7d32; }
+        .f2d-valve-pneu:not(.active) .f2d-valve-chamber.right { background: #fff3e0; box-shadow: inset 0 0 12px rgba(255, 152, 0, 0.4); color: #e65100; }
+        .f2d-valve-pneu:not(.active) .f2d-valve-chamber.left { background: #eceff1; color: #b0bec5; }
+        .f2d-valve-pneu.active .f2d-valve-chamber.right { background: #eceff1; color: #b0bec5; }
+		/* --- Drosselrückschlagventil --- */
+        .f2d-throttle { position: absolute; width: 40px; height: 35px; background: #fff; border: 2px solid #546e7a; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+        .f2d-throttle-knob { width: 16px; height: 16px; border-radius: 50%; background: repeating-conic-gradient(#37474f 0% 10%, #263238 10% 20%); border: 2px solid #212121; cursor: pointer; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+        .f2d-throttle-val { font-size: 9px; font-weight: bold; font-family: monospace; color: #0288d1; margin-top: 3px; }
+        /* --- Zylinder Pneumatik-Stutzen --- */
+        .f2d-pneu-port { position: absolute; width: 8px; height: 10px; background: #90a4ae; border: 2px solid #263238; border-radius: 1px; z-index: 1; }
+        /* --- Die Druckluftschläuche (SVG) --- */
+        #pneu-hose-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; overflow: visible; }
+        .pneu-hose { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.1s; }
+        .pneu-hose.pressurized { stroke: #81d4fa; filter: drop-shadow(0 0 3px rgba(3,169,244,0.8)); } /* Unter Druck */
+        .pneu-hose.exhaust { stroke: #1565c0; opacity: 0.7; } /* Abluft / Drucklos */
     </style>
 </head>
 <body>
@@ -671,7 +727,6 @@
             </div>
             <div style="display: flex; gap: 5px; align-items: center;">
                 <button id="btn-install-app" class="btn-export" onclick="installApp()" style="background: #e91e63; font-size: 11px; padding: 3px 8px; box-shadow: none; display: none;">📱 App installieren</button>
-                
               	<button class="btn-export" onclick="openHelpModal()" style="background: #17a2b8; font-size: 11px; padding: 3px 8px; box-shadow: none;">ℹ️ Hilfe / Tipps</button>
                 <button class="btn-export" onclick="openSaveLoadModal()" style="background: #2196f3; font-size: 11px; padding: 3px 8px; box-shadow: none;">💾 Speichern / Laden</button>
                 <select class="btn-reset" onchange="loadExample(this.value)" style="background: #333; padding: 3px 5px; border-radius: 3px;">
@@ -749,20 +804,19 @@
                 <button id="btn-view-fbs" class="btn-export view-btn active" onclick="toggleWorkspaceView('fbs-wrapper')">Logikplan</button>
                 <button id="btn-view-iec" class="btn-export view-btn" onclick="toggleWorkspaceView('circuit-wrapper')">Schaltplan</button>
                 <button id="btn-view-fac" class="btn-export view-btn" onclick="toggleWorkspaceView('factory-wrapper')">2D Anlage</button>
-																																																																																																																									   
+																																																				
 												  
 																		   
 																		   
 							   
 															
-																																															  
-																																													 
-																																															 
-																																														
+																					 
+																				 
+																					
+																				  
 							   
 						 
             </div>
-            
             <div style="display: flex; gap: 5px; align-items: center; margin: 0 auto;">
                 <div class="tb-dropdown">
                     <button class="btn-export" id="btn-layout-text" style="background:#444; border:none; color:white; outline:none; cursor:pointer;">Layout: ◫</button>
@@ -776,7 +830,6 @@
                         <div onclick="selectLayout('grid-sim-left', '◨')">◨ 2D-Anlage links</div>
                     </div>
                 </div>
-
                 <div class="info-hover-wrapper">
                     <button class="btn-export" style="background-color: #17a2b8; cursor: help;">ℹ️ Info</button>
                     <div class="info-hover-content">
@@ -805,14 +858,12 @@
             <div id="fbs-wrapper" class="workspace-panel" style="display: flex; grid-area: fbs; background-image: radial-gradient(#e0e0e0 1px, transparent 1px); background-size: 20px 20px;">
 			<div id="fbs-toolbar" style="position: absolute; top: 10px; left: 10px; right: 10px; z-index: 50; display: flex; gap: 5px; align-items: center; pointer-events: none;">
                     <button id="btn-fbs-toggle" class="tool-btn" style="background: #2196f3; padding: 0; font-size: 16px; pointer-events: auto; border-radius: 50%; width: 34px; height: 34px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.4);" onclick="toggleFbsToolbar()">➕</button>
-                    
                     <div id="fbs-button-group">
                         <button class="tool-btn" style="background: #e6194B;" onclick="openFbsAddModal('AND')" draggable="true" ondragstart="startFbsDrag(event, 'AND')" ontouchstart="startFbsTouchDrag(event, 'AND')">AND (&amp;&amp;)</button>
                         <button class="tool-btn" style="background: #3cb44b;" onclick="openFbsAddModal('OR')" draggable="true" ondragstart="startFbsDrag(event, 'OR')" ontouchstart="startFbsTouchDrag(event, 'OR')">OR (||)</button>
                         <button class="tool-btn" style="background: #4363d8;" onclick="openFbsAddModal('RS')" draggable="true" ondragstart="startFbsDrag(event, 'RS')" ontouchstart="startFbsTouchDrag(event, 'RS')">FlipFlop</button>
                         <button class="tool-btn" style="background: #911eb4;" onclick="openFbsAddModal('TON')" draggable="true" ondragstart="startFbsDrag(event, 'TON')" ontouchstart="startFbsTouchDrag(event, 'TON')">Timer</button>
                         <button class="tool-btn" style="background: #f58231;" onclick="openFbsAddModal('CTU')" draggable="true" ondragstart="startFbsDrag(event, 'CTU')" ontouchstart="startFbsTouchDrag(event, 'CTU')">Counter</button>
-                        
                         <span class="fbs-drag-hint">👆 Bausteine auf Leitungen ziehen</span>
                     </div>
                 </div>
@@ -827,7 +878,6 @@
             <div id="circuit-wrapper" class="workspace-panel" style="display: none; grid-area: iec; background-image: radial-gradient(#e0e0e0 1px, transparent 1px); background-size: 20px 20px;">
                 <div class="circuit-btn-container" style="align-items: center;">
                     <button id="btn-iec-toggle" class="btn-export" style="background-color: #607d8b; border: 1px solid #455a64;" onclick="toggleIecToolbar()">⚙️ Optionen</button>
-                    
                     <div id="iec-button-group">
                         <button id="btn-toggle-econ" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleEconMode()">💼 Modus: Relais (Klassisch)</button>
                         <button id="btn-toggle-colors" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleCircuitColors()">🌈 Bunte Pfade: AUS</button>
@@ -1131,6 +1181,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         let simulationFunction = null;
         let saveTimeout = null;
         let currentGraph = null;
+		// 🌟 NEU: Permanentes Farb-Gedächtnis für den Logikplan
+        window.fbsNodeColors = {};
+        window.fbsColorCounter = 0;
 		// ==========================================
         // NEU: WEB AUDIO API SYNTHESIZER (0 Bytes Audio-Dateien!)
         // ==========================================
@@ -1282,7 +1335,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         let globalOutputs = [];
         let currentView = 'FBS'; // 'FBS' oder 'IEC'
         let panZoomCircuitInstance = null; // Instanz für den Schaltplan
-        
         // 🌟 NEU: MULTI-TOUCH ENGINE ALS FACTORY (Schützt Klicks & Instanzen) 🌟
         const createTouchHandlers = () => ({
             haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
@@ -1290,7 +1342,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 let instance = options.instance;
                 let initialScale = 1, initialDistance = 0;
                 let isPanning = false, startPanX = 0, startPanY = 0;
-
                 this.touchStart = function(e) {
                     if (e.touches.length === 2) {
                         e.preventDefault(); // Zoom-Gesten blockieren
@@ -1304,7 +1355,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         startPanY = e.touches[0].clientY;
                     }
                 };
-
                 this.touchMove = function(e) {
                     if (e.touches.length === 2) {
                         e.preventDefault();
@@ -1323,12 +1373,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         startPanY = e.touches[0].clientY;
                     }
                 };
-
                 this.touchEnd = function(e) {
                     if (e.touches.length < 2) initialDistance = 0;
                     if (e.touches.length === 0) isPanning = false;
                 };
-
                 options.svgElement.addEventListener('touchstart', this.touchStart, {passive: false});
                 options.svgElement.addEventListener('touchmove', this.touchMove, {passive: false});
                 options.svgElement.addEventListener('touchend', this.touchEnd);
@@ -1341,11 +1389,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 options.svgElement.removeEventListener('touchcancel', this.touchEnd);
             }
         });
-
         // Unser zentrales Konfigurationsobjekt (Mit smarter Factory-Zuweisung!)
         const svgPanZoomOptions = { zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true };
         Object.defineProperty(svgPanZoomOptions, 'customEventsHandler', { get: function() { return createTouchHandlers(); } });
-
         // --- NEU: UI Splitter & Aufklapp-Logik ---
         const resizer = document.getElementById('panel-resizer');
         const topPanel = document.getElementById('editor-container');
@@ -1363,7 +1409,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             if (e.touches.length === 1) {
                 isResizing = true;
                 resizer.classList.add('active');
-													 
                 e.preventDefault(); 
             }
         }, { passive: false });
@@ -1573,20 +1618,13 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 this.nodes = new Map(); 
                 this.edges = [];
                 this.gateCounter = 0;
-                this.colorIndex = 0;
             }
             addNode(id, type, label = id) {
                 if (!this.nodes.has(id)) {
-                    let c = '#333';
-                    if (type === 'INPUT' || type === 'GATE' || type === 'RS' || type === 'SR') {
-                        c = palette[this.colorIndex % palette.length];
-                        this.colorIndex++;
-                    }
-                    this.nodes.set(id, { id, type, label, inputs: [], x: 0, y: 0, level: 0, color: c });
+                    // Standardmäßig Grau, die intelligente Farb-Engine am Ende übernimmt den Rest!
+                    this.nodes.set(id, { id, type, label, inputs: [], x: 0, y: 0, level: 0, color: '#333' });
                 } else {
-                    // FIX: Intelligentes Typ-Upgrade! 
-                    // Wenn eine Variable zuerst als INPUT eingelesen wurde, sich später aber 
-                    // als OUTPUT oder Systembaustein entpuppt, wird der Typ korrigiert!
+                    // Intelligentes Typ-Upgrade
                     let existing = this.nodes.get(id);
                     if (existing.type === 'INPUT' && type !== 'INPUT') {
                         existing.type = type;
@@ -1596,14 +1634,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 return this.nodes.get(id);
             }
             addEdge(sourceId, targetId, targetPin = '', inverted = false, originalSourceId = null) {
-                const sourceNode = this.nodes.get(sourceId);
-                const edgeColor = sourceNode ? sourceNode.color : '#333';
-                const edgeObj = { sourceId, targetId, targetPin, color: edgeColor, inverted, originalSourceId: originalSourceId || sourceId };
+                const edgeObj = { sourceId, targetId, targetPin, color: '#333', inverted, originalSourceId: originalSourceId || sourceId };
                 this.edges.push(edgeObj);
                 const targetNode = this.nodes.get(targetId);
                 if (targetNode) {
                     if (!targetNode.inputs.includes(sourceId)) targetNode.inputs.push(sourceId);
-                    if (targetNode.type === 'OUTPUT') targetNode.color = edgeColor;
                 }
             }
         }
@@ -1823,6 +1858,75 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             graph.nodes.forEach(node => {
                 if (!definedOutputs.has(node.id) && node.type === 'INPUT') node.type = 'PURE_INPUT';
             });
+
+            // ==========================================
+            // 🌟 NEU: KUGELSICHERE FARB- & ALIAS-ENGINE (V2)
+            // ==========================================
+            // 1. Sicherheit: Initialisiere den Speicher, falls er fehlt
+            if (!window.fbsNodeColors) window.fbsNodeColors = {};
+            if (typeof window.fbsColorCounter === 'undefined') window.fbsColorCounter = 0;
+
+            const getStableColor = (id) => {
+                if (!window.fbsNodeColors[id]) {
+                    if (window.fbsColorCounter < palette.length) {
+                        window.fbsNodeColors[id] = palette[window.fbsColorCounter];
+                    } else {
+                        // 🌟 INFINITE COLORS: Wenn die 20 Standard-Farben aufgebraucht sind, 
+                        // generieren wir neue HSL-Farben per Goldenem Winkel (137.5°)!
+                        let hue = (window.fbsColorCounter * 137.508) % 360;
+                        window.fbsNodeColors[id] = `hsl(${hue}, 80%, 45%)`;
+                    }
+                    window.fbsColorCounter++;
+                }
+                return window.fbsNodeColors[id];
+            };
+
+            // 2. Basis-Knoten einfärben
+            graph.nodes.forEach(n => {
+                if (n.type !== 'GATE') {
+                    n.color = getStableColor(n.id);
+                } else {
+                    n.color = '#333'; // Gatter starten neutral
+                }
+            });
+
+            // 3. Farben durch das Netz fließen lassen (Kaskade)
+            let colorChanged = true;
+            let colorLoops = 50; // Schutz vor Endlosschleifen
+            while(colorChanged && colorLoops > 0) {
+                colorChanged = false;
+                colorLoops--;
+                graph.edges.forEach(edge => {
+                    let src = graph.nodes.get(edge.sourceId);
+                    let tgt = graph.nodes.get(edge.targetId);
+                    if (src && tgt) {
+                        // 🌟 DER LOGIK-FIX: Gatter erben RÜCKWÄRTS von ihrem Ziel, 
+                        // ABER NICHT von komplexen Bausteinen (RS, Timer etc.), da dies eigene Eingangs-Stränge sind!
+                        if (src.type === 'GATE' && src.color === '#333') {
+                            if (['RS', 'SR', 'TON', 'TOF', 'TP', 'CTU'].includes(tgt.type)) {
+                                src.color = getStableColor(src.id); // Eigener, unabhängiger Netzstrang!
+                            } else if (tgt.color !== '#333') {
+                                src.color = tgt.color; // Erbt die Farbe vom reinen Output (Alias)
+                            }
+                            colorChanged = true;
+                        }
+                        // Outputs / Aliase erben VORWÄRTS von ihrer Quelle
+                        if (tgt.type === 'OUTPUT' && src.color !== '#333' && tgt.color !== src.color) {
+                            tgt.color = src.color;
+                            window.fbsNodeColors[tgt.id] = src.color; 
+                            colorChanged = true;
+                        }
+                    }
+                });
+            }
+
+            // 4. Fallback für isolierte Knoten & Linien final färben
+            graph.nodes.forEach(n => { if (n.color === '#333') n.color = getStableColor(n.id); });
+            graph.edges.forEach(edge => {
+                let src = graph.nodes.get(edge.sourceId);
+                if (src) edge.color = src.color;
+            });
+
             return { graph, jsCompiledCode, inputs: [...allUsedInputs].filter(i => !definedOutputs.has(i) && !i.startsWith('AND_') && !i.startsWith('OR_')), outputs: [...definedOutputs] };
         }
         function calculateLayout(graph) {
@@ -1849,23 +1953,19 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             graph.nodes.forEach(n => { if(n.level > maxLevel) maxLevel = n.level; });
             const hasOut = new Set(graph.edges.map(e => e.sourceId));
             graph.nodes.forEach(n => { if(n.type === 'OUTPUT' && !hasOut.has(n.id)) n.level = maxLevel + 1; });
-            
             const columns = {};
             graph.nodes.forEach(node => {
                 if (!columns[node.level]) columns[node.level] = [];
                 columns[node.level].push(node);
             });
-
             // =========================================================
             // NEU: PERFEKTIONIERTES LAYOUT (Barycenter + Elastisch + Lücken)
             // =========================================================
             const MIN_GAP = 20;       
             const WIRE_PADDING = 70;  
             let sortedLevels = Object.keys(columns).sort((a,b) => parseInt(a) - parseInt(b));
-
             // --- 1. EINGÄNGE ALPHABETISCH VORSORTIEREN ---
             if (columns[0]) columns[0].sort((a, b) => a.id.localeCompare(b.id));
-
             // --- 2. BARYCENTER SORTIERUNG (Verhindert Kreuzungen) ---
             sortedLevels.forEach(levelStr => {
                 let level = parseInt(levelStr);
@@ -1893,26 +1993,22 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     });
                 }
             });
-
             // --- 3. X-ACHSE BERECHNEN ---
             let currentX = 40;        
             sortedLevels.forEach((levelStr, index) => {
                 let level = parseInt(levelStr);
                 let maxColumnWidth = 0;
                 let incomingCount = 0;
-                
                 columns[level].forEach(node => {
                     incomingCount += graph.edges.filter(e => e.targetId === node.id).length;
                     node.width = (['RS', 'SR', 'TON', 'TOF', 'TP', 'CTU', 'GATE'].includes(node.type)) ? 55 : Math.max(60, node.label.length * 8 + 10);
                     node.height = (['RS', 'SR', 'TON', 'TOF', 'TP', 'CTU'].includes(node.type)) ? 65 : (node.type === 'GATE' ? Math.max(30, node.inputs.length * 15 + 15) : 30);
                     if (node.width > maxColumnWidth) maxColumnWidth = node.width;
                 });
-                
                 // FIX: Dramatisch verkleinerter Kabelkanal! 
                 // 6px pro einkommendem Kabel reichen völlig aus. Die ausgehenden Kabel verbrauchen kaum noch Platz!
                 let dynamicWirePadding = Math.max(50, 20 + (incomingCount * 6));
                 if (index > 0) currentX += dynamicWirePadding;
-
                 columns[level].forEach(node => {
                     if (level === 0) {
                         node.x = currentX + (maxColumnWidth - node.width); // Rechtsbündig für saubere Kante
@@ -1921,10 +2017,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                     node.idealY = 40; 
                 });
-
                 currentX += maxColumnWidth;
             });
-
             // --- 4. Y-ACHSE INIT ---
             sortedLevels.forEach(levelStr => {
                 let level = parseInt(levelStr);
@@ -1934,7 +2028,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     currentY += node.height + MIN_GAP;
                 });
             });
-
             // Hilfsfunktion: Eine Spalte überschneidungsfrei anordnen (LÄSST LÜCKEN ZU!)
             function resolveOverlaps(column) {
                 column.sort((a, b) => a.idealY - b.idealY); 
@@ -1944,7 +2037,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     currentY = node.y + node.height + MIN_GAP;
                 });
             }
-
             // --- 5. ELASTISCHE ENTWIRRUNG (Relaxation-Pass mit Lücken-Logik) ---
             for (let iter = 0; iter < 4; iter++) {
                 // A) Vorwärts-Durchlauf
@@ -1966,7 +2058,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     });
                     resolveOverlaps(columns[level]);
                 });
-
                 // B) Rückwärts-Durchlauf: Bausteine richten sich nach der Höhe ihrer ZIELE aus!
                 let reversedLevels = [...sortedLevels].reverse();
                 reversedLevels.forEach(levelStr => {
@@ -1976,36 +2067,28 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         if (outEdges.length > 0) {
                             let sumY = 0;
                             let minTargetLevel = 999;
-                            
                             outEdges.forEach(e => {
                                 let tgt = graph.nodes.get(e.targetId);
                                 sumY += tgt.y + tgt.height / 2;
                                 if (tgt.level < minTargetLevel) minTargetLevel = tgt.level;
                             });
-                            
                             let avgTargetY = sumY / outEdges.length;
-
                             // 🌟 DIE MAGIE: Fern-Verbindungen nach außen drängen (Lücken erzeugen!) 🌟
                             if (level === 0 && minTargetLevel > 1) {
                                 // Wir berechnen die exakten Grenzen der benachbarten Spalte
                                 let pivotY = 300;
                                 let topY = 0;
                                 let bottomY = 800;
-                                
                                 if (columns[1] && columns[1].length > 0) {
                                     let firstNode = columns[1][0];
                                     let lastNode = columns[1][columns[1].length - 1];
-                                    
                                     let firstY = firstNode.y;
                                     let lastY = lastNode.y + lastNode.height;
-                                    
                                     pivotY = (firstY + lastY) / 2;
-                                    
                                     // Knapp über oder unter der benachbarten Gatter-Spalte platzieren (40px Puffer)
                                     topY = firstY - node.height - 40;
                                     bottomY = lastY + 40; 
                                 }
-                                
                                 if (avgTargetY < pivotY) {
                                     node.idealY = topY; 
                                 } else {
@@ -2085,15 +2168,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         }
         function drawGraph(graph) {
             currentGraph = graph;
-						  
-					
             let isFirstRun = !panZoomInstance;
             svgHalos.innerHTML = '';
             svgLines.innerHTML = '';
             svgNodes.innerHTML = '';
             const channelUsage = {};
             const horizontalUsage = [];
-            
             // =========================================================
             // NEU: PRE-PASS FÜR PIN-EINFLUGSCHNEISEN
             // =========================================================
@@ -2117,7 +2197,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 horizontalUsage.push({ y: safe(endY), x1: target.x - 120, x2: target.x, isPinStub: true });
             });
             // =========================================================
-
             const nets = {};
             graph.edges.forEach(edge => {
                 const source = graph.nodes.get(edge.sourceId);
@@ -2129,7 +2208,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 if (!nets[netKey]) nets[netKey] = { source, startY, edges: [], color: edge.color };
                 nets[netKey].edges.push(edge);
             });
-
 			// HYBRID-FIX: Wir MÜSSEN uns die rechteste Kante merken, um lange Hilfsvariablen in Level > 0 zu schützen!
             const levelRightEdges = {};
             graph.nodes.forEach(n => {
@@ -2138,13 +2216,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     levelRightEdges[n.level] = rightEdge;
                 }
             });
-
             const sourceUsage = {}; 
-
             Object.values(nets).forEach(net => {
                 let startX = safe(net.source.x + net.source.width);
                 let colRightEdge = safe(levelRightEdges[net.source.level]);
-                
                 net.edges.forEach(edge => {
                     const target = graph.nodes.get(edge.targetId);
                     let endY = target.y + (target.height / 2);
@@ -2165,25 +2240,19 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     edge.calcMidX = safe(target.x - 12 - (channelUsage[target.level] * 6));
                     channelUsage[target.level]++;
                 });
-                
                 let maxMidX = safe(Math.max(...net.edges.map(e => e.calcMidX)));
                 let minMidX = safe(Math.min(...net.edges.map(e => e.calcMidX))); 
-                
                 // Vorab-Schätzung für den horizontalen Bereich
                 let tempDropX = safe(colRightEdge + 12);
                 let rightExtent = Math.max(tempDropX, maxMidX);
                 let leftExtent = Math.min(tempDropX, minMidX);
-                
                 let trunkY = safe(net.startY);
                 let validEndYs = net.edges.map(e => e.calcEndY);
-
                 if (rightExtent > leftExtent) {
                     trunkY = safe(findFreeY(net.startY, leftExtent, rightExtent, graph.nodes, horizontalUsage, validEndYs));
                     horizontalUsage.push({y: trunkY, x1: leftExtent, x2: rightExtent, isPinStub: false});
                 }
-                
                 let hasKnick = Math.abs(trunkY - net.startY) > 2;
-                
                 // 🌟 DER MAGISCHE FIX: Wir verbrauchen NUR dann eine vertikale Spur am Start, 
                 // wenn die Linie wirklich abknicken muss!
                 let dropX = tempDropX;
@@ -2192,15 +2261,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (!sourceUsage[lvl]) sourceUsage[lvl] = 0;
                     dropX = safe(colRightEdge + 12 + (sourceUsage[lvl] * 6)); // 6px Schritte
                     sourceUsage[lvl]++;
-                    
                     // Extents mit dem finalen aufgefächerten dropX korrigieren
                     rightExtent = Math.max(dropX, maxMidX);
                     leftExtent = Math.min(dropX, minMidX);
                 }
-
                 let drawLeft = hasKnick ? leftExtent : Math.min(startX, minMidX);
                 let drawRight = hasKnick ? rightExtent : Math.max(startX, maxMidX);
-
                 if (net.edges.length > 0) {
                     let trunkD = "";
                     if (hasKnick) {
@@ -2210,7 +2276,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                     drawPath(trunkD, net.color, net.source.id);
                 }
-                
                 const dots = new Set();
                 net.edges.forEach(edge => {
                     let actualEndX = edge.calcEndX;
@@ -2218,7 +2283,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         actualEndX -= 7;
                         drawBubble(actualEndX + 3.5, edge.calcEndY, net.color, net.source.id);
                     }
-                    
                     let dropD = "";
                     if (Math.abs(trunkY - edge.calcEndY) <= 4) {
                         dropD = `M ${edge.calcMidX} ${trunkY} L ${actualEndX} ${trunkY}`;
@@ -2226,21 +2290,17 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         dropD = `M ${edge.calcMidX} ${trunkY} L ${edge.calcMidX} ${edge.calcEndY} L ${actualEndX} ${edge.calcEndY}`;
                     }
                     drawPath(dropD, net.color, net.source.id);
-
                     let X = edge.calcMidX;
                     let segments = 0;
                     if (drawLeft < X) segments++; 
                     if (drawRight > X) segments++; 
                     if (hasKnick && dropX === X) segments++; 
                     else if (!hasKnick && startX === X) segments++; 
-                    
                     const edgesHere = net.edges.filter(e => e.calcMidX === X);
                     const uniqueYs = new Set(edgesHere.map(e => e.calcEndY));
                     segments += uniqueYs.size; 
-
                     if (segments >= 3) dots.add(`${X},${trunkY}`);
                 });
-                
                 dots.forEach(d => {
                     const [dx, dy] = d.split(',').map(Number);
                     drawDot(dx, dy, net.color, net.source.id);
@@ -2412,6 +2472,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
                     }
                     spsState = {};
+					window.fbsNodeColors = {}; 
+					window.fbsColorCounter = 0;
                     updateHighlighting(); 
                     updateEditor(); 
                     saveToStorage();
@@ -2629,12 +2691,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             // 🌟 DER FIX: Wir suchen im richtigen Fenster!
             let doc = (window.popOutWindows && window.popOutWindows['circuit-wrapper'] && !window.popOutWindows['circuit-wrapper'].closed) 
                       ? window.popOutWindows['circuit-wrapper'].document : document;
-            
             const wrapper = doc.getElementById('circuit-wrapper');
             const btn = doc.getElementById('btn-toggle-colors');
-            
             if (!wrapper || !btn) return;
-
             wrapper.classList.toggle('colorful');
             if (wrapper.classList.contains('colorful')) {
                 btn.style.backgroundColor = '#911eb4';
@@ -2643,39 +2702,35 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btn.style.backgroundColor = '#555';
                 btn.textContent = '🌈 Bunte Pfade: AUS';
             }
-            
             if (typeof SoundEngine !== 'undefined') SoundEngine.click();
         };
 		// --- NEU: SCHALTPLAN DARSTELLUNGS-OPTIONEN ---
         window.configWechsler = false;
         window.configSeqNum = false;
         window.configDetails = 2; // 0 = Aus, 1 = E/A, 2 = Alle
-        
         // 🌟 HELFER: Sucht immer im abgekoppelten Fenster, falls es offen ist!
         function getCircDoc() {
             return (window.popOutWindows && window.popOutWindows['circuit-wrapper'] && !window.popOutWindows['circuit-wrapper'].closed) 
                    ? window.popOutWindows['circuit-wrapper'].document : document;
         }
-
         window.configEconMode = false;
         window.toggleEconMode = function() {
             window.configEconMode = !window.configEconMode;
             const btn = getCircDoc().getElementById('btn-toggle-econ');
             if (btn) {
                 if (window.configEconMode) {
-																																														  
+																				   
                     btn.style.backgroundColor = '#4caf50'; btn.textContent = '💼 Modus: Direkt (Wirtschaftlich)';
                 } else {
 																			 
                     btn.style.backgroundColor = '#555'; btn.textContent = '💼 Modus: Relais (Klassisch)';
                 }
 							   
-																																													 
+																				 
 									
             }
             if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
         };
-        
         window.toggleDetails = function() {
             window.configDetails = (window.configDetails + 1) % 3; 
             const btn = getCircDoc().getElementById('btn-toggle-details');
@@ -2690,12 +2745,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 else { btn.style.backgroundColor = '#555'; btn.textContent = '🏷️ Details: AUS'; }
 			 
 							   
-																																													 
+																				 
 									
             }
             if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
         };
-        
         window.toggleWechsler = function() {
             window.configWechsler = !window.configWechsler;
             const btn = getCircDoc().getElementById('btn-toggle-wech');
@@ -2703,13 +2757,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btn.style.backgroundColor = window.configWechsler ? '#911eb4' : '#555';
                 btn.textContent = window.configWechsler ? '🔀 Wechslernummerierung: AN' : '🔀 Wechslernummerierung: AUS';
 							   
-																																																		  
-																																													 
+																						  
+																				 
 									 
             }
             if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
         };
-        
         window.toggleSeqNum = function() {
             window.configSeqNum = !window.configSeqNum;
             const btn = getCircDoc().getElementById('btn-toggle-seq');
@@ -2717,8 +2770,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btn.style.backgroundColor = window.configSeqNum ? '#911eb4' : '#555';
                 btn.textContent = window.configSeqNum ? '🔢 Fortlaufende Nrn: AN' : '🔢 Fortlaufende Nrn: AUS';
 							   
-																																																		  
-																																													 
+																						  
+																				 
 									
             }
             if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
@@ -2812,12 +2865,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         };
         // --- NEU: WORKSPACE PANEL MANAGEMENT ---
         let currentLayout = 'flex-row'; // Speichert das aktive Layout
-        
         window.selectLayout = function(val, icon) {
             document.getElementById('btn-layout-text').textContent = 'Layout: ' + icon;
             changeWorkspaceLayout(val);
         };
-
         window.changeWorkspaceLayout = function(val) {
             currentLayout = val;
             const wc = document.getElementById('workspace-container');
@@ -3015,7 +3066,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         // ==========================================
         document.addEventListener('touchmove', (e) => {
             if (e.touches.length !== 1) return;
-            
             // 1. Linkes Panel ziehen
             if (isResizing) {
                 let containerRect = document.getElementById('left-panel').getBoundingClientRect();
@@ -3028,7 +3078,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 e.preventDefault(); // Verhindert Scrollen der Seite
                 return;
             }
-            
             // 2. Haupt-Panels ziehen (Schaltplan, 2D Anlage)
             if (wsResizing) {
                 let wc = document.getElementById('workspace-container');
@@ -3063,7 +3112,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 return;
             }
         }, { passive: false });
-
         document.addEventListener('touchend', () => {
             if (isResizing) {
                 isResizing = false;
@@ -3151,18 +3199,18 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             // 3. Logikplan (FBS) Kästen und Linien aktualisieren
             currentGraph.nodes.forEach(node => {
                 const val = !!spsState[node.id];
-                // FIX: CSS.escape hier extrem wichtig!
-                const block = document.getElementById(`node-block-${CSS.escape(node.id)}`);
+                // 🌟 MULTI-WINDOW FIX: Wir MÜSSEN im 'customSvg' suchen, nicht im globalen 'document'!
+                const block = customSvg.querySelector(`#node-block-${CSS.escape(node.id)}`);
                 if (block) {
                     if (val) { block.classList.add('active'); block.classList.remove('inactive'); }
                     else { block.classList.add('inactive'); block.classList.remove('active'); }
                 }
-                const nets = document.querySelectorAll(`.net-source-${CSS.escape(node.id)}`);
+                const nets = customSvg.querySelectorAll(`.net-source-${CSS.escape(node.id)}`);
                 nets.forEach(el => {
                     if (val) { el.classList.add('active'); el.classList.remove('inactive'); }
                     else { el.classList.add('inactive'); el.classList.remove('active'); }
                 });
-            });		
+            });	
             // 4. Schaltplan (IEC) aktualisieren
             // 4. Schaltplan (IEC) aktualisieren
             let pCirc = circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
@@ -3232,8 +3280,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         function drawCircuitPlan(graph, inputsList, outputsList, keepView = false) {
             let isFirstRun = !panZoomCircuitInstance;
             circuitContent.innerHTML = '';
-			let sfCount = 1, kfCount = 1, bgCount = 1, mbCount = 1, pCount = 1, hCount = 1, mCount = 1, kCount = 1, eCount = 1;            
-			let symMap = {};
+            let sfCount = 1, kfCount = 1, bgCount = 1, mbCount = 1, pCount = 1, hCount = 1, mCount = 1, kCount = 1, eCount = 1; 
+            let symMap = {};
+            window.iecSymMap = symMap; // 🌟 FIX: Macht das Register für die Magnetspulen global!
             let contactTypeMap = {};
             let pathCounter = 1; 
             let relayContacts = {}; 
@@ -3310,7 +3359,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         else if (cType === 'contactor') prefix = `-K${window.kCount++ || (window.kCount=1, window.kCount++)}`;
                         else if (cType === 'heater') prefix = `-E${eCount++}`; // NEU
                         else prefix = `-P${pCount++}`;
-                        
                         symMap[n.id] = prefix + (window.configDetails >= 1 ? ` (${n.label})` : '');
                         n.isRelay = false;
                         n.outType = cType;
@@ -3404,11 +3452,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 drawSmallText(g, x - 5, y - 10, pinTop, 'end');
                 drawSmallText(g, x - 5, y + 15, pinBot, 'end');
                 if (type === 'taster' || type === 'schalter' || type === 'nothalt' || type === 'mech_sensor' || type === 'key_switch' || type === 'light_curtain') {
-																		 
-																									  
                     let dashEndX = isNC ? x + 3 : x - 5; 
                     g.appendChild(createSvgElement('line', {x1: dashEndX, y1: y + 2.5, x2: x - 18, y2: y + 2.5, stroke: '#000', 'stroke-width': 1.5, 'stroke-dasharray': '2,2'}));
-                    
                     if (type === 'nothalt') {
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5}));
                         g.appendChild(createSvgElement('path', {d: `M ${x - 18} ${y - 2.5} A 5 5 0 0 0 ${x - 18} ${y + 7.5} Z`, fill: '#000'}));
@@ -3518,7 +3563,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 // Das "M"
                 let txt = createSvgElement('text', {x: x, y: y + 5, 'font-size': '14px', 'font-weight': '900', 'text-anchor': 'middle', 'font-family': 'Arial'});
                 txt.textContent = 'M'; g.appendChild(txt);
-                
                 addLabelText(g, x + 25, y, label, true);
                 drawSmallText(g, x - 5, y - 18, 'U1', 'end');
                 drawSmallText(g, x - 5, y + 24, 'U2', 'end');
@@ -3538,7 +3582,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 g.appendChild(createSvgElement('path', {d: `M ${x-8} ${y-4} Q ${x-5} ${y-8} ${x-2} ${y-4} T ${x+4} ${y-4} T ${x+10} ${y-4}`, fill: 'none', stroke: '#000', 'stroke-width': 1}));
                 g.appendChild(createSvgElement('path', {d: `M ${x-8} ${y+1} Q ${x-5} ${y-3} ${x-2} ${y+1} T ${x+4} ${y+1} T ${x+10} ${y+1}`, fill: 'none', stroke: '#000', 'stroke-width': 1}));
                 g.appendChild(createSvgElement('path', {d: `M ${x-8} ${y+6} Q ${x-5} ${y+2} ${x-2} ${y+6} T ${x+4} ${y+6} T ${x+10} ${y+6}`, fill: 'none', stroke: '#000', 'stroke-width': 1}));
-                
                 addLabelText(g, x + 25, y, label, true);
                 drawSmallText(g, x - 5, y - 12, 'X1', 'end');
                 drawSmallText(g, x - 5, y + 18, 'X2', 'end');
@@ -3815,20 +3858,15 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     let p = pathCounter++;
                     let edge = inEdges[0]; 
                     let w1 = calcPinW(edge);
-                    
                     // 1. Start-X für diesen Pfad festlegen
                     currX += (w1 > 90 ? (w1-90)/2 : 0);
                     drawText(currX, yTop - 25, p.toString(), true);
-                    
                     let pCond = "false";
                     if (edge) {
-																										
                         pCond = drawInputPin(edge, currX, yTop, 430, p, "true");
                     } else {
-																											   
                         setPower(drawLine(currX, yTop, currX, 430, 2, node.id, col), "false"); 
                     }
-
                     // 2. Das Bauteil zeichnen
                     if (node.isRelay) setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
                     else if (node.outType === 'valve') setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'valve', col, p), pCond);
@@ -3837,10 +3875,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     else if (node.outType === 'heater') setPower(drawHeater(currX, 450, symMap[node.id], node.id, col), pCond); // NEU
                     else if (node.outType === 'contactor') setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
                     else setPower(drawLED(currX, 450, symMap[node.id], node.id, col, p), pCond);
-
                     // 3. Verbindung zur Masseschiene (M)
                     setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
-
                     // 🌟 WICHTIG: Den X-Abstand zum NÄCHSTEN Bauteil festlegen
                     // Wir rechnen hier den Platzbedarf des Bauteils ein
                     currX += Math.max(130, w1 + 40); 
@@ -3963,10 +3999,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 if (pFbs && pFbs.style.display !== 'none') {
                     drawGraph(parsed.graph);
                 }
-                let pCirc = circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
-                if (pCirc && pCirc.style.display !== 'none') {
-                    drawCircuitPlan(parsed.graph, globalInputs, globalOutputs);
-                }
+                // 🌟 FIX: Schaltplan IMMER (auch unsichtbar) generieren, damit die IEC-Namen für die Anlage aktuell sind!
+				 
+                drawCircuitPlan(parsed.graph, globalInputs, globalOutputs, true);
+	 
                 runSimulationTick();
             } catch (e) {
                 console.warn("Warte auf korrekte Syntax...", e);
@@ -4058,7 +4094,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         }, { passive: false });
 		// 🌟 NEU: 2D KAMERA TOUCH-STEUERUNG (Pinch-to-Zoom & Pan) 🌟
         let touchInitDist = 0, touchInitScale = 1;
-        
         factoryScrollArea.addEventListener('touchstart', (e) => {
             if (e.touches.length === 2) {
                 isPanActive = false; // Normales Schieben abbrechen
@@ -4077,13 +4112,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
             }
         }, { passive: false });
-
         factoryScrollArea.addEventListener('touchmove', (e) => {
             if (e.touches.length === 2) {
                 e.preventDefault(); // Verhindert native Browser-Gesten
                 let currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 let scaleChange = currentDist / touchInitDist;
-                
                 factoryScale = Math.max(0.2, Math.min(touchInitScale * scaleChange, 3.0));
                 factoryCanvas.style.transform = `scale(${factoryScale})`;
             } else if (e.touches.length === 1 && isPanActive) {
@@ -4092,7 +4125,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 factoryScrollArea.scrollTop = panScrollTop - (e.touches[0].clientY - panStartY);
             }
         }, { passive: false });
-
         factoryScrollArea.addEventListener('touchend', (e) => {
             if (e.touches.length < 2) touchInitDist = 0;
             if (e.touches.length === 0) isPanActive = false;
@@ -4125,6 +4157,214 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         // NEU: BAUTEIL REGISTRY (Plugin-Architektur)
         // ==========================================
         const ComponentRegistry = {
+            // 🌟 PNEUMATIK BASIS-KOMPONENTEN
+            'pneumatic_zone': {
+                directSpawn: true,
+                build: function(obj, el) {
+                    obj.width = 400; obj.height = 300; el.className = 'f2d-obj f2d-pneumatic-zone';
+                    el.style.width = obj.width + 'px'; el.style.height = obj.height + 'px';
+                    let resizer = document.createElement('div'); resizer.className = 'f2d-resize-handle-xy'; obj.resizerEl = resizer; el.appendChild(resizer);
+                    obj.useCollision = false; obj.useGravity = false;
+                }
+            },
+            'compressor': {
+                directSpawn: true,
+                build: function(obj, el) {
+                    obj.width = 100; obj.height = 60; obj.pressure = 6.0; obj.maxFlow = 200; // 6 bar, 200 l/min
+                    el.className = 'f2d-obj f2d-compressor';
+                    el.innerHTML = `<div class="f2d-comp-motor"></div><div class="f2d-comp-gauge"></div><span style="font-size: 10px; font-weight: bold; color: #37474f;">${obj.pressure} bar</span>`;
+                    obj.useCollision = false;
+                },
+                contextMenu: function(obj, ctxMenu, saveCallback) {
+                    let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
+                    let wrapP = document.createElement('div'); wrapP.style.padding = '5px 15px'; wrapP.onclick = e => e.stopPropagation();
+                    wrapP.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">🗜️ Netzdruck (bar)</div>`;
+                    let inpP = document.createElement('input'); inpP.type = 'number'; inpP.min = '1'; inpP.max = '12'; inpP.step = '0.5'; inpP.value = obj.pressure;
+                    inpP.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px;";
+                    inpP.onchange = e => { obj.pressure = parseFloat(e.target.value); obj.el.querySelector('span').textContent = obj.pressure + ' bar'; saveCallback(); };
+                    wrapP.appendChild(inpP); ctxMenu.appendChild(wrapP);
+                    let wrapF = document.createElement('div'); wrapF.style.padding = '5px 15px'; wrapF.onclick = e => e.stopPropagation();
+                    wrapF.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">💨 Fördervolumen (l/min)</div>`;
+                    let inpF = document.createElement('input'); inpF.type = 'number'; inpF.min = '10'; inpF.step = '10'; inpF.value = obj.maxFlow;
+                    inpF.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px;";
+                    inpF.onchange = e => { obj.maxFlow = parseFloat(e.target.value); saveCallback(); };
+                    wrapF.appendChild(inpF); ctxMenu.appendChild(wrapF);
+                }
+            },
+			'throttle': {
+                directSpawn: true,
+                build: function(obj, el) {
+                    obj.width = 40; obj.height = 35; obj.opening = 100;
+                    el.className = 'f2d-obj f2d-throttle';
+                    // 🌟 FIX: Optischer Bypass für das Rückschlagventil hinzugefügt
+                    el.innerHTML = `
+                        <div class="f2d-throttle-knob"></div><div class="f2d-throttle-val">${obj.opening}%</div>
+                        <div class="f2d-v-port" style="top:-6px; left:18px;"></div>
+                        <div class="f2d-v-port" style="bottom:-6px; left:18px;"></div>
+                        <div style="position:absolute; right: -12px; top: 12px; font-size: 7px; color: #546e7a; font-weight: bold; pointer-events: none;">▶|</div>
+                    `;
+                    // 🌟 NORM-BESCHRIFTUNG
+                    let label = document.createElement('div'); label.className = 'f2d-label f2d-norm-label'; 
+                    label.style.left = '45px'; label.style.top = '10px'; 
+                    label.textContent = obj.normLabel || 'Drosselrückschlagventil'; el.appendChild(label);
+                    obj.useCollision = false;
+                },
+                // ... (Die contextMenu Funktion der Drossel bleibt exakt gleich!)
+                contextMenu: function(obj, ctxMenu, saveCallback) {
+                    let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
+                    let wrap = document.createElement('div'); wrap.style.padding = '5px 15px'; wrap.onclick = e => e.stopPropagation();
+                    wrap.innerHTML = `<div style="color: #03a9f4; font-size: 10px; font-weight: bold; margin-bottom: 5px;">⚙️ Öffnungsgrad (%)</div>`;
+                    let slider = document.createElement('input'); slider.type = 'range'; slider.min = '1'; slider.max = '100'; slider.value = obj.opening;
+                    slider.style.width = '100%'; slider.style.cursor = 'ew-resize';
+                    let valDisplay = document.createElement('div'); valDisplay.style.color = '#fff'; valDisplay.style.fontSize = '11px'; valDisplay.style.textAlign = 'center'; valDisplay.textContent = obj.opening + '%';
+                    slider.oninput = e => {
+                        obj.opening = parseInt(e.target.value);
+                        valDisplay.textContent = obj.opening + '%';
+                        obj.el.querySelector('.f2d-throttle-val').textContent = obj.opening + '%';
+                        obj.el.querySelector('.f2d-throttle-knob').style.transform = `rotate(${obj.opening * 2.7}deg)`;
+                        saveCallback();
+                    };
+                    wrap.appendChild(slider); wrap.appendChild(valDisplay); ctxMenu.appendChild(wrap);
+                }
+            },
+            'valve_pneu': {
+                directSpawn: true,
+                build: function(obj, el, var1, var2) {
+                    // 🌟 FIX: Ventil ist wieder 50px breit! (Schläuche können so exakt ankern)
+                    obj.width = 50; obj.height = 40; obj.isDouble = (var2 === 'double'); 
+                    el.className = 'f2d-obj f2d-valve-pneu';
+                    let svgDefs = `<defs><marker id="arr-${obj.id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" /></marker></defs>`;
+                    let chamberL, chamberR, ports;
+                    if (obj.isDouble) { 
+                        chamberL = `<svg width="50" height="40">${svgDefs}
+                            <line x1="25" y1="40" x2="15" y2="5" stroke="currentColor" stroke-width="2" marker-end="url(#arr-${obj.id})"/>
+                            <line x1="35" y1="0" x2="40" y2="35" stroke="currentColor" stroke-width="2" marker-end="url(#arr-${obj.id})"/>
+                            <path d="M10,40 v-8 m-5,0 h10" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>`;
+                        chamberR = `<svg width="50" height="40">${svgDefs}
+                            <line x1="25" y1="40" x2="35" y2="5" stroke="currentColor" stroke-width="2" marker-end="url(#arr-${obj.id})"/>
+                            <line x1="15" y1="0" x2="10" y2="35" stroke="currentColor" stroke-width="2" marker-end="url(#arr-${obj.id})"/>
+                            <path d="M40,40 v-8 m-5,0 h10" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>`;
+                        // 🌟 FIX: Stutzen exakt auf den 50px Body ausgerichtet
+                        ports = `
+                            <div class="f2d-v-port" style="bottom:-6px; left:8px;"></div>
+                            <div class="f2d-v-port" style="bottom:-6px; left:23px;"></div>
+                            <div class="f2d-v-port" style="bottom:-6px; left:38px;"></div>
+                            <div class="f2d-v-port" style="top:-6px; left:13px;"></div>
+                            <div class="f2d-v-port" style="top:-6px; left:33px;"></div>
+                        `;
+                    } else { 
+                        chamberL = `<svg width="50" height="40">${svgDefs}
+                            <line x1="15" y1="40" x2="25" y2="5" stroke="currentColor" stroke-width="2" marker-end="url(#arr-${obj.id})"/>
+                            <path d="M35,40 v-8 m-5,0 h10" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>`;
+                        chamberR = `<svg width="50" height="40">${svgDefs}
+                            <line x1="25" y1="0" x2="35" y2="35" stroke="currentColor" stroke-width="2" marker-end="url(#arr-${obj.id})"/>
+                            <path d="M15,40 v-8 m-5,0 h10" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>`;
+                        ports = `
+                            <div class="f2d-v-port" style="bottom:-6px; left:13px;"></div>
+                            <div class="f2d-v-port" style="bottom:-6px; left:33px;"></div>
+                            <div class="f2d-v-port" style="top:-6px; left:23px;"></div>
+                        `;
+                    }
+                    // 🌟 FIX: HTML-Platzhalter für die Spulen-Labels eingebaut!
+                    let leftActuator = `<div class="f2d-v-solenoid left"><div class="f2d-solenoid-label"></div></div>`;
+                    let rightActuator = obj.isDouble 
+                        ? `<div class="f2d-v-solenoid right"><div class="f2d-solenoid-label"></div></div>` 
+                        : `<svg class="f2d-v-spring" viewBox="0 0 16 20"><polyline points="0,10 4,2 12,18 16,10" stroke="#333" stroke-width="2" fill="none"/></svg>`;
+                    // 🌟 FIX: Die Schieber-Struktur (Slider im Body)
+                    el.innerHTML = `
+                        ${leftActuator}
+                        ${rightActuator}
+                        ${ports}
+                        <div class="f2d-valve-body">
+                            <div class="f2d-valve-slider">
+                                <div class="f2d-valve-chamber left">${chamberL}</div>
+                                <div class="f2d-valve-chamber right">${chamberR}</div>
+                            </div>
+                        </div>
+                    `;
+                    // 🌟 FIX: Das Label nutzt nun die DIN-Norm
+                    let label = document.createElement('div'); label.className = 'f2d-label f2d-norm-label'; label.style.top = '-25px'; 
+                    label.textContent = obj.normLabel || (obj.isDouble ? '5/2-Wege' : '3/2-Wege'); el.appendChild(label);
+                    obj.useCollision = false;
+                },
+                animate: function(obj, spsState) {
+                    let isActive = false;
+                    
+                    let extVar = obj.linkedVarExt;
+                    let retVar = obj.linkedVarRet;
+                    if (obj.targetCylinderId) {
+                        let parentCyl = factoryObjects.find(o => o.id === obj.targetCylinderId);
+                        if (parentCyl) {
+                            extVar = parentCyl.linkedVarExt;
+                            retVar = parentCyl.linkedVarRet;
+                        }
+                    }
+
+                    // 1. Linke Spule (Ausfahren) checken
+                    let extElec = extVar ? !!spsState[extVar] : false;
+                    let visExt = extElec;
+                    if (extElec) obj.dwellLeft = 15;
+                    else if (obj.dwellLeft > 0) { obj.dwellLeft--; visExt = true; }
+
+                    let solLeft = obj.el.querySelector('.f2d-v-solenoid.left');
+                    if (solLeft) {
+                        solLeft.classList.toggle('energized', visExt);
+                        // 🌟 FIX: Label aus der IEC-Map auslesen und reinschreiben!
+                        let lblL = solLeft.querySelector('.f2d-solenoid-label');
+                        if (lblL) {
+                            let iecName = window.iecSymMap && window.iecSymMap[extVar] ? window.iecSymMap[extVar].split(' ')[0] : '';
+                            lblL.innerHTML = extVar ? `${extVar}<br><span style="color:#03a9f4">${iecName}</span>` : '';
+                        }
+                    }
+
+                    if (obj.isDouble) {
+                        // 2. Rechte Spule (Einfahren) checken
+                        let retElec = retVar ? !!spsState[retVar] : false;
+                        let visRet = retElec;
+                        if (retElec) obj.dwellRight = 15;
+                        else if (obj.dwellRight > 0) { obj.dwellRight--; visRet = true; }
+
+                        let solRight = obj.el.querySelector('.f2d-v-solenoid.right');
+                        if (solRight) {
+                            solRight.classList.toggle('energized', visRet);
+                            // 🌟 FIX: Label für die rechte Spule!
+                            let lblR = solRight.querySelector('.f2d-solenoid-label');
+                            if (lblR) {
+                                let iecName = window.iecSymMap && window.iecSymMap[retVar] ? window.iecSymMap[retVar].split(' ')[0] : '';
+                                lblR.innerHTML = retVar ? `${retVar}<br><span style="color:#03a9f4">${iecName}</span>` : '';
+                            }
+                        }
+                        
+                        // 3. Mechanische Logik (Reagiert SOFORT auf das echte Signal, nicht auf die Optik!)
+                        if (extElec && !retElec) obj.valveState = 'ext';
+                        if (retElec && !extElec) obj.valveState = 'ret';
+                        isActive = (obj.valveState === 'ext');
+                    } else {
+                        // Monostabil (Federrückstellung)
+                        isActive = extElec;
+                    }
+                    
+                    // 4. Optisches und akustisches Schalten des Schiebers
+                    if (isActive !== obj.isActive) {
+                        obj.isActive = isActive;
+                        obj.el.classList.toggle('active', isActive);
+                        if (typeof SoundEngine !== 'undefined') SoundEngine.clack();
+                    }
+                }
+            },
+            'manifold': {
+                directSpawn: true,
+                build: function(obj, el) {
+                    obj.width = 200; obj.height = 15; el.className = 'f2d-obj f2d-manifold';
+                    el.style.width = obj.width + 'px'; el.style.height = obj.height + 'px';
+                    let resizer = document.createElement('div'); resizer.className = 'f2d-resize-handle'; obj.resizerEl = resizer; el.appendChild(resizer);
+                    obj.useCollision = false;
+                }
+            },
             'turntable': {
                 meta: { name: 'Drehtisch', icon: '🔄', desc: '[Hier kommt später der Beschreibungstext hin...]' },
                 // 1. UI & Modal Infos
@@ -4355,40 +4595,29 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     let sCy = sensorObj.y + (sensorObj.height||sensorObj.width)/2;
                     let maxR = Math.max(targetObj.width, targetObj.height) + Math.max(sensorObj.width, (sensorObj.height||sensorObj.width));
                     if (Math.hypot(tCx - sCx, tCy - sCy) > maxR) return false;
-
                     let sRad = (sensorObj.rotation || 0) * Math.PI / 180;
-                    
                     // 🌟 DER FIX: High-Density Abtastung! 
                     // Das Gitter skaliert dynamisch mit, sodass die Lücken maximal 5 Pixel groß sind!
                     let stepsX = Math.max(1, Math.ceil(lw / 5));
                     let stepsY = Math.max(1, Math.ceil(lh / 5)); 
-
                     let tk = targetObj.thickness || 20;
                     let halfW = targetObj.width/2; 
                     let halfH = targetObj.height/2;
-
                     for (let x=0; x<=stepsX; x++) {
                         let stepX = lx + (lw/stepsX)*x; 
                         for (let y=0; y<=stepsY; y++) {
                             let stepY = ly + (lh/stepsY)*y;
-                            
                             let distX = stepX - sensorObj.width/2;
                             let distY = stepY - (sensorObj.height||sensorObj.width)/2;
                             let px = sCx + distX * Math.cos(sRad) - distY * Math.sin(sRad);
                             let py = sCy + distX * Math.sin(sRad) + distY * Math.cos(sRad);
-                            
                             let tRad = (targetObj.rotation || 0) * Math.PI / 180;
                             let dx = px - tCx;
                             let dy = py - tCy;
-                            
                             let localX = dx * Math.cos(tRad) + dy * Math.sin(tRad);
                             let localY = -dx * Math.sin(tRad) + dy * Math.cos(tRad);
-                            
-																					  
-																								
                             let inVert = (localX >= -halfW) && (localX <= -halfW + tk) && (localY >= -halfH) && (localY <= halfH);
                             let inHoriz = (localX >= -halfW) && (localX <= halfW) && (localY >= halfH - tk) && (localY <= halfH);
-                            
                             if(inVert || inHoriz) return true;
                         }
                     }
@@ -4422,32 +4651,24 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     let sCy = sensorObj.y + (sensorObj.height||sensorObj.width)/2;
                     let maxR = Math.max(targetObj.width, targetObj.height) + Math.max(sensorObj.width, (sensorObj.height||sensorObj.width));
                     if (Math.hypot(tCx - sCx, tCy - sCy) > maxR) return false;
-
                     let sRad = (sensorObj.rotation || 0) * Math.PI / 180;
-                    
                     let stepsX = Math.max(1, Math.ceil(lw / 5));
                     let stepsY = Math.max(1, Math.ceil(lh / 5)); 
-
                     let halfW = targetObj.width/2; 
                     let halfH = targetObj.height/2;
-
                     for (let x=0; x<=stepsX; x++) {
                         let stepX = lx + (lw/stepsX)*x; 
                         for (let y=0; y<=stepsY; y++) {
                             let stepY = ly + (lh/stepsY)*y;
-                            
                             let distX = stepX - sensorObj.width/2;
                             let distY = stepY - (sensorObj.height||sensorObj.width)/2;
                             let px = sCx + distX * Math.cos(sRad) - distY * Math.sin(sRad);
                             let py = sCy + distX * Math.sin(sRad) + distY * Math.cos(sRad);
-                            
                             let tRad = (targetObj.rotation || 0) * Math.PI / 180;
                             let dx = px - tCx;
                             let dy = py - tCy;
-                            
                             let localX = dx * Math.cos(tRad) + dy * Math.sin(tRad);
                             let localY = -dx * Math.sin(tRad) + dy * Math.cos(tRad);
-                            
                             if(localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH) return true;
                         }
                     }
@@ -4587,22 +4808,18 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 },
                 animate: function(obj, spsState) {
                     let isTriggered = false;
-                    
                     // Hitbox um den Schalter (Groß genug für seitliches Streifen)
                     let hX = -10, hY = -20, hW = 40, hH = 60;
-
                     // 1. Werkstücke
                     factoryItems.forEach(item => {
                         if (isBlockInLocalRect(item, obj, hX, hY, hW, hH)) isTriggered = true;
                     });
-                    
                     // 2. Zylinderkolben (Das gesamte ausgefahrene Rohr abtasten!)
                     factoryObjects.forEach(cyl => {
                         if (cyl.type && cyl.type.startsWith('zylinder')) {
                             let extPixels = (cyl.extension / 100) * cyl.width;
                             if (extPixels > 2) { // Nur wenn er aus dem Gehäuse schaut
                                 let cRad = (cyl.rotation || 0) * Math.PI / 180;
-                                
                                 // Wir tasten die gesamte ausgefahrene Stange in 10px-Schritten ab
                                 let steps = Math.ceil(extPixels / 10);
                                 for (let i = 0; i <= steps; i++) {
@@ -4610,7 +4827,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                     let dist = (cyl.width / 2) + (i / steps) * extPixels;
                                     let ptX = cyl.x + cyl.width/2 + dist * Math.cos(cRad);
                                     let ptY = cyl.y + 15 + dist * Math.sin(cRad);
-                                    
                                     // Simuliere einen kleinen Punkt auf der Stange
                                     let dummyPt = { x: ptX - 5, y: ptY - 5, width: 10, height: 10, isMetallic: true };
                                     if (isBlockInLocalRect(dummyPt, obj, hX, hY, hW, hH)) {
@@ -4620,19 +4836,16 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                 }
                             }
                         }
-                        
                         // 3. Anbauteile (Schieber, Stempel)
                         if (cyl.type === 'pusher' || cyl.type === 'press') {
                             let cItem = { x: cyl.x, y: cyl.y, width: cyl.width, height: cyl.height, isMetallic: true };
                             if (isBlockInLocalRect(cItem, obj, hX, hY, hW, hH)) isTriggered = true;
                         }
                     });
-                    
                     // Logik synchronisieren
                     if (spsState[obj.linkedVar] !== isTriggered) { 
                         spsState[obj.linkedVar] = isTriggered; 
                     }
-                    
                     // Visueller Latch (Lässt den Hebel nicht stottern, wenn er hart getroffen wird)
                     if (isTriggered) {
                         obj.visualDwell = 15; 
@@ -4708,12 +4921,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 animate: function(obj, spsState) {
                     let isBroken = false;
                     let lx = 0, ly = 0, lw = obj.width, lh = obj.height;
-                    
                     // 1. Test auf Werkstücke
                     factoryItems.forEach(item => {
                         if (isBlockInLocalRect(item, obj, lx, ly, lw, lh)) isBroken = true;
                     });
-                    
                     // 2. Test auf Zylinder und Anbauteile
                     factoryObjects.forEach(cyl => {
                         if (cyl.type && cyl.type.startsWith('zylinder')) {
@@ -4736,11 +4947,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             }
                         }
                     });
-
                     // DIE FAIL-SAFE LOGIK
                     let isClear = !isBroken;
                     if (spsState[obj.linkedVar] !== isClear) spsState[obj.linkedVar] = isClear;
-
                     if (isBroken) obj.el.classList.add('broken');
                     else obj.el.classList.remove('broken');
                 }
@@ -4793,19 +5002,16 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (isActive !== obj.isActive) {
                         obj.isActive = isActive;
                         obj.el.classList.toggle('active', isActive);
-                        
                         // SOUND LOGIK: Wir starten einen oszillierenden Sirenenton
                         if (isActive && (window.soundMode === 2 || window.soundMode === 3) && SoundEngine.ctx) {
                             let ctx = SoundEngine.ctx;
                             let osc = ctx.createOscillator();
                             let gain = ctx.createGain();
                             osc.type = 'square'; // Aggressiver Industrie-Sound
-                            
                             // Die Frequenz schwingt zwischen 400Hz und 600Hz hin und her
                             osc.frequency.setValueAtTime(400, ctx.currentTime);
                             osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.2);
                             osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.4);
-                            
                             // Loop der Frequenz-Modulation
                             let mod = ctx.createOscillator();
                             mod.frequency.value = 5; // 5Hz Schwingung (Sirene)
@@ -4814,12 +5020,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             mod.connect(modGain);
                             modGain.connect(osc.frequency);
                             mod.start();
-
                             gain.gain.value = 0.1;
                             osc.connect(gain);
                             gain.connect(ctx.destination);
                             osc.start();
-                            
                             obj.audioNodes = { osc, mod, gain };
                         } else if (!isActive && obj.audioNodes) {
                             // Sanftes Ausblenden gegen Knacken
@@ -4876,7 +5080,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (isActive !== obj.isActive) {
                         obj.isActive = isActive;
                         obj.el.classList.toggle('active', isActive);
-                        
                         // SOUND LOGIK (Das sanfte, ansteigende Zischen der Hitze)
                         if (isActive && (window.soundMode === 2 || window.soundMode === 3) && typeof SoundEngine !== 'undefined' && SoundEngine.ctx && !obj.muteSound) {
                             let ctx = SoundEngine.ctx;
@@ -4911,9 +5114,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 physics: function(obj, item, isActive) {
                     // 1. Physische Kollision (Verhält sich wie eine Mauer)
                     let ocx = obj.x + obj.width / 2, ocy = obj.y + obj.height / 2;
-													 
                     resolveOBBCollision(item, ocx, ocy, obj.width / 2, obj.height / 2, obj.rotation, 'wall', false);
-                    
                     // 2. Thermische Übertragung, wenn das Element auf der Platte liegt
                     if (isActive) {
                         // Hitbox leicht nach oben erweitern (-20px), um aufliegende Blöcke zu erfassen
@@ -4940,6 +5141,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         };
         function startFactoryEngine() {
             if (engineRunning) return;
+			// Schläuche live nachziehen
+            if (window.drawPneumaticHoses) window.drawPneumaticHoses();
             requestAnimationFrame(factoryLoop);
         }
         // NEU: Hilfsfunktion zum Leeren der Auswahl
@@ -5102,6 +5305,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 obj.width = 80; obj.height = 30; obj.extension = 0; obj.valveState = 'ret'; 
                 el.className = 'f2d-obj f2d-zylinder-wrapper'; el.style.width = obj.width + 'px'; 
                 let housing = document.createElement('div'); housing.className = 'f2d-zylinder';
+				// 🌟 NEU: Pneumatik-Stutzen am Zylindergehäuse anbringen
+                let port1 = document.createElement('div'); port1.className = 'f2d-pneu-port'; port1.style.left = '10px'; port1.style.top = '-10px'; housing.appendChild(port1);
+                if (type === 'zylinder_double') {
+                    let port2 = document.createElement('div'); port2.className = 'f2d-pneu-port'; port2.style.right = '10px'; port2.style.top = '-10px'; housing.appendChild(port2);
+                }
                 let rod = document.createElement('div'); rod.className = 'f2d-zyl-kolben'; rod.id = `kolben_${obj.id}`;
                 let magnet = document.createElement('div'); magnet.className = 'f2d-zyl-magnet'; magnet.id = `magnet_${obj.id}`;
                 obj.rodEl = rod; obj.magnetEl = magnet;
@@ -5477,24 +5685,45 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 ctxMenu.appendChild(meltWrapper);
             }
             if (obj.type && obj.type.startsWith('zylinder')) {
-                // NEU: Geschwindigkeits-Regler für Zylinder
-                let sepSpd = document.createElement('div'); sepSpd.style.borderTop = '1px solid #555'; sepSpd.style.margin = '5px 0'; ctxMenu.appendChild(sepSpd);
-                let spdWrapper = document.createElement('div'); spdWrapper.style.padding = '5px 15px';
-                spdWrapper.onclick = (e) => e.stopPropagation(); 
-                spdWrapper.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">💨 Zylinder-Tempo</div>`;
-                let spdInput = document.createElement('input');
-                spdInput.type = 'number'; spdInput.min = '0.1'; spdInput.max = '50'; spdInput.step = '0.5'; 
-                spdInput.value = obj.speed !== undefined ? obj.speed : 10;
-                spdInput.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px; outline: none; box-sizing: border-box;";
-                spdInput.onchange = (e) => { 
-                    let newVal = parseFloat(e.target.value);
-                    if (newVal > 0) {
-                        obj.speed = newVal;
-                        saveFactoryState();
-                    }
-                };
-                spdWrapper.appendChild(spdInput);
-                ctxMenu.appendChild(spdWrapper);
+                // 🌟 PNEUMATIK ODER STARRKÖRPER MODUS?
+                // FIX: Wir prüfen live, ob das Ventil auf dem Spielfeld existiert!
+                let associatedValve = factoryObjects.find(o => o.type === 'valve_pneu' && o.targetCylinderId === obj.id);
+                if (!associatedValve) {
+                    obj.hasPneumatics = false; // Reset, falls es gelöscht wurde
+                    let sepSpd = document.createElement('div'); sepSpd.style.borderTop = '1px solid #555'; sepSpd.style.margin = '5px 0'; ctxMenu.appendChild(sepSpd);
+                    let spdWrapper = document.createElement('div'); spdWrapper.style.padding = '5px 15px';
+                    spdWrapper.onclick = (e) => e.stopPropagation(); 
+                    spdWrapper.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">💨 Zylinder-Tempo (Elektrisch)</div>`;
+                    let spdInput = document.createElement('input');
+                    spdInput.type = 'number'; spdInput.min = '0.1'; spdInput.max = '50'; spdInput.step = '0.5'; 
+                    spdInput.value = obj.speed !== undefined ? obj.speed : 10;
+                    spdInput.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px; outline: none; box-sizing: border-box;";
+                    spdInput.onchange = (e) => { let newVal = parseFloat(e.target.value); if (newVal > 0) { obj.speed = newVal; saveFactoryState(); } };
+                    spdWrapper.appendChild(spdInput); ctxMenu.appendChild(spdWrapper);
+                    let btnGenPneu = document.createElement('div'); btnGenPneu.className = 'ctx-item'; 
+                    btnGenPneu.innerHTML = `<strong style="color:#03a9f4;">💨 Pneumatik-Anschluss generieren</strong>`;
+                    btnGenPneu.onclick = () => { 
+                        obj.hasPneumatics = true; 
+                        obj.pistonD = 20; obj.rodD = 8; obj.stroke = 100; // Standard-Werte in mm
+                        window.generatePneumaticSetup(obj); 
+                        saveFactoryState(); ctxMenu.style.display = 'none'; 
+                    };
+                    ctxMenu.appendChild(btnGenPneu);
+                } else {
+                    let sepPneu = document.createElement('div'); sepPneu.style.borderTop = '1px solid #555'; sepPneu.style.margin = '5px 0'; ctxMenu.appendChild(sepPneu);
+                    let titlePneu = document.createElement('div'); titlePneu.style.padding = '0 10px'; titlePneu.style.color = '#03a9f4'; titlePneu.style.fontSize = '10px'; titlePneu.style.fontWeight = 'bold'; titlePneu.textContent = 'Pneumatische Abmessungen (mm):'; ctxMenu.appendChild(titlePneu);
+                    const addDimInput = (lbl, prop) => {
+                        let wrap = document.createElement('div'); wrap.style.padding = '2px 15px'; wrap.onclick = e => e.stopPropagation();
+                        wrap.innerHTML = `<div style="color: #aaa; font-size: 9px; margin-bottom: 1px;">${lbl}</div>`;
+                        let inp = document.createElement('input'); inp.type = 'number'; inp.min = '1'; inp.value = obj[prop];
+                        inp.style.cssText = "width: 100%; padding: 2px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 10px; outline: none; box-sizing: border-box;";
+                        inp.onchange = e => { obj[prop] = parseFloat(e.target.value); saveFactoryState(); };
+                        wrap.appendChild(inp); ctxMenu.appendChild(wrap);
+                    };
+                    addDimInput('Kolbendurchmesser (D)', 'pistonD');
+                    addDimInput('Stangendurchmesser (d)', 'rodD');
+                    addDimInput('Hublänge (h)', 'stroke');
+                }
                 let attachedSensors = obj.children ? obj.children.filter(c => c.type === 'sensor_mag') : [];
                 if (attachedSensors.length > 0) {
                     let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
@@ -5645,10 +5874,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 let gPushX = pushX * cos - pushY * sin;
                 let gPushY = pushX * sin + pushY * cos;
                 item.x += gPushX; item.y += gPushY;
-                
                 // FIX: Dynamische Abfrage für flache Bauteile aus der Registry!
                 let isFlat = type === 'conveyor' || (ComponentRegistry[type] && ComponentRegistry[type].isFlatBelt);
-                
                 // 🌟 ANTI-TUNNELING FIX FÜR FÖRDERBÄNDER 🌟
                 // Wenn ein Block so schnell fällt, dass er tief in das Band eindringt, 
                 // zwingen wir die Engine, ihn IMMER nach OBEN abzustoßen (ny = -1)!
@@ -5660,7 +5887,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     gPushX = pushX * cos - pushY * sin; gPushY = pushX * sin + pushY * cos;
                     item.x += gPushX; item.y += gPushY; // Korrekten Push anwenden
                 }
-
                 if (isFlat) {
                     if (ny < -0.5) { 
                         item.vy = 0; item.vx *= Math.pow(0.5, window.simSpeed); 
@@ -5695,26 +5921,119 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             return ((localBx - cpx)**2 + (localBy - cpy)**2) < br * br;
         }
         function factoryLoop() {
+            // ==========================================
+            // 🌟 NEU: PNEUMATIK-ZONEN TRACKER (Löschen)
+            // ==========================================
+            if (!window.pneumaticZoneMemory) window.pneumaticZoneMemory = {};
+            let currentZoneIds = factoryObjects.filter(o => o.type === 'pneumatic_zone').map(z => z.id);
+            
+            // Zerstörte Zonen erkennen und ihren Inhalt restlos löschen
+            Object.keys(window.pneumaticZoneMemory).forEach(zoneId => {
+                if (!currentZoneIds.includes(zoneId)) {
+                    let orphans = window.pneumaticZoneMemory[zoneId];
+                    // Rückwärts iterieren, da wir Elemente aus dem Array löschen!
+                    for (let i = factoryObjects.length - 1; i >= 0; i--) {
+                        let o = factoryObjects[i];
+                        if (orphans.includes(o.id)) {
+                            if (o.el) o.el.remove();
+                            factoryObjects.splice(i, 1);
+                        }
+                    }
+                    delete window.pneumaticZoneMemory[zoneId];
+                }
+            });
+			// ==========================================
+            // 🌟 NEU: EIGENE SCHLEIFE FÜR DEN MOVE-TRACKER
+            // (Muss hier stehen, damit es auch im Pause-Modus klappt!)
+            // ==========================================
+            factoryObjects.forEach(obj => {
+                if (obj.type === 'pneumatic_zone') {
+                    let insideIds = [];
+                    let pneuTypes = ['compressor', 'manifold', 'valve_pneu', 'throttle'];
+                    
+                    // 1. Bewegung synchronisieren (Hat sich die Kiste bewegt?)
+                    if (obj.lastX !== undefined && obj.lastY !== undefined) {
+                        let dx = obj.x - obj.lastX;
+                        let dy = obj.y - obj.lastY;
+                        if (dx !== 0 || dy !== 0) {
+                            factoryObjects.forEach(o => {
+                                if (o !== obj && pneuTypes.includes(o.type)) {
+                                    // War das Bauteil VOR der Bewegung innerhalb der Zone? (+/- 5px Toleranz)
+                                    let isInside = (o.x >= obj.lastX - 5 && o.y >= obj.lastY - 5 && 
+                                                    o.x + o.width <= obj.lastX + obj.width + 5 && 
+                                                    o.y + (o.height || 30) <= obj.lastY + obj.height + 5);
+                                    if (isInside) {
+                                        o.x += dx; 
+                                        o.y += dy;
+                                        if (typeof updateObjTransform === 'function') updateObjTransform(o);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    // Neue Position für den nächsten Frame merken
+                    obj.lastX = obj.x; 
+                    obj.lastY = obj.y;
+
+                    // 2. Speicher-Liste für den Garbage Collector aktualisieren
+                    factoryObjects.forEach(o => {
+                        if (o !== obj && pneuTypes.includes(o.type)) {
+                            let isInside = (o.x >= obj.x - 5 && o.y >= obj.y - 5 && 
+                                            o.x + o.width <= obj.x + obj.width + 5 && 
+                                            o.y + (o.height || 30) <= obj.y + obj.height + 5);
+                            if (isInside) insideIds.push(o.id);
+                        }
+                    });
+                    window.pneumaticZoneMemory[obj.id] = insideIds;
+                }
+            });
+            // ==========================================
+
             // 🌟 DELTA-TIME BERECHNUNG START 🌟
             let now = performance.now();
             let deltaTime = (now - lastFrameTime) / 1000; // in Sekunden
             lastFrameTime = now;
-            
             // Tab-Wechsel-Schutz: Wenn der Browser den Tab drosselt, maximal 0.1s pro Frame berechnen!
             if (deltaTime > 0.1) deltaTime = 0.1; 
-            
             // timeScale auf 60 FPS normieren (1.0 = 60Hz, 0.5 = 120Hz, 2.0 = 30Hz)
             timeScale = deltaTime * 60; 
             // 🌟 DELTA-TIME BERECHNUNG ENDE 🌟
-
             if (isSimulationActive) {
                 // Wir nutzen jetzt die ECHTE verstrichene Zeit für die Timer, statt fest 16.666ms!
                 let deltaMs = (deltaTime * 1000) * window.simSpeed; 
+															 
+																																	 
+														 
                 factoryObjects.forEach(obj => {
+													
+													
+									   
+																						 
+																			 
+																			   
+												   
+														 
+																			  
+																																																																		  
+																																				
+								 
+							   
+						 
+					 
+														 
+												 
+																	  
+																																												
+															   
+						 
+					   
+																   
+				 
+
+												 
                     if (obj.type.startsWith('spawner_')) {
                         let isActive = obj.linkedVar ? !!spsState[obj.linkedVar] : true;
                         if (isActive) {
-																	  
                             obj.timeAccum = (obj.timeAccum || 0) + deltaMs;
                             if (obj.timeAccum >= obj.interval * 1000) { 
                                 obj.timeAccum -= obj.interval * 1000; 
@@ -5747,21 +6066,97 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 });
                 // Schleife für alle Aktoren (Zylinder und Förderbänder)
                 factoryObjects.forEach(obj => {
-											 
                     if (obj.type.startsWith('zylinder')) {
                         let baseSpeed = obj.speed !== undefined ? obj.speed : 10;
-                        // Zylinder-Auszug drosseln/beschleunigen je nach Framerate
+                        let forceExt = false;
+                        let forceRet = false;
+                        
+                        // 🌟 AUTO-HEAL: Prüfen, ob das Wegeventil auf dem Spielfeld gelöscht wurde!
+                        if (obj.hasPneumatics) {
+                            let valveExists = factoryObjects.some(o => o.type === 'valve_pneu' && o.targetCylinderId === obj.id);
+                            if (!valveExists) {
+                                obj.hasPneumatics = false;
+                                obj.normLabel = null; // Norm entfernen
+                                // 🌟 FIX: Ursprünglichen Namen wiederherstellen!
+                                let cLbl = obj.el.querySelector('.f2d-label');
+                                if (cLbl && obj.originalLabelText) {
+                                    cLbl.innerHTML = obj.originalLabelText;
+                                }
+                            }
+                        }
+                        
+                        // 🌟 ECHTE PNEUMATIK-STEUERUNG (Phase 3: Fluidik & Volumenstrom)
+                        if (obj.hasPneumatics) {
+                            let valve = factoryObjects.find(o => o.type === 'valve_pneu' && o.targetCylinderId === obj.id);
+                            let tExt = factoryObjects.find(o => o.type === 'throttle' && o.targetCylinderId === obj.id && o.role === 'ext');
+                            let tRet = factoryObjects.find(o => o.type === 'throttle' && o.targetCylinderId === obj.id && o.role === 'ret');
+                            let comp = factoryObjects.find(o => o.type === 'compressor');
+                            
+                            // Zylinder ist komplett entkoppelt vom Strom und hört NUR NOCH auf das Ventil!
+                            if (valve && comp) {
+                                // 1. Systemparameter abrufen
+                                let p_supply = comp.pressure || 6.0; // Bar
+                                let q_max_l_min = comp.maxFlow || 200; // l/min
+                                
+                                // 2. Volumenstrom-Umrechnung (l/min -> mm³/s)
+                                // ECHTE PHYSIK: 1 l/min = 16666.67 mm³/s (Keine magischen Konstanten mehr!)
+                                let q_max_mm3_s = q_max_l_min * 16666.67;
+                                
+                                // 3. Kolbenflächen berechnen (A = pi * r²) in mm²
+                                let dPiston = obj.pistonD || 20;
+                                let dRod = obj.rodD || 8;
+                                let stroke = obj.stroke || 100;
+                                
+                                let aExt = Math.PI * Math.pow(dPiston / 2, 2); // Volle Kolbenfläche (Ausfahren)
+                                let aRet = aExt - (Math.PI * Math.pow(dRod / 2, 2)); // Ringfläche (Einfahren)
+                                
+                                // Druckabfall bei geringerem Kompressordruck (linear genähert)
+                                let pressureFactor = p_supply / 6.0;
+                                
+                                if (valve.isActive) {
+                                    forceExt = true; // Druckluft strömt in die Ausfahr-Kammer
+                                    let opening = tExt ? (tExt.opening / 100) : 1.0;
+                                    let q_eff = q_max_mm3_s * opening * pressureFactor;
+                                    
+                                    // v = Q / A (Geschwindigkeit in mm/s)
+                                    let v_mm_s = q_eff / aExt;
+                                    
+                                    // Umrechnung für die Game-Engine (% der Hublänge pro Frame)
+                                    baseSpeed = ((v_mm_s / stroke) * 100) / 60;
+                                } else {
+                                    forceRet = true; // Druckluft strömt in die Einfahr-Kammer
+                                    let opening = 1.0;
+                                    if (tRet) opening = (tRet.opening / 100);
+					 
+                                    else if (obj.type === 'zylinder_single' && tExt) opening = (tExt.opening / 100);
+                                    
+                                    let q_eff = q_max_mm3_s * opening * pressureFactor;
+                                    
+                                    // 🌟 LEHRBUCH: Hier wird durch die kleinere Ringfläche geteilt!
+                                    // v = Q / A_retract (Zylinder fährt bei gleicher Drossel schneller ein als aus!)
+                                    let v_mm_s = q_eff / aRet;
+                                    
+                                    baseSpeed = ((v_mm_s / stroke) * 100) / 60;
+		  
+                                }
+                            }
+                        } else {
+                            // Klassischer (elektrischer/fiktiver) Modus für Zylinder ohne Pneumatik
+                            if (obj.type === 'zylinder_single') {
+                                if (spsState[obj.linkedVarExt]) forceExt = true; else forceRet = true;
+                            } else {
+                                let extCmd = !!spsState[obj.linkedVarExt], retCmd = !!spsState[obj.linkedVarRet];
+                                if (extCmd && !retCmd) obj.valveState = 'ext';
+                                if (retCmd && !extCmd) obj.valveState = 'ret';
+                                if (obj.valveState === 'ext') forceExt = true;
+                                if (obj.valveState === 'ret') forceRet = true;
+                            }
+                        }
+
                         let zylSpeed = baseSpeed * window.simSpeed * timeScale;
                         let oldExtension = obj.extension || 0; 
-                        if (obj.type === 'zylinder_single') {
-                            if (spsState[obj.linkedVarExt]) obj.extension += zylSpeed; else obj.extension -= zylSpeed;
-                        } else {
-                            let extCmd = !!spsState[obj.linkedVarExt], retCmd = !!spsState[obj.linkedVarRet];
-                            if (extCmd && !retCmd) obj.valveState = 'ext';
-                            if (retCmd && !extCmd) obj.valveState = 'ret';
-                            if (obj.valveState === 'ext') obj.extension += zylSpeed;
-                            if (obj.valveState === 'ret') obj.extension -= zylSpeed;
-                        }
+                        if (forceExt) obj.extension += zylSpeed;
+                        if (forceRet) obj.extension -= zylSpeed;
                         if (obj.extension > 100) obj.extension = 100;
                         if (obj.extension < 0) obj.extension = 0;
                         let extPixels = (obj.extension / 100) * obj.width;
@@ -5772,12 +6167,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         let mdx = magPos - (obj.width / 2); let mdy = -2;
                         obj.magnetX = obj.x + (obj.width / 2) + mdx * Math.cos(rad) - mdy * Math.sin(rad);
                         obj.magnetY = obj.y + 15 + mdx * Math.sin(rad) + mdy * Math.cos(rad);
-																			   
                         let deltaExt = obj.extension - oldExtension;
                         if (deltaExt !== 0 && obj.children) {
                             let movePixels = (deltaExt / 100) * obj.width;
                             let moveX = movePixels * Math.cos(rad);
                             let moveY = movePixels * Math.sin(rad);
+                            // Den Stempel physikalisch mitschieben!
                             obj.children.forEach(child => {
                                 if (child.attachmentType === 'rod') {
                                     moveObjRecursive(child, moveX, moveY);
@@ -5785,7 +6180,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             });
                         }
                     }
-																	
                     if (obj.type === 'conveyor') {
                         obj.isRunning = !!spsState[obj.linkedVar];
                         if (obj.isRunning) {
@@ -5820,12 +6214,10 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (item.useCollision !== false) {
                         factoryObjects.forEach(obj => {
                             if (obj.useCollision === false) return; 
-													  
                             if (ComponentRegistry[obj.type] && ComponentRegistry[obj.type].physics) {
                                 let rad = (obj.rotation || 0) * Math.PI / 180;
                                 ComponentRegistry[obj.type].physics(obj, item, obj.isActive, rad);
                             }
-													  
                             else if (obj.type === 'conveyor') {
                                 if (item.activeMode === 'side') {
                                     let ocx = obj.x + obj.width / 2, ocy = obj.y + obj.height / 2;
@@ -5845,10 +6237,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             else if (obj.type.startsWith('zylinder')) {
                                 let ocx = obj.x + obj.width / 2, ocy = obj.y + 15;
                                 resolveOBBCollision(item, ocx, ocy, obj.width / 2, 15, obj.rotation, 'wall', false);
-                                
                                 // 🌟 DER FIX: Stange ist nur physisch, wenn KEIN Anbauteil montiert ist!
                                 let hasAttachment = obj.children && obj.children.some(c => c.attachmentType === 'rod');
-                                
                                 if (obj.extension > 0 && !hasAttachment) {
                                     let extPixels = (obj.extension / 100) * obj.width;
                                     let rad = (obj.rotation || 0) * Math.PI / 180;
@@ -5861,7 +6251,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     }
                     if (item.y > 2000) item.el.remove(); 
                 });
-										  
                 for (let i = 0; i < factoryItems.length; i++) {
                     let itA = factoryItems[i];
                     if (!itA.isSolid) continue;
@@ -5873,15 +6262,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         let dy = (itA.y + r) - (itB.y + r);
                         let distSq = dx*dx + dy*dy;
                         let minDistSq = (r * 2) * (r * 2); 
-													   
                         if (distSq < minDistSq && distSq > 0) {
                             let dist = Math.sqrt(distSq);
                             let overlap = (r * 2) - dist;
                             let nx = dx / dist; let ny = dy / dist;
-																					 
                             itA.x += nx * overlap / 2; itA.y += ny * overlap / 2;
                             itB.x -= nx * overlap / 2; itB.y -= ny * overlap / 2;
-															   
                             let rvx = itA.vx - itB.vx; let rvy = itA.vy - itB.vy;
                             let velAlongNormal = rvx * nx + rvy * ny;
                             if (velAlongNormal < 0) {
@@ -5894,19 +6280,15 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
                 factoryItems.forEach(item => {
                     updateObjTransform(item);
-
                     // --- THERMODYNAMIK (Glühen & Schmelzen) ---
                     item.temperature = item.temperature || 20; // Start bei Raumtemperatur
-                    
                     // Passives Abkühlen (an der Luft)
                     if (!item.isHeatedThisFrame && item.temperature > 20) {
                         item.temperature -= 15 * 0.0166 * window.simSpeed * timeScale;
                         if (item.temperature < 20) item.temperature = 20;
                     }
                     item.isHeatedThisFrame = false; // Reset für den nächsten Frame
-
                     let maxMelt = item.meltTemp || (item.material === 'metall' ? 1200 : 150);
-
                     // Visuelles Feedback
                     if (item.material === 'metall') {
                         if (item.temperature > 400) {
@@ -5935,13 +6317,11 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             item.el.style.opacity = '1';
                         }
                     }
-
                     // Schmelzpunkt erreicht!
                     if (item.temperature >= maxMelt) {
                         item._isMelted = true;
                     }
                 });
-
                 // Speicherleck-Fix: Gefallene und geschmolzene Objekte sauber aus dem Array löschen!
                 factoryItems = factoryItems.filter(item => {
                     if (item.y > 2000 || item._isMelted) {
@@ -5970,6 +6350,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         if(obj.type==='sensor_kap'){ lx=20; ly=10; lw=25; lh=20; }
                         if(obj.type==='sensor_opt'){ lx=20; ly=15; lw=80; lh=10; }
                         if(obj.type==='sensor_mag'){ lx=-5; ly=5; lw=30; lh=30; }
+					
                         factoryItems.forEach(item => {
                             if (isBlockInLocalRect(item, obj, lx, ly, lw, lh)) {
                                 if (obj.type === 'sensor_ind' && item.material === 'metall') isTriggered = true;
@@ -5977,9 +6358,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                 if (obj.type === 'sensor_kap') isTriggered = true; 
                             }
                         });
-																										
+					
                         if (!isTriggered && obj.type !== 'sensor_mag') {
-																																  
                             let sRad = (obj.rotation || 0) * Math.PI / 180;
                             let steps = obj.type === 'sensor_opt' ? 5 : 2;
                             let testPoints = [];
@@ -5994,15 +6374,12 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                 });
                             }
                             factoryObjects.forEach(targetObj => {
-																					   
                                 if (targetObj === obj || targetObj.type.startsWith('zone_') || targetObj.type === 'despawner' || targetObj.type.startsWith('spawner_') || targetObj.type === 'led') return;
-																														 
                                 if (ComponentRegistry[targetObj.type] && ComponentRegistry[targetObj.type].customSensorHit) {
                                     if (ComponentRegistry[targetObj.type].customSensorHit(targetObj, obj, lx, ly, lw, lh)) {
                                         isTriggered = true;
                                     }
                                 } else {
-																												  
                                     let tRad = (targetObj.rotation || 0) * Math.PI / 180;
                                     let halfW = targetObj.width / 2;
                                     let halfH = (targetObj.height || targetObj.width) / 2;
@@ -6030,14 +6407,19 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                                 }
                             });
                         }
-																								   
                         if (spsState[obj.linkedVar] !== isTriggered) { spsState[obj.linkedVar] = isTriggered; }
                         obj.el.style.borderColor = isTriggered ? '#fff' : ''; obj.el.style.boxShadow = isTriggered ? '0 0 10px yellow' : '2px 2px 5px rgba(0,0,0,0.3)';
                     }
                 });
-														   
-																										
+
+														 
+																						
+														 
                 runSimulationTick();
+            }
+			// 🌟 DER FIX: Schläuche IMMER live nachziehen (auch im Pause/Editor-Modus!)
+            if (typeof window.drawPneumaticHoses === 'function') {
+                window.drawPneumaticHoses();
             }
             requestAnimationFrame(factoryLoop);
         }
@@ -6161,13 +6543,16 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         function getFactoryStateObj() {
             return {
                 globalViewMode: globalViewMode,
-                // NEU: Werte runden (Math.round), da 15-stellige Kommazahlen aus der Physik den Link extrem aufblähen!
-                items: factoryItems.map(i => ({ x: Math.round(i.x), y: Math.round(i.y), vx: Math.round(i.vx||0), vy: Math.round(i.vy||0), material: i.material, useGravity: i.useGravity, useCollision: i.useCollision, isSolid: i.isSolid })),
+																														
+                items: factoryItems.map(i => ({ x: Math.round(i.x), y: Math.round(i.y), vx: Math.round(i.vx||0), vy: Math.round(i.vy||0), material: i.material, useGravity: i.useGravity, useCollision: i.useCollision, isSolid: i.isSolid, meltTemp: i.meltTemp })),
                 objects: factoryObjects.map(o => ({
                     id: o.id, type: o.type, x: Math.round(o.x), y: Math.round(o.y), width: Math.round(o.width), height: Math.round(o.height||0), rotation: Math.round(o.rotation||0),
-                    thickness: o.thickness, speed: o.speed, heatingPower: o.heatingPower, meltTemp: o.meltTemp, // <--- Nur die Variablen speichern! Kein "if" hier!
+                    // 🌟 FIX: opening für Drosseln hinzugefügt!
+                    thickness: o.thickness, speed: o.speed, heatingPower: o.heatingPower, meltTemp: o.meltTemp, opening: o.opening,
                     linkedVar: o.linkedVar, linkedVarExt: o.linkedVarExt, linkedVarRet: o.linkedVarRet, linkedVar3: o.linkedVar3, spawnSolid: o.spawnSolid,
-                    parentId: o.parent ? o.parent.id : null, attachmentType: o.attachmentType,
+                    hasPneumatics: o.hasPneumatics, targetCylinderId: o.targetCylinderId, role: o.role, isDouble: o.isDouble,
+                    // 🌟 FIX: parentId und attachmentType MÜSSEN gespeichert werden, sonst fällt der Stempel ab!
+                    parentId: o.parent ? o.parent.id : null, attachmentType: o.attachmentType, normLabel: o.normLabel, originalLabelText: o.originalLabelText,
                     color: o.color, interval: o.interval, useCollision: o.useCollision, labelPinned: o.labelPinned, muteSound: o.muteSound
                 }))
             };
@@ -6203,7 +6588,15 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 let idMap = {};
                 state.objects.forEach(o => {
                     // FIX: var2 intelligent befüllen! Spawner brauchen 'solid'/'normal', Zylinder brauchen ihre Ret-Variable!
-                    let var2 = o.type.startsWith('spawner_') ? (o.spawnSolid ? 'solid' : 'normal') : o.linkedVarRet;
+                    let var2 = o.linkedVarRet;
+                    if (o.type.startsWith('spawner_')) var2 = o.spawnSolid ? 'solid' : 'normal';
+                    // 🌟 DER FIX: Ventile bekommen wieder ihr 'double' oder 'single' zurück! 
+                    // (Der Fallback !!o.linkedVarRet rettet alte, fehlerhafte Spielstände)
+                    if (o.type === 'valve_pneu') {
+                        let wasDouble = o.isDouble !== undefined ? o.isDouble : !!o.linkedVarRet;
+                        var2 = wasDouble ? 'double' : 'single';
+                    }
+
                     let newObj = createFactoryObject(o.type, o.linkedVar || o.linkedVarExt, var2, o.id, o.color, o.interval, o.linkedVar3);
                     newObj.x = o.x; newObj.y = o.y; newObj.width = o.width; newObj.rotation = o.rotation;
                     if (o.height) newObj.height = o.height; 
@@ -6213,6 +6606,28 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         newObj.thickness = o.thickness; 
                         newObj.el.style.setProperty('--tk', o.thickness + 'px'); 
                     }
+					if (o.hasPneumatics) newObj.hasPneumatics = o.hasPneumatics;
+					if (o.targetCylinderId) newObj.targetCylinderId = o.targetCylinderId;
+                    if (o.role) newObj.role = o.role;
+					// 🌟 FIX: Drossel-Öffnungswinkel und Optik wiederherstellen
+                    if (o.opening !== undefined) {
+                        newObj.opening = o.opening;
+                        if (newObj.type === 'throttle') {
+                            let knob = newObj.el.querySelector('.f2d-throttle-knob');
+                            let valD = newObj.el.querySelector('.f2d-throttle-val');
+                            if (knob) knob.style.transform = `rotate(${o.opening * 2.7}deg)`;
+                            if (valD) valD.textContent = o.opening + '%';
+                        }
+                    }
+                    // 🌟 FIX: Wenn das Bauteil ein Stempel ist, merkt es sich hier seine Montierung!
+					// 🌟 FIX: Norm-Beschriftungen wiederherstellen
+                    if (o.normLabel) {
+                        newObj.normLabel = o.normLabel;
+                        let lblEl = newObj.el.querySelector('.f2d-norm-label');
+                        if (lblEl) lblEl.textContent = o.normLabel;
+                    }
+					if (o.originalLabelText) newObj.originalLabelText = o.originalLabelText;
+                    if (o.attachmentType) newObj.attachmentType = o.attachmentType;
 					if (o.heatingPower) newObj.heatingPower = o.heatingPower;
                     if (o.meltTemp) newObj.meltTemp = o.meltTemp;
                     if (o.labelPinned) {
@@ -6372,7 +6787,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 if (data.types !== undefined) componentTypes = data.types;
                 // Speichert sofort in den LocalStorage
                 localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
-                
                 // 🌟 NEU: Plugin-Konfiguration laden und Menüs updaten
                 if (data.plugins !== undefined) {
                     activePlugins = { ...activePlugins, ...data.plugins }; // Mergen (schützt neue Plugins)
@@ -6383,11 +6797,13 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     });
                     updateMenuVisibility(); // Trennstriche und leere Menüs aufräumen
                 }
-                
                 saveToStorage();
                 // Update Logik & UI
                 spsState = {};
-                updateHighlighting(); 
+                // 🌟 FIX 4: Farbspeicher für völlig neue Anlagen zurücksetzen!
+                window.fbsNodeColors = {}; 
+                window.fbsColorCounter = 0;
+                updateHighlighting();
                 updateEditor(); 
                 // Factory neu aufbauen
                 if (data.factory) {
@@ -6422,7 +6838,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                     if (data.code !== undefined) textarea.value = data.code;
                     if (data.types !== undefined) componentTypes = data.types;
                     localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
-                    
                     // 🌟 NEU: Plugin-Konfiguration aus dem Link laden
                     if (data.plugins !== undefined) {
                         activePlugins = { ...activePlugins, ...data.plugins };
@@ -6433,7 +6848,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         });
                         updateMenuVisibility();
                     }
-                    
                     saveToStorage();
                     spsState = {};
                     updateHighlighting(); 
@@ -6511,7 +6925,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 panel.style.flex = 'none'; 
             }
             extWin.document.body.appendChild(panel);
-
             // 🌟 FIX 2: Wir machen alle UI-Funktionen im neuen Fenster bekannt!
             // Dadurch funktionieren die onClick-Befehle der Buttons weiterhin.
             for (let key in window) {
@@ -6709,7 +7122,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             // Modal breiter machen, damit das Grid Platz hat
             modal.style.width = '1000px'; 
             modal.style.maxWidth = '95vw';
-
             const list = document.getElementById('plugin-list');
             list.innerHTML = '';
             // NEU: CSS Grid für den Listen-Container
@@ -6717,7 +7129,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             list.style.gridTemplateColumns = 'repeat(auto-fit, minmax(320px, 1fr))';
             list.style.gap = '15px';
             list.style.alignItems = 'start'; // Verhindert, dass kurze Karten künstlich in die Länge gezogen werden
-
             const catNames = {
                 '#menu-bedienpult': '🕹️ HMI & Bedienpult',
                 '#menu-sensoren': '📡 Sensorik',
@@ -6726,7 +7137,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 '#menu-struktur': '🏗️ Struktur & Umgebung',
                 '#menu-werkstuecke': '📦 Werkstücke & Logistik'
             };
-
             // Gruppiere alle Plugins
             let groups = {};
             Object.keys(ComponentRegistry).forEach(key => {
@@ -6736,58 +7146,45 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 if (!groups[catId]) groups[catId] = [];
                 groups[catId].push({ key: key, data: p });
             });
-
             // Feste Reihenfolge definieren
             let renderOrder = ['#menu-bedienpult', '#menu-sensoren', '#menu-aktoren', '#menu-anbauteile', '#menu-struktur', '#menu-werkstuecke', 'other'];
-
             renderOrder.forEach(catId => {
                 if (!groups[catId] || groups[catId].length === 0) return;
-
                 // NEU: Eine "Karte" (Card) für jede Kategorie erstellen
                 let catCard = document.createElement('div');
                 catCard.style.cssText = "background: #252526; border: 1px solid #444; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 2px 2px 8px rgba(0,0,0,0.3);";
-
                 // Kategorie-Titel IN der Karte
                 let header = document.createElement('div');
                 header.style.cssText = "color: #2196f3; font-weight: bold; font-size: 13px; border-bottom: 2px solid #2196f3; padding-bottom: 6px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;";
                 header.textContent = catNames[catId] || '📦 Sonstiges / Ungruppiert';
                 catCard.appendChild(header);
-
                 // Plugins in diese Karte einfügen
                 groups[catId].forEach(item => {
                     let key = item.key;
                     let p = item.data;
                     let m = p.meta || { name: key, icon: '❓', desc: '' };
                     let isActive = activePlugins[key];
-
                     let row = document.createElement('div');
                     row.style.cssText = "display: flex; align-items: center; background: #1e1e1e; border: 1px solid #333; padding: 8px; border-radius: 4px; transition: border-color 0.2s;";
                     row.onmouseover = () => row.style.borderColor = '#555';
                     row.onmouseout = () => row.style.borderColor = '#333';
-                    
                     let previewBox = document.createElement('div');
                     previewBox.style.cssText = "width: 40px; height: 40px; background: #2d2d30; border: 1px solid #555; border-radius: 4px; position: relative; overflow: hidden; margin-right: 12px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.5);";
-                    
                     try {
                         if (p.build) {
                             let dummyEl = document.createElement('div');
                             let dummyObj = { id: 'prev', el: dummyEl, children: [] };
-                            
                             p.build(dummyObj, dummyEl, 'DEMO', '', '', '#4caf50', 3);
-                            
                             let toRemove = dummyEl.querySelectorAll('.f2d-resize-handle, .f2d-resize-handle-xy, .f2d-rotate-handle, .f2d-label');
                             for (let i = 0; i < toRemove.length; i++) toRemove[i].remove();
-
                             let w = dummyObj.width || 40; 
                             let h = dummyObj.height || 40;
                             let scale = Math.min(1, 30 / w, 30 / h);
-                            
                             dummyEl.style.position = 'absolute'; 
                             dummyEl.style.left = '50%'; 
                             dummyEl.style.top = '50%';
                             dummyEl.style.transform = `translate(-50%, -50%) scale(${scale})`; 
                             dummyEl.style.pointerEvents = 'none'; 
-                            
                             if (key === 'stacklight' && dummyEl.children.length >= 3) { 
                                 dummyEl.children[0].classList.add('on'); 
                                 dummyEl.children[1].classList.add('on'); 
@@ -6795,7 +7192,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             } 
                             if (key === 'display') dummyEl.textContent = '88.8';
                             if (key === 'light_curtain') dummyEl.classList.add('broken');
-                            
                             previewBox.appendChild(dummyEl);
                         } else {
                             previewBox.innerHTML = `<span style="font-size: 18px;">${m.icon}</span>`;
@@ -6804,25 +7200,20 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                         console.error(`Fehler im Plugin-Manager bei [${key}]:`, e);
                         previewBox.innerHTML = `<span style="font-size: 18px; color: #ff5252;" title="Fehler: ${e.message}">⚠️</span>`;
                     }
-
                     let textBox = document.createElement('div'); 
                     textBox.style.flexGrow = '1';
                     textBox.innerHTML = `<strong style="color: #fff; font-size: 12px;">${m.name}</strong><p style="color: #aaa; font-size: 10px; margin: 2px 0 0 0; line-height: 1.2;">${m.desc}</p>`;
-                    
                     let switchBox = document.createElement('label'); 
                     switchBox.className = 'switch'; 
                     switchBox.style.marginLeft = '10px';
                     switchBox.innerHTML = `<input type="checkbox" class="plugin-toggle-cb" ${isActive ? 'checked' : ''} onchange="togglePlugin('${key}', this.checked)"><span class="slider"></span>`;
-                    
                     row.appendChild(previewBox); 
                     row.appendChild(textBox); 
                     row.appendChild(switchBox); 
                     catCard.appendChild(row); // Reihe in die Karte legen
                 });
-
                 list.appendChild(catCard); // Karte in den Grid-Container legen
             });
-
             modal.style.display = 'flex';
         };
         window.closePluginModal = function() { document.getElementById('plugin-modal').style.display = 'none'; };
@@ -7608,17 +7999,14 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
 		// 🌟 NEU: TOUCH-DRAG ENGINE FÜR LOGIKPLAN (Smartphones / Tablets) 🌟
         let fbsTouchType = null;
         let fbsTouchGhost = null;
-
         window.startFbsTouchDrag = function(e, type) {
             // Nur reagieren, wenn es wirklich ein Touch-Event ist (kein Mausklick)
             if (e.touches && e.touches.length === 1) {
                 e.preventDefault(); // Verhindert, dass die Seite beim Ziehen scrollt
                 fbsTouchType = type;
                 let touch = e.touches[0];
-                
                 window.draggedFbsButton = e.target;
                 e.target.classList.add('drag-active-target');
-
                 // Wir erschaffen einen sichtbaren "Geist" des Buttons, der dem Finger folgt
                 fbsTouchGhost = document.createElement('div');
                 fbsTouchGhost.textContent = e.target.textContent;
@@ -7633,19 +8021,15 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 document.body.appendChild(fbsTouchGhost);
             }
         };
-
         document.addEventListener('touchmove', (e) => {
             if (fbsTouchGhost && e.touches.length === 1) {
                 e.preventDefault(); // Seite stillhalten
                 let touch = e.touches[0];
-                
                 // Geist dem Finger folgen lassen
                 fbsTouchGhost.style.left = touch.clientX + 'px';
                 fbsTouchGhost.style.top = touch.clientY + 'px';
-
                 // Prüfen, was exakt unter dem Finger liegt
                 let targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-                
                 if (targetElement && (targetElement.classList.contains('fbs-line') || targetElement.classList.contains('fbs-line-halo'))) {
                     let match = Array.from(targetElement.classList).find(c => c.startsWith('net-source-'));
                     if (match && lastHighlightedLine !== match) {
@@ -7661,30 +8045,24 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
             }
         }, {passive: false});
-
         document.addEventListener('touchend', (e) => {
             if (fbsTouchGhost) {
                 // Geist löschen
                 fbsTouchGhost.remove();
                 fbsTouchGhost = null;
-                
                 if (window.draggedFbsButton) {
                     window.draggedFbsButton.classList.remove('drag-active-target');
                     window.draggedFbsButton = null;
                 }
-
                 if (lastHighlightedLine) {
                     // Extrahiere das Ziel
                     let rawId = lastHighlightedLine.replace('net-source-', '').replace(/\\/g, '');
-                    
                     // Optik aufräumen
                     document.querySelectorAll('.' + lastHighlightedLine).forEach(el => el.classList.remove('fbs-drag-target'));
                     lastHighlightedLine = null;
-
                     // DROP LOGIK AUSFÜHREN!
                     let prefillSource = window.getFbsVariableDisplay(rawId);
                     let prefillTarget = "";
-                    
                     let outEdges = currentGraph.edges.filter(ed => ed.sourceId === rawId);
                     if (outEdges.length > 0) {
                         let rootCtx = window.getRootContextGlobal(outEdges[0]);
@@ -7698,11 +8076,9 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                             }
                         }
                     }
-
                     openFbsAddModal(fbsTouchType);
                     if (prefillSource) document.getElementById('fbs-add-in1').value = prefillSource;
                     if (prefillTarget) document.getElementById('fbs-add-out').value = prefillTarget;
-                    
                     setTimeout(() => {
                         if (!prefillTarget) {
                             document.getElementById('fbs-add-out').focus();
@@ -7862,7 +8238,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         window.toggleSidebar = function() {
             const panel = document.getElementById('left-panel');
             const btn = document.getElementById('btn-toggle-sidebar');
-            
             if (panel.style.display === 'none') {
                 panel.style.display = 'flex';
                 btn.textContent = '◀';
@@ -7872,7 +8247,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btn.textContent = '☰'; // Burger-Menu Icon, wenn eingeklappt
                 btn.title = 'Seitenleiste ausklappen';
             }
-            
             // WICHTIG: Den SVG-Engines und dem Oszilloskop einen Moment Zeit geben, 
             // den neuen Platz zu erkennen, und sie dann neu zentrieren lassen!
             setTimeout(() => {
@@ -7899,7 +8273,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
 																	  
             if (typeof SoundEngine !== 'undefined') SoundEngine.click();
         };
-
         window.toggleIecToolbar = function() {
             let doc = (window.popOutWindows && window.popOutWindows['circuit-wrapper'] && !window.popOutWindows['circuit-wrapper'].closed) 
                       ? window.popOutWindows['circuit-wrapper'].document : document;
@@ -7918,20 +8291,16 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
         let touchTimer = null;
         let touchStartPos = null;
         let wasLongPress = false;
-
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY, target: e.touches[0].target };
                 wasLongPress = false;
-                
                 // Nach 600ms den Rechtsklick auslösen
                 touchTimer = setTimeout(() => {
                     touchTimer = null;
                     wasLongPress = true;
-                    
                     // Premium-App Feeling: Kurzes haptisches Feedback, falls das Gerät das unterstützt
                     if (navigator.vibrate) navigator.vibrate(50);
-                    
                     // Wir feuern ein echtes, synthetisches 'contextmenu'-Event ab.
                     // Dadurch triggern völlig automatisch alle vorhandenen Rechtsklick-Funktionen in VALIS!
                     const contextEvent = new MouseEvent('contextmenu', {
@@ -7946,7 +8315,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }, 600);
             }
         }, { passive: false });
-
         document.addEventListener('touchmove', (e) => {
             // Wenn der Finger zu weit rutscht, war es ein Scrollen oder Ziehen -> Timer abbrechen!
             if (touchTimer && e.touches.length > 0) {
@@ -7958,7 +8326,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 }
             }
         }, { passive: false });
-
         document.addEventListener('touchend', (e) => { 
             if (touchTimer) clearTimeout(touchTimer); 
             // Wenn das Menü erfolgreich aufging, verhindern wir, dass beim Finger-Loslassen 
@@ -7968,27 +8335,22 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 setTimeout(() => wasLongPress = false, 100); // Reset nach kurzem Cooldown
             }
         }, { passive: false });
-        
         document.addEventListener('touchcancel', () => { if (touchTimer) clearTimeout(touchTimer); });
 		// ==========================================
         // 🌟 NEU: PROGRESSIVE WEB APP (PWA) INSTALL-ENGINE
         // ==========================================
         let deferredPrompt;
         const btnInstall = document.getElementById('btn-install-app');
-        
         // Prüfen, ob wir bereits als App im Vollbild laufen (dann Button verstecken)
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
-        
         // 🌟 FIX: Bessere Apple-Erkennung (schließt auch neue iPads ein, die sich als Mac tarnen!)
         const isAppleMobile = (/iphone|ipad|ipod|macintosh/.test(window.navigator.userAgent.toLowerCase()) && 'ontouchend' in document);
-        
         // 1. Fallback für Apple (da Apple das automatische Install-Event blockiert)
         window.addEventListener('DOMContentLoaded', () => {
             if (btnInstall && !isStandalone && isAppleMobile) {
                 btnInstall.style.display = 'inline-block';
             }
         });
-
         // 2. Android / Chrome / Edge Logic (Fängt die Einladung des Browsers ab)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -7997,7 +8359,6 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 btnInstall.style.display = 'inline-block';
             }
         });
-
         // 3. Die Klick-Funktion
         window.installApp = async function() {
             if (deferredPrompt) {
@@ -8016,7 +8377,187 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 alert("💡 App-Installation:\n\nÖffne das Menü deines Browsers (meist drei Punkte oder Striche) und wähle 'Zum Startbildschirm hinzufügen' oder 'App installieren'.");
             }
         };
+		// ==========================================
+        // 🌟 NEU: PNEUMATIK AUTO-GENERATOR (DIN ISO 1219)
+        // ==========================================
+        window.generatePneumaticSetup = function(cylObj) {
+            let zone = factoryObjects.find(o => o.type === 'pneumatic_zone');
+            if (!zone) { zone = createFactoryObject('pneumatic_zone', ''); zone.x = 20; zone.y = 600; }
+            
+            let comp = factoryObjects.find(o => o.type === 'compressor');
+            let manifold = factoryObjects.find(o => o.type === 'manifold');
+            
+            if (!comp) {
+                comp = createFactoryObject('compressor', ''); comp.x = zone.x + 20; comp.y = zone.y + zone.height - 80;
+                manifold = createFactoryObject('manifold', ''); manifold.x = comp.x + 140; manifold.y = comp.y + 45;
+                
+                // 🌟 NORM-UPDATE (DIN EN 81346-2): Kompressor (GQA) und Wartungseinheit/Verteiler (GQ)
+                comp.normLabel = '-GQA1';
+                let cLbl = document.createElement('div'); cLbl.className = 'f2d-label f2d-norm-label'; 
+                cLbl.style.top = '-20px'; cLbl.innerHTML = `Kompressor<br><span style="color:#03a9f4; font-size:10px;">[${comp.normLabel}]</span>`; 
+                comp.el.appendChild(cLbl);
+                
+                manifold.normLabel = '-GQ1';
+                let mLbl = document.createElement('div'); mLbl.className = 'f2d-label f2d-norm-label'; 
+                mLbl.style.top = '-25px'; mLbl.innerHTML = `Wartungseinheit<br><span style="color:#03a9f4; font-size:10px;">[${manifold.normLabel}]</span>`; 
+                manifold.el.appendChild(mLbl);
+            }
+            
+            let isDouble = cylObj.type === 'zylinder_double';
+						 
+            let existingValves = factoryObjects.filter(o => o.type === 'valve_pneu');
+            
+            // 🌟 NORM-LOGIK (DIN EN 81346-2)
+            let groupNum = existingValves.length + 1;
+            
+            // Zylinder: MM (Linearer Antrieb)
+            cylObj.normLabel = '-MM' + groupNum;
+            let cLbl = cylObj.el.querySelector('.f2d-label'); 
+            if(cLbl) {
+                if (!cylObj.originalLabelText) cylObj.originalLabelText = cLbl.textContent; 
+                cLbl.innerHTML = `${cylObj.originalLabelText}<br><span style="color:#03a9f4; font-size:10px;">[${cylObj.normLabel}]</span>`;
+            }
 
+            let valve = createFactoryObject('valve_pneu', '', isDouble ? 'double' : 'single');
+            // Wegeventil: QM (Steuern von Energieflüssen)
+            valve.normLabel = '-QM' + groupNum;
+            let vLbl = valve.el.querySelector('.f2d-norm-label'); if(vLbl) vLbl.textContent = valve.normLabel;
+            
+            valve.x = comp.x + 140 + ((existingValves.length) * 130); 
+            valve.y = comp.y - 10;
+            
+            valve.linkedVarExt = cylObj.linkedVarExt; valve.linkedVarRet = cylObj.linkedVarRet; valve.targetCylinderId = cylObj.id;
+            
+            // 🌟 REINE PHYSIK: Den alten Speed in die exakt nötigen Öffnungswinkel (%) umrechnen
+            let targetSpeed = cylObj.speed !== undefined ? cylObj.speed : 10;
+            let stroke = cylObj.stroke || 100;
+            let target_v_mm_s = (targetSpeed * 60 * stroke) / 100;
+            
+            // 1. Beide Flächen berechnen (Die Ringfläche beim Einfahren ist kleiner!)
+            let pistonD = cylObj.pistonD || 20;
+            let rodD = cylObj.rodD || 8;
+            let aExt = Math.PI * Math.pow(pistonD / 2, 2);
+            let aRet = aExt - (Math.PI * Math.pow(rodD / 2, 2));
+            
+            // 2. Benötigte Volumenströme berechnen (Q = v * A)
+            let target_Q_ext = target_v_mm_s * aExt;
+            let target_Q_ret = target_v_mm_s * aRet; // 🌟 Korrekt: Braucht WENIGER Luft für dasselbe Tempo!
+            
+            // 3. Was liefert der Kompressor maximal?
+            let compPressure = comp.pressure || 6.0;
+            let compFlow = comp.maxFlow || 200;
+            let max_Q_mm3_s = compFlow * 16666.67 * (compPressure / 6.0);
+            
+            // 4. Öffnungswinkel SEPARAT berechnen
+            let reqOpenExt = Math.round((target_Q_ext / max_Q_mm3_s) * 100);
+            let reqOpenRet = Math.round((target_Q_ret / max_Q_mm3_s) * 100);
+            
+            reqOpenExt = Math.max(1, Math.min(100, reqOpenExt));
+            reqOpenRet = Math.max(1, Math.min(100, reqOpenRet));
+
+            // Helfer-Funktion: Nimmt jetzt den individuellen Wert entgegen!
+            const applyThrottleVisuals = (throttleObj, openingVal) => {
+                throttleObj.opening = openingVal;
+                let valD = throttleObj.el.querySelector('.f2d-throttle-val');
+                let knob = throttleObj.el.querySelector('.f2d-throttle-knob');
+                if (valD) valD.textContent = openingVal + '%';
+                if (knob) knob.style.transform = `rotate(${openingVal * 2.7}deg)`;
+            };
+
+            // Drosselrückschlagventil 1 (RN)
+            let tExt = createFactoryObject('throttle', '');
+            tExt.normLabel = '-RN' + ((groupNum - 1) * 2 + 1); // Berechnet fortlaufend -RN1, -RN3...
+            let tExtLbl = tExt.el.querySelector('.f2d-norm-label'); if(tExtLbl) tExtLbl.textContent = tExt.normLabel;
+            applyThrottleVisuals(tExt, reqOpenExt); // 🌟 Öffnungswinkel für's Ausfahren!
+            tExt.x = valve.x - 10; 
+            tExt.y = valve.y - 70;
+            tExt.targetCylinderId = cylObj.id; tExt.role = 'ext';
+
+            let tRet = null;
+            if (isDouble) {
+                // Drosselrückschlagventil 2 (RN)
+                tRet = createFactoryObject('throttle', '');
+                tRet.normLabel = '-RN' + ((groupNum - 1) * 2 + 2); // Berechnet fortlaufend -RN2, -RN4...
+                let tRetLbl = tRet.el.querySelector('.f2d-norm-label'); if(tRetLbl) tRetLbl.textContent = tRet.normLabel;
+                applyThrottleVisuals(tRet, reqOpenRet); // 🌟 Öffnungswinkel für's Einfahren!
+                tRet.x = valve.x + 35; 
+                tRet.y = valve.y - 70;
+                tRet.targetCylinderId = cylObj.id; tRet.role = 'ret';
+            }
+
+            updateObjTransform(zone); updateObjTransform(comp); 
+            if (manifold) updateObjTransform(manifold);
+            updateObjTransform(valve); updateObjTransform(tExt);
+            if (tRet) updateObjTransform(tRet);
+            
+            const scrollArea = document.getElementById('factory-canvas-area');
+            scrollArea.scrollTo({ left: zone.x * factoryScale - 50, top: zone.y * factoryScale - 50, behavior: 'smooth' });
+        };
+        // 🌟 DIE MAGISCHE SCHLAUCH-ENGINE (Wird jeden Frame gezeichnet!)
+        window.drawPneumaticHoses = function() {
+            let layer = document.getElementById('pneu-hose-layer');
+            if (!layer) {
+                layer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                layer.id = "pneu-hose-layer";
+                document.getElementById('factory-content').prepend(layer);
+            }
+            let svgHtml = '';
+            // Helfer für rotierte Anschlüsse am Zylinder
+            const getRotatedPort = (obj, lx, ly) => {
+                let rad = (obj.rotation || 0) * Math.PI / 180;
+                let cx = obj.x + obj.width/2; let cy = obj.y + (obj.height||30)/2;
+                let px = obj.x + lx; let py = obj.y + ly;
+                let dx = px - cx; let dy = py - cy;
+                return { x: cx + dx * Math.cos(rad) - dy * Math.sin(rad), y: cy + dx * Math.sin(rad) + dy * Math.cos(rad) };
+            };
+            // Helfer für weiche SVG Beziers
+            const drawHose = (x1, y1, x2, y2, stateClass) => {
+                let cpY = y1 - Math.max(50, Math.abs(y1 - y2) / 2); // Schwerkraft-Bogen
+                if (y2 > y1) cpY = y1 + Math.abs(y2-y1)/2; // Wenn Ziel tiefer liegt
+                svgHtml += `<path d="M ${x1} ${y1} C ${x1} ${cpY}, ${x2} ${cpY}, ${x2} ${y2}" class="pneu-hose ${stateClass}" />`;
+            };
+            let comp = factoryObjects.find(o => o.type === 'compressor');
+            let manifold = factoryObjects.find(o => o.type === 'manifold');
+            if (comp && manifold) {
+                // Hauptleitung Kompressor -> Verteiler (immer unter Druck)
+                drawHose(comp.x + 80, comp.y + 50, manifold.x + 10, manifold.y + 7, 'pressurized');
+            }
+            factoryObjects.filter(o => o.hasPneumatics && o.type.startsWith('zylinder')).forEach(cyl => {
+                let valve = factoryObjects.find(o => o.type === 'valve_pneu' && o.targetCylinderId === cyl.id);
+                if (!valve) return;
+                let isDouble = cyl.type === 'zylinder_double';
+                let isExtending = valve.isActive; 
+                // 🌟 FIX: Exakte Anschlusspositionen des kompakten 50px Ventils
+                let port1X = valve.x + (isDouble ? 25 : 15);
+                let portOutExtX = valve.x + (isDouble ? 15 : 25);
+                let portOutRetX = valve.x + 35;
+                // 1. Verteiler -> Ventil (Port 1)
+                if (manifold) drawHose(port1X, manifold.y + 7, port1X, valve.y + 40, 'pressurized');
+                // 2. Ventil -> Drosseln -> Zylinder (Ausfahren / Vorhub)
+                let tExt = factoryObjects.find(o => o.type === 'throttle' && o.targetCylinderId === cyl.id && o.role === 'ext');
+                let extState = isExtending ? 'pressurized' : 'exhaust';
+                let cylRearPort = getRotatedPort(cyl, 14, -10); // Hinterer Zylinderstutzen
+                if (tExt) {
+                    drawHose(portOutExtX, valve.y, tExt.x + 20, tExt.y + 35, extState); // Ventil -> Drossel
+                    drawHose(tExt.x + 20, tExt.y, cylRearPort.x, cylRearPort.y, extState); // Drossel -> Zylinder
+                } else {
+                    drawHose(portOutExtX, valve.y, cylRearPort.x, cylRearPort.y, extState); // Direkt
+                }
+                // 3. Ventil -> Drosseln -> Zylinder (Einfahren / Rückhub)
+                if (isDouble) {
+                    let tRet = factoryObjects.find(o => o.type === 'throttle' && o.targetCylinderId === cyl.id && o.role === 'ret');
+                    let retState = !isExtending ? 'pressurized' : 'exhaust';
+                    let cylFrontPort = getRotatedPort(cyl, cyl.width - 6, -10); // Vorderer Zylinderstutzen
+                    if (tRet) {
+                        drawHose(portOutRetX, valve.y, tRet.x + 20, tRet.y + 35, retState); 
+                        drawHose(tRet.x + 20, tRet.y, cylFrontPort.x, cylFrontPort.y, retState); 
+                    } else {
+                        drawHose(portOutRetX, valve.y, cylFrontPort.x, cylFrontPort.y, retState);
+                    }
+                }
+            });
+            layer.innerHTML = svgHtml;
+        };
         // 3. Engine zünden
         startFactoryEngine();
     </script>
