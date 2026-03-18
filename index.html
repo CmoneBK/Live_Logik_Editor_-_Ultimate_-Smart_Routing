@@ -3548,6 +3548,7 @@ You must output exactly this JSON format. The logic code goes as a single string
         };
         window.changeWorkspaceLayout = function(val) {
             currentLayout = val;
+            localStorage.setItem('valisLayout', val); // 🌟 NEU: Layout für F5 speichern!
             const wc = document.getElementById('workspace-container');
             // Vorherige Raster-Klassen immer erst aufräumen
             wc.classList.remove('layout-grid', 'grid-sim-bottom', 'grid-sim-top', 'grid-sim-right', 'grid-sim-left');
@@ -8225,6 +8226,14 @@ You must output exactly this JSON format. The logic code goes as a single string
             updateHighlighting(); 
             updateEditor(); 
             loadFactoryState(); 
+            
+            // 🌟 NEU: Layout aus dem Speicher (F5) wiederherstellen
+            let savedLayout = localStorage.getItem('valisLayout');
+            if (savedLayout) {
+                const layoutIcons = { 'flex-row': '◫', 'flex-col': '⬒', 'grid-sim-bottom': '🗗', 'grid-sim-top': '🗒', 'grid-sim-right': '◧', 'grid-sim-left': '◨' };
+                let icon = layoutIcons[savedLayout] || '◫';
+                window.selectLayout(savedLayout, icon);
+            }
         }
 		// ==========================================
         // NEU: VISUAL EDITOR (Two-Way-Binding)
