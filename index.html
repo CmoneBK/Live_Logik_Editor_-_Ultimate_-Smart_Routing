@@ -852,7 +852,8 @@
                 <div class="circuit-btn-container" style="align-items: center;">
                     <button id="btn-iec-toggle" class="btn-export" style="background-color: #607d8b; border: 1px solid #455a64;" onclick="toggleIecToolbar()" data-i18n="iec_options">⚙️ Optionen</button>
                     <div id="iec-button-group">
-                        <button id="btn-toggle-econ" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleEconMode()" data-i18n="iec_mode_relay">💼 Modus: Relais (Klassisch)</button>
+                        <button id="btn-toggle-strict" class="btn-export" style="background-color: #4caf50; border: 1px solid #333;" onclick="toggleStrictHardware()">♾️ Hardware-Limit: MULTI</button>
+						<button id="btn-toggle-econ" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleEconMode()" data-i18n="iec_mode_relay">💼 Modus: Relais (Klassisch)</button>
                         <button id="btn-toggle-colors" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleCircuitColors()" data-i18n="iec_colors_off">🌈 Bunte Pfade: AUS</button>
                         <button id="btn-toggle-wech" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleWechsler()" data-i18n="iec_wech_off">🔀 Wechslernummerierung: AUS</button>
                         <button id="btn-toggle-seq" class="btn-export" style="background-color: #555; border: 1px solid #333;" onclick="toggleSeqNum()" data-i18n="iec_seq_off">🔢 Fortlaufende Nrn: AUS</button>
@@ -862,6 +863,7 @@
                 <svg id="circuit-svg" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
                     <g id="circuit-content"></g>
                 </svg>
+				<div id="iec-context-menu" style="display: none; position: absolute; background: #2d2d30; border: 1px solid #555; padding: 5px 0; border-radius: 3px; z-index: 2000; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); font-family: sans-serif;"></div>
             </div>
             <div class="workspace-resizer" id="ws-resizer-2" style="grid-area: r2;"></div>
             <div id="factory-wrapper" class="workspace-panel" style="display: none; grid-area: sim; background-color: #e8ecef;">
@@ -2434,8 +2436,11 @@ You must output exactly this JSON format. The logic code goes as a single string
                     .replace(/\bOR\b/gi, '||').replace(/\bODER\b/gi, '||').replace(/\bv\b/gi, '||').replace(/∨/g, '||');
                 expressionStr = expressionStr.replace(/&&/g, '##AND##').replace(/&/g, '&&').replace(/##AND##/g, '&&');
                 expressionStr = expressionStr.replace(/\|\|/g, '##OR##').replace(/\|/g, '||').replace(/##OR##/g, '||');
-                let timerMatch = expressionStr.match(/^(TON|TOF|TP)\s*\(\s*([a-zA-Z0-9_]+)\s*,\s*([\d\.]*)\s*(?:s|ms)?\s*\)$/i);
-                let counterMatch = expressionStr.match(/^CTU\s*\(\s*([a-zA-Z0-9_]+)\s*,\s*([a-zA-Z0-9_]+)\s*,\s*(\d*)\s*\)$/i);
+                
+                // 🌟 FIX: [^,]+ erlaubt ab sofort alle Zeichen (inklusive ¬) vor dem Komma!
+                let timerMatch = expressionStr.match(/^(TON|TOF|TP)\s*\(\s*([^,]+)\s*,\s*([\d\.]*)\s*(?:s|ms)?\s*\)$/i);
+                let counterMatch = expressionStr.match(/^CTU\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*(\d*)\s*\)$/i);
+                
                 if (timerMatch) {
                     let funcType = timerMatch[1].toUpperCase(); let inVar = timerMatch[2]; 
                     let ptVal = parseFloat(timerMatch[3]) || 0; 
@@ -3392,6 +3397,21 @@ You must output exactly this JSON format. The logic code goes as a single string
             return (window.popOutWindows && window.popOutWindows['circuit-wrapper'] && !window.popOutWindows['circuit-wrapper'].closed) 
                    ? window.popOutWindows['circuit-wrapper'].document : document;
         }
+		window.configStrictHardware = false;
+        window.toggleStrictHardware = function() {
+            window.configStrictHardware = !window.configStrictHardware;
+            const btn = getCircDoc().getElementById('btn-toggle-strict');
+            if (btn) {
+                if (window.configStrictHardware) {
+                    btn.style.backgroundColor = '#f44336'; 
+                    btn.textContent = '🛑 Hardware-Limit: STRIKT';
+                } else {
+                    btn.style.backgroundColor = '#4caf50'; 
+                    btn.textContent = '♾️ Hardware-Limit: MULTI';
+                }
+            }
+            if (currentGraph) { drawCircuitPlan(currentGraph, globalInputs, globalOutputs, true); runSimulationTick(); }
+        };
         window.configEconMode = false;
         window.toggleEconMode = function() {
             window.configEconMode = !window.configEconMode;
@@ -3901,12 +3921,29 @@ You must output exactly this JSON format. The logic code goes as a single string
                     let val = !!spsState[varName]; 
                     let blade = el.querySelector('.circ-moving-contact');
                     let isNC = blade ? blade.classList.contains('is-nc') : el.classList.contains('is-nc-wire');
-                    let cType = el.dataset.ctype || 'relais';
+                    
+                    let cType = el.getAttribute('data-ctype') || 'relais';
+                    let cRole = el.getAttribute('data-iec-role');
                     let isRelayContact = ['relais', 'ton', 'tof', 'tp', 'ctu'].includes(cType);
-                    // 1. Physische Klinge bewegen (Relais schalten wenn Spule=1, Hardware schaltet wenn ungedrückt/gedrückt)
-                    let isMechanicallyClosed = isRelayContact ? (isNC ? !val : val) : val;
-                    // 2. Stromfluss prüfen (Ist der Pfad von L+ bis hier intakt?)
+                    
+                    // Stromfluss prüfen (Ist der Pfad von L+ bis hier intakt?)
                     let hasPower = el._checkPower ? el._checkPower(spsState) : true;
+                    
+                    // 🌟 FIX: Spulen (und vor allem die virtuellen AUX-Relais) leuchten IMMER, wenn sie Strom haben!
+                    if (cRole === 'coil') {
+                        val = hasPower; 
+                    }
+
+                    let isMechanicallyClosed;
+                    if (isRelayContact) {
+                        isMechanicallyClosed = isNC ? !val : val;
+                    } else {
+                        // 🌟 FIX: Entkopplung von logischem Software-Zustand und echtem mechanischem Finger-Druck!
+                        let pNC = componentTypes[varName] === 'nothalt' || componentTypes[varName] === 'taster_nc' || componentTypes[varName] === 'schalter_nc' || componentTypes[varName] === 'light_curtain';
+                        let isPressed = pNC ? !val : val;
+                        isMechanicallyClosed = isNC ? !isPressed : isPressed;
+                    }
+                    
                     // Ein Element leuchtet nur, wenn auch wirklich Strom von oben bis hierher fließt!
                     let shouldGlow = el.classList.contains('circ-wire') ? hasPower : (hasPower && isMechanicallyClosed);
                     if (isSimulationActive) {
@@ -3955,39 +3992,57 @@ You must output exactly this JSON format. The logic code goes as a single string
             for (let k in attrs) el.setAttribute(k, attrs[k]);
             return el;
         }
+        // 🌟 NEU: Zentraler Helper, der zielsicher die Textzeile für verschachtelte Kontakte ermittelt
+        window.getLinePrefixForEdge = function(edge) {
+            if (!edge) return '';
+            let rootCtx = window.getRootContextGlobal(edge);
+            if (!rootCtx) return edge.targetId;
+            let tNode = rootCtx.targetNode;
+            if (tNode.type === 'OUTPUT') return tNode.id;
+            if (['TON', 'TOF', 'TP', 'CTU'].includes(tNode.type)) return tNode.id.substring(tNode.type.length + 1);
+            if (['RS', 'SR'].includes(tNode.type)) {
+                let matchNum = tNode.id.match(/\d+/);
+                if (matchNum) return (rootCtx.targetPin || 'S') + matchNum[0] + (tNode.type === 'SR' ? '_SR' : '');
+            }
+            return tNode.id;
+        };
+
         function drawCircuitPlan(graph, inputsList, outputsList, keepView = false) {
             let isFirstRun = !panZoomCircuitInstance;
             circuitContent.innerHTML = '';
             let sfCount = 1, kfCount = 1, bgCount = 1, mbCount = 1, pCount = 1, hCount = 1, mCount = 1, kCount = 1, eCount = 1; 
             let symMap = {};
-            window.iecSymMap = symMap; // 🌟 FIX: Macht das Register für die Magnetspulen global!
+            window.iecSymMap = symMap; 
             let contactTypeMap = {};
             let pathCounter = 1; 
             let relayContacts = {}; 
-            let relayContactCount = {}; // NEU: Merkt sich, der wievielte Kontakt es für dieses Bauteil ist!
+            let relayContactCount = {}; 
+            
+            // 🌟 FIX: Speicher und clevere Benennung für benötigte Koppelrelais
+            let requiredAuxRelays = new Set();
+            let auxRelayNames = {};
+
             let getNodeColor = (id) => {
                 if (!id || id === 'NONE') return '#000';
                 return graph.nodes.get(id) ? graph.nodes.get(id).color : '#f58231';            
             };
             const usedAsSource = new Set(graph.edges.map(e => e.sourceId));
             let preRungsToDraw = [];
+
             inputsList.forEach(i => { 
                 let cType = componentTypes[i] || 'taster';
                 if (cType.startsWith('sensor_') || cType === 'nothalt') {
                     let deviceName = cType === 'nothalt' ? `-SF${sfCount++}` : `-BG${bgCount++}`;
-                    // Details ab Stufe 1 (E/A) anzeigen
                     let kfName = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (${deviceName})` : ''); 
                     symMap[i] = kfName; 
                     contactTypeMap[i] = 'relais';
                     preRungsToDraw.push({ id: i, cType: cType, kfName: kfName, deviceName: deviceName });
                 } else {
-                    // Details ab Stufe 1 (E/A) anzeigen
                     symMap[i] = `-SF${sfCount++}` + (window.configDetails >= 1 ? ` (${i})` : ''); 
                     contactTypeMap[i] = cType.replace('_nc', ''); 
                 }
             });
-            // FIX: Wir sortieren die Logik-Knoten nach Level, damit wir die Namen 
-            // der vorherigen Bauteile schon kennen, wenn wir ein Gatter benennen!
+
             let sortedNodes = Array.from(graph.nodes.values()).sort((a,b) => a.level - b.level);
             sortedNodes.forEach(n => {
                 if (n.type === 'GATE') { 
@@ -3998,7 +4053,6 @@ You must output exactly this JSON format. The logic code goes as a single string
                     });
                     let op = n.label === '&' ? '&&' : '||';
                     let detail = exprParts.join(` ${op} `);
-                    // Logik-Details NUR in Stufe 2 (ALLE) anzeigen!
                     symMap[n.id] = `-KF${kfCount++}` + (window.configDetails === 2 ? ` (${detail})` : '');
                     contactTypeMap[n.id] = 'relais';
                 } else if (n.type === 'RS' || n.type === 'SR' || ['TON', 'TOF', 'TP', 'CTU'].includes(n.type)) { 
@@ -4008,17 +4062,13 @@ You must output exactly this JSON format. The logic code goes as a single string
                         let numMatch = n.id.match(/\d+(_(?:SR|RS))?/);
                         qName = numMatch ? `Q${numMatch[0]}` : n.id;
                     }
-                    // Logik-Details NUR in Stufe 2 (ALLE) anzeigen!
                     symMap[n.id] = `-KF${kfCount++}` + (window.configDetails === 2 ? ` (${qName})` : '');
-                    // FIX: Hier bekommt das Bauteil endlich seinen echten Typ ('ton', 'tof'...) statt nur 'relais'!
                     contactTypeMap[n.id] = isTimer ? n.type.toLowerCase() : 'relais';
                 } else if (n.type === 'OUTPUT') {
                     let cType = componentTypes[n.id] || 'led';
                     if (usedAsSource.has(n.id)) {
-                        // Ausgangs-Details ab Stufe 1 (E/A) anzeigen
                         symMap[n.id] = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (${n.label})` : '');
                         n.isRelay = true;
-                        // FIX: Wir prüfen, ob die Quelle dieses Relais ein Timer/Zähler ist und vererben den Typ!
                         let inEdge = graph.edges.find(e => e.targetId === n.id);
                         let srcType = 'relais';
                         if (inEdge) {
@@ -4029,13 +4079,12 @@ You must output exactly this JSON format. The logic code goes as a single string
                         }
                         contactTypeMap[n.id] = srcType;
                     } else {
-                        // Ausgangs-Details mit korrekten Norm-Präfixen
                         let prefix = "";
                         if (cType === 'valve') prefix = `-MB${mbCount++}`;
                         else if (cType === 'siren') prefix = `-H${hCount++}`;
                         else if (cType === 'motor') prefix = `-M${window.mCount++ || (window.mCount=1, window.mCount++)}`;
                         else if (cType === 'contactor') prefix = `-K${window.kCount++ || (window.kCount=1, window.kCount++)}`;
-                        else if (cType === 'heater') prefix = `-E${eCount++}`; // NEU
+                        else if (cType === 'heater') prefix = `-E${eCount++}`; 
                         else prefix = `-P${pCount++}`;
                         symMap[n.id] = prefix + (window.configDetails >= 1 ? ` (${n.label})` : '');
                         n.isRelay = false;
@@ -4043,25 +4092,28 @@ You must output exactly this JSON format. The logic code goes as a single string
                     }
                 }
             });
+
             const drawLine = (x1, y1, x2, y2, width = 2, varName = null, color = null, isNCLine = false) => {
                 let l = createSvgElement('line', {x1, y1, x2, y2, stroke: '#000', 'stroke-width': width});
                 if (varName && varName !== 'NONE') {
                     l.classList.add('circ-wire', `circ-var-${varName}`);
-                    // FIX: Die Linie merkt sich, wenn sie zu einem Öffner gehört!
                     if (isNCLine) l.classList.add('is-nc-wire');
                     if (color) l.style.setProperty('--logic-color', color);
                 }
                 circuitContent.appendChild(l); 
                 return l;
             };
+
             const drawText = (x, y, txt, bold = false) => {
                 let t = createSvgElement('text', {x, y, 'font-size': '13px', fill: '#000', 'font-family': 'Segoe UI, Tahoma, sans-serif'});
                 if (bold) t.setAttribute('font-weight', 'bold'); t.textContent = txt; circuitContent.appendChild(t);
             };
+
             const drawSmallText = (parent, x, y, txt, anchor = 'end') => {
                 let t = createSvgElement('text', {x, y, 'font-size': '9px', fill: '#666', 'font-family': 'monospace', 'text-anchor': anchor});
                 t.textContent = txt; parent.appendChild(t);
             };
+
             const addLabelText = (parentG, x, y, textContent, isBold = false) => {
                 let fontSize = isBold ? '13px' : '12px';
                 let fontWeight = isBold ? 'bold' : 'normal';
@@ -4078,11 +4130,17 @@ You must output exactly this JSON format. The logic code goes as a single string
                     t.textContent = textContent; parentG.appendChild(t);
                 }
             };
-            const drawContact = (x, y, label, isNC, type, varName, color, pathNum) => {
+
+            const drawContact = (x, y, label, isNC, type, varName, color, pathNum, targetLinePrefix) => {
                 let g = createSvgElement('g', {class: `circ-contact-group circ-colored-group circ-var-${varName}`});
-				g.dataset.ctype = type; // <--- NEU: Diese Zeile einfügen!
+                g.setAttribute('data-ctype', type);
+                g.setAttribute('data-iec-id', varName);
+                g.setAttribute('data-iec-role', 'contact');
+                g.setAttribute('data-line-prefix', targetLinePrefix || varName);
+                g.style.cursor = 'context-menu';
+                g.appendChild(createSvgElement('rect', {x: x - 20, y: y - 20, width: 40, height: 40, fill: 'transparent'}));
+                
                 if (color) g.style.setProperty('--logic-color', color);
-                // NEU: Zählen der Kontakte für die durchlaufende Nummerierung
                 if (varName && varName !== 'NONE') {
                     if (!relayContacts[varName]) relayContacts[varName] = { contacts: [] };
                     relayContacts[varName].contacts.push({ isNC: isNC, path: pathNum });
@@ -4095,40 +4153,33 @@ You must output exactly this JSON format. The logic code goes as a single string
                 g.appendChild(createSvgElement('circle', {cx: x, cy: y + 15, r: 2.5, fill: '#000', class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 15, x2: x, y2: y - 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 15, x2: x, y2: y + 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                // Das bewegliche Teil als Gruppe, damit wir IEC-Schirme (Fallschirme) anhängen können
+                
                 let movingGroup = createSvgElement('g', { class: `circ-moving-contact ${isNC ? 'is-nc' : 'is-no'}`, stroke: '#000' });
                 movingGroup.style.transformOrigin = `${x}px ${y + 15}px`; 
                 if (!isNC) movingGroup.classList.add('open');
-                // Die eigentliche Schaltklinge (ohne eigenen Stroke, erbt von der Gruppe für den Glow-Effekt!)
                 movingGroup.appendChild(createSvgElement('line', { x1: x, y1: y - 6, x2: x, y2: y + 15, 'stroke-width': 2 }));
-                // IEC 60617 Fallschirme für Timer-Kontakte
+                
                 if (type === 'ton') {
-                    // Anzugsverzögert (Bremst das Schließen)
                     let arc = isNC ? `M ${x} ${y} C ${x+7} ${y-3}, ${x+7} ${y+3}, ${x} ${y+6}` : `M ${x} ${y} C ${x-7} ${y-3}, ${x-7} ${y+3}, ${x} ${y+6}`;
                     movingGroup.appendChild(createSvgElement('path', { d: arc, fill: 'none', 'stroke-width': 1.5 }));
                 } else if (type === 'tof') {
-                    // Abfallverzögert (Bremst das Öffnen)
                     let arc = isNC ? `M ${x} ${y} C ${x-7} ${y-3}, ${x-7} ${y+3}, ${x} ${y+6}` : `M ${x} ${y} C ${x+7} ${y-3}, ${x+7} ${y+3}, ${x} ${y+6}`;
                     movingGroup.appendChild(createSvgElement('path', { d: arc, fill: 'none', 'stroke-width': 1.5 }));
                 } else if (type === 'tp') {
-                    // Wischrelais / Impuls (Beide Richtungen)
                     movingGroup.appendChild(createSvgElement('path', { d: `M ${x} ${y} C ${x-6} ${y-3}, ${x-6} ${y+3}, ${x} ${y+6}`, fill: 'none', 'stroke-width': 1.5 }));
                     movingGroup.appendChild(createSvgElement('path', { d: `M ${x} ${y} C ${x+6} ${y-3}, ${x+6} ${y+3}, ${x} ${y+6}`, fill: 'none', 'stroke-width': 1.5 }));
                 }
                 g.appendChild(movingGroup);               
-                // FIX: Der Haken (die feste Kerbe) für den Öffner ist jetzt oben rechts!
+                
                 if (isNC) g.appendChild(createSvgElement('line', {x1: x, y1: y - 5, x2: x + 8, y2: y - 5, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                // NEU: Intelligente Klemmenbezeichnungen (DIN EN 60947-5-1)
                 let pinTop, pinBot;
                 if (window.configWechsler) {
-                    pinTop = prefix + '1';
-                    pinBot = isNC ? prefix + '2' : prefix + '4';
+                    pinTop = prefix + '1'; pinBot = isNC ? prefix + '2' : prefix + '4';
                 } else {
-                    pinTop = isNC ? prefix + '1' : prefix + '3';
-                    pinBot = isNC ? prefix + '2' : prefix + '4';
+                    pinTop = isNC ? prefix + '1' : prefix + '3'; pinBot = isNC ? prefix + '2' : prefix + '4';
                 }
-                drawSmallText(g, x - 5, y - 10, pinTop, 'end');
-                drawSmallText(g, x - 5, y + 15, pinBot, 'end');
+                drawSmallText(g, x - 5, y - 10, pinTop, 'end'); drawSmallText(g, x - 5, y + 15, pinBot, 'end');
+                
                 if (type === 'taster' || type === 'schalter' || type === 'nothalt' || type === 'mech_sensor' || type === 'key_switch' || type === 'light_curtain') {
                     let dashEndX = isNC ? x + 3 : x - 5; 
                     g.appendChild(createSvgElement('line', {x1: dashEndX, y1: y + 2.5, x2: x - 18, y2: y + 2.5, stroke: '#000', 'stroke-width': 1.5, 'stroke-dasharray': '2,2'}));
@@ -4140,19 +4191,15 @@ You must output exactly this JSON format. The logic code goes as a single string
                         g.appendChild(createSvgElement('circle', {cx: x - 21, cy: y + 2.5, r: 3, fill: 'none', stroke: '#000', 'stroke-width': 1.5}));
                         g.appendChild(createSvgElement('line', {x1: x - 24, y1: y - 2.5, x2: x - 24, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5}));
                     } else if (type === 'key_switch') {
-                        // NEU: IEC Schlüsselschalter (Normale Schalter-Raste + Schloss-Symbol auf der Linie)
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5})); 
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 14, y2: y - 2.5, stroke: '#000', 'stroke-width': 1.5})); 
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y + 7.5, x2: x - 14, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5})); 
-                        g.appendChild(createSvgElement('path', {d: `M ${x - 12} ${y - 0.5} L ${x - 9} ${y + 2.5} L ${x - 12} ${y + 5.5}`, fill: 'none', stroke: '#000', 'stroke-width': 1.5})); // V-Raste
-                        g.appendChild(createSvgElement('rect', {x: x - 20.5, y: y - 4, width: 5, height: 7, fill: '#fff', stroke: '#000', 'stroke-width': 1})); // Schloss-Kasten
-                        g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2, x2: x - 18, y2: y + 1, stroke: '#000', 'stroke-width': 1})); // Schlüsselloch
+                        g.appendChild(createSvgElement('path', {d: `M ${x - 12} ${y - 0.5} L ${x - 9} ${y + 2.5} L ${x - 12} ${y + 5.5}`, fill: 'none', stroke: '#000', 'stroke-width': 1.5}));
+                        g.appendChild(createSvgElement('rect', {x: x - 20.5, y: y - 4, width: 5, height: 7, fill: '#fff', stroke: '#000', 'stroke-width': 1})); 
+                        g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2, x2: x - 18, y2: y + 1, stroke: '#000', 'stroke-width': 1})); 
                     } else if (type === 'light_curtain') {
-                        // NEU: IEC Symbol für Optoelektronische Schutzeinrichtung (Lichtgitter)
                         g.appendChild(createSvgElement('line', {x1: x - 18, y1: y - 2.5, x2: x - 18, y2: y + 7.5, stroke: '#000', 'stroke-width': 1.5}));
-                        // Rechteck für den Sensor
                         g.appendChild(createSvgElement('rect', {x: x - 24, y: y - 1.5, width: 6, height: 8, fill: 'none', stroke: '#000', 'stroke-width': 1}));
-                        // 3 parallele Laserstrahlen, die in den Sensor fallen
                         g.appendChild(createSvgElement('line', {x1: x - 30, y1: y, x2: x - 25, y2: y, stroke: '#000', 'stroke-width': 1}));
                         g.appendChild(createSvgElement('line', {x1: x - 30, y1: y + 2.5, x2: x - 25, y2: y + 2.5, stroke: '#000', 'stroke-width': 1}));
                         g.appendChild(createSvgElement('line', {x1: x - 30, y1: y + 5, x2: x - 25, y2: y + 5, stroke: '#000', 'stroke-width': 1}));
@@ -4164,17 +4211,21 @@ You must output exactly this JSON format. The logic code goes as a single string
                     }
                 }
                 circuitContent.appendChild(g);
-				return g; // <--- NEU: Diese Zeile einfügen
+                return g;
             };
+
             const drawCoil = (x, y, label, id, type='relais', color, pathNum) => {
                 let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
+                g.setAttribute('data-ctype', type); g.setAttribute('data-iec-id', id); g.setAttribute('data-iec-role', 'coil');
+                g.style.cursor = 'context-menu';
+                g.appendChild(createSvgElement('rect', {x: x - 30, y: y - 20, width: 60, height: 40, fill: 'transparent'}));
                 if (color) g.style.setProperty('--logic-color', color);
+                
                 if (type === 'relais' && id) {
                     if (!relayContacts[id]) relayContacts[id] = { contacts: [] };
                     relayContacts[id].coilX = x;
                 }
-				if (type === 'valve') g.appendChild(createSvgElement('line', {x1: x - 20, y1: y + 10, x2: x + 20, y2: y - 10, stroke: '#000', 'stroke-width': 2}));
-                // NEU: IEC-Norm Symbole für Timer und Zähler
+                if (type === 'valve') g.appendChild(createSvgElement('line', {x1: x - 20, y1: y + 10, x2: x + 20, y2: y - 10, stroke: '#000', 'stroke-width': 2}));
                 if (type === 'ton') {
                     g.appendChild(createSvgElement('line', {x1: x-20, y1: y-10, x2: x-10, y2: y+10, stroke: '#000', 'stroke-width': 1.5}));
                     g.appendChild(createSvgElement('line', {x1: x-10, y1: y-10, x2: x-20, y2: y+10, stroke: '#000', 'stroke-width': 1.5}));
@@ -4191,16 +4242,18 @@ You must output exactly this JSON format. The logic code goes as a single string
                 g.appendChild(rect);
                 if (type === 'valve') g.appendChild(createSvgElement('line', {x1: x - 20, y1: y + 10, x2: x + 20, y2: y - 10, stroke: '#000', 'stroke-width': 2}));
                 addLabelText(g, x + 30, y, label, true);
-                // FIX: Die Reset-Spule (am "(R)" im Label zu erkennen) bekommt normgerecht die Klemmen A3 und A4!
+                
                 let pinTop = type === 'valve' ? '1' : (label.includes('(R)') ? 'A3' : 'A1');
                 let pinBot = type === 'valve' ? '2' : (label.includes('(R)') ? 'A4' : 'A2');
-                drawSmallText(g, x - 5, y - 15, pinTop, 'end');
-                drawSmallText(g, x - 5, y + 20, pinBot, 'end');
+                drawSmallText(g, x - 5, y - 15, pinTop, 'end'); drawSmallText(g, x - 5, y + 20, pinBot, 'end');
                 circuitContent.appendChild(g);
-				return g; // <--- NEU: Diese Zeile einfügen
+                return g;
             };
+
             const drawLED = (x, y, label, id, color, pathNum) => {
                 let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
+                g.setAttribute('data-ctype', 'coil'); g.setAttribute('data-iec-id', id); g.setAttribute('data-iec-role', 'coil');
+                g.style.cursor = 'context-menu';
                 if (color) g.style.setProperty('--logic-color', color);
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 20, x2: x, y2: y - 15, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 15, x2: x, y2: y + 20, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
@@ -4209,79 +4262,254 @@ You must output exactly this JSON format. The logic code goes as a single string
                 g.appendChild(createSvgElement('line', {x1: x - 10.6, y1: y - 10.6, x2: x + 10.6, y2: y + 10.6, stroke: '#000', 'stroke-width': 2}));
                 g.appendChild(createSvgElement('line', {x1: x - 10.6, y1: y + 10.6, x2: x + 10.6, y2: y - 10.6, stroke: '#000', 'stroke-width': 2}));
                 addLabelText(g, x + 25, y, label, true);
-                drawSmallText(g, x - 5, y - 18, 'X1', 'end');
-                drawSmallText(g, x - 5, y + 24, 'X2', 'end');
+                drawSmallText(g, x - 5, y - 18, 'X1', 'end'); drawSmallText(g, x - 5, y + 24, 'X2', 'end');
                 circuitContent.appendChild(g);
-				return g; // <--- NEU: Diese Zeile einfügen
+                return g;
             };
-			const drawSiren = (x, y, label, id, color) => {
+
+            const drawSiren = (x, y, label, id, color) => {
                 let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
+                g.setAttribute('data-ctype', 'coil'); g.setAttribute('data-iec-id', id); g.setAttribute('data-iec-role', 'coil');
+                g.style.cursor = 'context-menu';
                 if (color) g.style.setProperty('--logic-color', color);
-                // Drähte
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 20, x2: x, y2: y - 10, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 10, x2: x, y2: y + 20, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                // IEC Hupe Symbol
                 let sirenPath = `M ${x-10} ${y-10} A 10 10 0 0 0 ${x-10} ${y+10} L ${x+10} ${y+15} L ${x+10} ${y-15} Z`;
                 g.appendChild(createSvgElement('path', {d: sirenPath, class: 'circ-component', fill: '#fff', stroke: '#000', 'stroke-width': 2}));
                 addLabelText(g, x + 20, y, label, true);
-                drawSmallText(g, x - 5, y - 12, 'X1', 'end');
-                drawSmallText(g, x - 5, y + 18, 'X2', 'end');
+                drawSmallText(g, x - 5, y - 12, 'X1', 'end'); drawSmallText(g, x - 5, y + 18, 'X2', 'end');
                 circuitContent.appendChild(g);
                 return g;
             };
-			const drawMotor = (x, y, label, id, color) => {
+
+            const drawMotor = (x, y, label, id, color) => {
                 let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
+                g.setAttribute('data-ctype', 'coil'); g.setAttribute('data-iec-id', id); g.setAttribute('data-iec-role', 'coil');
+                g.style.cursor = 'context-menu';
                 if (color) g.style.setProperty('--logic-color', color);
-                // Zuleitungen
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 20, x2: x, y2: y - 15, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 15, x2: x, y2: y + 20, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                // Motorkreis
                 let circle = createSvgElement('circle', {cx: x, cy: y, r: 15, class: 'circ-component', fill: '#fff', stroke: '#000', 'stroke-width': 2});
                 g.appendChild(circle);
-                // Das "M"
                 let txt = createSvgElement('text', {x: x, y: y + 5, 'font-size': '14px', 'font-weight': '900', 'text-anchor': 'middle', 'font-family': 'Arial'});
                 txt.textContent = 'M'; g.appendChild(txt);
                 addLabelText(g, x + 25, y, label, true);
-                drawSmallText(g, x - 5, y - 18, 'U1', 'end');
-                drawSmallText(g, x - 5, y + 24, 'U2', 'end');
+                drawSmallText(g, x - 5, y - 18, 'U1', 'end'); drawSmallText(g, x - 5, y + 24, 'U2', 'end');
                 circuitContent.appendChild(g);
                 return g;
             };
-			const drawHeater = (x, y, label, id, color) => {
+
+            const drawHeater = (x, y, label, id, color) => {
                 let g = createSvgElement('g', {class: `circ-colored-group circ-var-${id}`});
+                g.setAttribute('data-ctype', 'coil'); g.setAttribute('data-iec-id', id); g.setAttribute('data-iec-role', 'coil');
+                g.style.cursor = 'context-menu';
                 if (color) g.style.setProperty('--logic-color', color);
-                // Zuleitungen
                 g.appendChild(createSvgElement('line', {x1: x, y1: y - 20, x2: x, y2: y - 10, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
                 g.appendChild(createSvgElement('line', {x1: x, y1: y + 10, x2: x, y2: y + 20, stroke: '#000', 'stroke-width': 2, class: 'circ-static'}));
-                // Kasten
                 let rect = createSvgElement('rect', {x: x - 15, y: y - 10, width: 30, height: 20, class: 'circ-component', fill: '#fff', stroke: '#000', 'stroke-width': 2});
                 g.appendChild(rect);
-                // 3 thermische Wellenlinien
                 g.appendChild(createSvgElement('path', {d: `M ${x-8} ${y-4} Q ${x-5} ${y-8} ${x-2} ${y-4} T ${x+4} ${y-4} T ${x+10} ${y-4}`, fill: 'none', stroke: '#000', 'stroke-width': 1}));
                 g.appendChild(createSvgElement('path', {d: `M ${x-8} ${y+1} Q ${x-5} ${y-3} ${x-2} ${y+1} T ${x+4} ${y+1} T ${x+10} ${y+1}`, fill: 'none', stroke: '#000', 'stroke-width': 1}));
                 g.appendChild(createSvgElement('path', {d: `M ${x-8} ${y+6} Q ${x-5} ${y+2} ${x-2} ${y+6} T ${x+4} ${y+6} T ${x+10} ${y+6}`, fill: 'none', stroke: '#000', 'stroke-width': 1}));
                 addLabelText(g, x + 25, y, label, true);
-                drawSmallText(g, x - 5, y - 12, 'X1', 'end');
-                drawSmallText(g, x - 5, y + 18, 'X2', 'end');
+                drawSmallText(g, x - 5, y - 12, 'X1', 'end'); drawSmallText(g, x - 5, y + 18, 'X2', 'end');
                 circuitContent.appendChild(g);
                 return g;
             };
-			// NEU: Helfer für das Stromfluss-Routing
+
             const setPower = (el, condStr) => {
                 if (el) el._checkPower = new Function('state', `return !!(${condStr || 'true'});`);
                 return el;
             };
             const getCond = (edge) => edge ? ((edge.inverted ? "!" : "") + `state['${edge.sourceId}']`) : "false";
+            
+            const getContactNC = (edge) => {
+                if (!edge) return false;
+                let t = contactTypeMap[edge.sourceId] || 'relais';
+                if (['relais', 'ton', 'tof', 'tp', 'ctu'].includes(t)) return edge.inverted;
+                let cT = componentTypes[edge.sourceId];
+                let pNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc' || cT === 'light_curtain';
+                return pNC ? !edge.inverted : edge.inverted;
+            };			
+            
+            const nodesToDraw = Array.from(graph.nodes.values()).filter(n => ['GATE', 'RS', 'SR', 'TON', 'TOF', 'TP', 'CTU', 'OUTPUT'].includes(n.type)).sort((a,b) => a.level - b.level);
+            
+            function getTreeW(nodeId) {
+                let node = graph.nodes.get(nodeId);
+                if (!node || node.type !== 'GATE') return 90; 
+                let inEdges = graph.edges.filter(e => e.targetId === nodeId);
+                if (inEdges.length === 0) return 90;
+                if (node.label === '&') return Math.max(90, ...inEdges.map(e => getTreeW(e.sourceId))); 
+                else return Math.max(90, inEdges.reduce((sum, e) => sum + getTreeW(e.sourceId), 0));    
+            }
+            
+            function drawTree(nodeId, cx, y, w, isTargetInverted, basePathNum, baseCond, edgeObjForPrefix = null) {
+                let targetLinePrefix = window.getLinePrefixForEdge(edgeObjForPrefix);
+                
+                if (nodeId === 'TRUE') {
+                    setPower(drawLine(cx, y, cx, y + 60, 2, 'TRUE', '#000'), baseCond);
+                    return { bottomY: y + 60, cond: baseCond };
+                }
+                if (nodeId === 'FALSE') {
+                    setPower(drawLine(cx, y, cx, y + 25, 2, 'FALSE', '#000'), baseCond);
+                    setPower(drawLine(cx, y + 35, cx, y + 60, 2, 'FALSE', '#000'), "false");
+                    return { bottomY: y + 60, cond: "false" };
+                }
+                
+                let node = graph.nodes.get(nodeId);
+                if (!node || node.type !== 'GATE') {
+                    let mockEdge = { sourceId: nodeId, inverted: isTargetInverted };
+                    let logicalIsNC = getContactNC(mockEdge);
+                    
+                    let isHardwareInput = globalInputs.includes(nodeId);
+                    let cT = componentTypes[nodeId] || 'taster';
+                    let pNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc' || cT === 'light_curtain';
+                    
+                    // 🌟 FIX: Wenn das Bauteil schon ein Relais ist (z.B. Not-Halt), braucht es KEIN Koppelrelais!
+                    let isAlreadyRelay = contactTypeMap[nodeId] === 'relais';
+                    let requiresAux = window.configStrictHardware && isHardwareInput && !isAlreadyRelay && (logicalIsNC !== pNC);
+
+                    let name = symMap[nodeId] || nodeId;
+                    let type = contactTypeMap[nodeId] || 'relais';
+
+                    if (requiresAux) {
+                        requiredAuxRelays.add(nodeId);
+                        if (!auxRelayNames[nodeId]) auxRelayNames[nodeId] = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (AUX_${nodeId})` : '');
+                        name = auxRelayNames[nodeId];
+                        type = 'relais';
+                        logicalIsNC = isTargetInverted; 
+                    }
+
+                    let col = getNodeColor(nodeId);
+                    let myCond = (isTargetInverted ? "!" : "") + `state['${nodeId}']`;
+                    let totalCond = baseCond === "true" ? myCond : `(${baseCond}) && ${myCond}`;
+                    setPower(drawLine(cx, y, cx, y + 15, 2, nodeId, col, logicalIsNC), baseCond);
+                    
+                    let g = drawContact(cx, y + 30, name, logicalIsNC, type, nodeId, col, basePathNum, targetLinePrefix); 
+                    setPower(g, baseCond); 
+                    setPower(drawLine(cx, y + 45, cx, y + 60, 2, nodeId, col, logicalIsNC), totalCond);
+                    return { bottomY: y + 60, cond: totalCond };
+                }
+                let inEdges = graph.edges.filter(e => e.targetId === nodeId);
+                let col = node.color;
+                if (node.label === '&') { 
+                    let currY = y; let currCond = baseCond;
+                    inEdges.forEach(edge => {
+                        let res = drawTree(edge.sourceId, cx, currY, w, edge.inverted, basePathNum, currCond, edge);
+                        currY = res.bottomY; currCond = res.cond;
+                    });
+                    return { bottomY: currY, cond: currCond };
+                } else if (node.label === '>=1') { 
+                    let branches = inEdges.length;
+                    let startXArray = []; let totalW = getTreeW(nodeId);
+                    let startX = cx - totalW/2; let currX = startX;
+                    inEdges.forEach(edge => {
+                        let bw = getTreeW(edge.sourceId); startXArray.push(currX + bw/2); currX += bw;
+                    });
+                    let firstX = startXArray[0]; let lastX = startXArray[branches - 1];
+                    setPower(drawLine(cx, y, cx, y + 10, 2, nodeId, col), baseCond);
+                    setPower(drawLine(firstX, y + 10, lastX, y + 10, 2, nodeId, col), baseCond);
+                    let maxBottomY = y + 10; let outConds = []; let branchResults = [];
+                    inEdges.forEach((edge, idx) => {
+                        let bx = startXArray[idx]; let bw = getTreeW(edge.sourceId);
+                        setPower(drawLine(bx, y + 10, bx, y + 20, 2, edge.sourceId, getNodeColor(edge.sourceId)), baseCond);
+                        let res = drawTree(edge.sourceId, bx, y + 20, bw, edge.inverted, basePathNum, baseCond, edge);
+                        branchResults.push({ x: bx, bottomY: res.bottomY, cond: res.cond });
+                        if (res.bottomY > maxBottomY) maxBottomY = res.bottomY;
+                        outConds.push(res.cond);
+                    });
+                    let totalCond = outConds.join(' || ') || 'false';
+                    if (baseCond !== "true") totalCond = `(${baseCond}) && (${totalCond})`;
+                    branchResults.forEach(res => setPower(drawLine(res.x, res.bottomY, res.x, maxBottomY + 10, 2, nodeId, col), res.cond));
+                    setPower(drawLine(firstX, maxBottomY + 10, lastX, maxBottomY + 10, 2, nodeId, col), totalCond);
+                    setPower(drawLine(cx, maxBottomY + 10, cx, maxBottomY + 20, 2, nodeId, col), totalCond);
+                    return { bottomY: maxBottomY + 20, cond: totalCond };
+                }
+            }
+            
+            function calcPinW(edge) {
+                if (window.configEconMode && edge && graph.nodes.get(edge.sourceId) && graph.nodes.get(edge.sourceId).type === 'GATE') return getTreeW(edge.sourceId);
+                return 90;
+            }
+            
+            function drawInputPin(edge, cx, yStart, yEnd, pNum, baseCond = "true", forceInvertNC = false) {
+                if (!edge) { setPower(drawLine(cx, yStart, cx, yEnd, 2, 'NONE', '#000'), baseCond); return baseCond; }
+                
+                let targetLinePrefix = window.getLinePrefixForEdge(edge);
+
+                if (edge.sourceId === 'TRUE') {
+                    let col = getNodeColor(edge.sourceId);
+                    setPower(drawLine(cx, yStart, cx, yEnd, 2, 'TRUE', col), baseCond);
+                    return baseCond;
+                }
+                if (edge.sourceId === 'FALSE') {
+                    let col = getNodeColor(edge.sourceId);
+                    let cy = (yStart + yEnd) / 2;
+                    setPower(drawLine(cx, yStart, cx, cy - 10, 2, 'FALSE', col), baseCond);
+                    setPower(drawLine(cx, cy + 10, cx, yEnd, 2, 'FALSE', col), "false");
+                    return "false";
+                }
+
+                let sourceNode = graph.nodes.get(edge.sourceId);
+                let col = getNodeColor(edge.sourceId);
+                
+                if (window.configEconMode && sourceNode && sourceNode.type === 'GATE') {
+                    let totalW = getTreeW(edge.sourceId);
+                    setPower(drawLine(cx, yStart, cx, yStart + 15, 2, edge.sourceId, col), baseCond);
+                    let res = drawTree(edge.sourceId, cx, yStart + 15, totalW, edge.inverted, pNum, baseCond, edge); 
+                    setPower(drawLine(cx, res.bottomY, cx, yEnd, 2, edge.sourceId, col), res.cond);
+                    return res.cond;
+                } else {
+                    let logicalIsNC = getContactNC(edge);
+                    let finalIsNC = forceInvertNC ? !logicalIsNC : logicalIsNC;
+
+                    let isHardwareInput = globalInputs.includes(edge.sourceId);
+                    let cT = componentTypes[edge.sourceId] || 'taster';
+                    let pNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc' || cT === 'light_curtain';
+                    
+                    // 🌟 FIX: Koppelrelais Check
+                    let isAlreadyRelay = contactTypeMap[edge.sourceId] === 'relais';
+                    let requiresAux = window.configStrictHardware && isHardwareInput && !isAlreadyRelay && (finalIsNC !== pNC);
+
+                    let name = symMap[edge.sourceId] || edge.sourceId;
+                    let type = contactTypeMap[edge.sourceId] || 'relais';
+
+                    if (requiresAux) {
+                        requiredAuxRelays.add(edge.sourceId);
+                        if (!auxRelayNames[edge.sourceId]) auxRelayNames[edge.sourceId] = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (AUX_${edge.sourceId})` : '');
+                        name = auxRelayNames[edge.sourceId];
+                        type = 'relais';
+                        logicalIsNC = edge.inverted;
+                        finalIsNC = forceInvertNC ? !logicalIsNC : logicalIsNC;
+                    }
+
+                    let cy = (yStart + yEnd) / 2;
+                    setPower(drawLine(cx, yStart, cx, cy - 15, 2, edge.sourceId, col, finalIsNC), baseCond);
+                    
+                    let g = drawContact(cx, cy, name, finalIsNC, type, edge.sourceId, col, pNum, targetLinePrefix); 
+                    setPower(g, baseCond); 
+                    let myCond = getCond(edge);
+                    // 🌟 FIX FÜR ORANGE DRÄHTE: Stromfluss für umgedrehte Hardware invertieren!
+                    if (forceInvertNC) myCond = `!(${myCond})`;
+
+                    let totalCond = baseCond === "true" ? myCond : `(${baseCond}) && ${myCond}`;
+                    setPower(drawLine(cx, cy + 15, cx, yEnd, 2, edge.sourceId, col, finalIsNC), totalCond);
+                    return totalCond;
+                }
+            }
+
             let currX = 100;
             const yTop = 50, yBot = 500;
+
             preRungsToDraw.forEach(item => {
                 let col = getNodeColor(item.id);
-                let pCond = item.cType === 'nothalt' ? `!state['${item.id}']` : `state['${item.id}']`;
+                // 🌟 FIX: Keine Invertierung mehr! Ein ungedrückter Not-Halt (NC) lässt Strom durch und zieht das Relais an!
+                let pCond = `state['${item.id}']`;
                 if (item.cType === 'nothalt') {
                     let p1 = pathCounter++;
                     drawText(currX, yTop - 25, p1.toString(), true); 
                     setPower(drawLine(currX, yTop, currX, 150 - 15, 2, item.id, col, true), "true"); 
-                    setPower(drawContact(currX, 150, `${item.deviceName} (${item.id})`, true, 'nothalt', item.id, col, p1), "true"); 
+                    setPower(drawContact(currX, 150, `${item.deviceName} (${item.id})`, true, 'nothalt', item.id, col, p1, item.id), "true"); 
                     setPower(drawLine(currX, 165, currX, 430, 2, item.id, col, true), pCond); 
                     setPower(drawCoil(currX, 450, item.kfName, item.id, 'relais', col, p1), pCond); 
                     setPower(drawLine(currX, 470, currX, yBot, 2, item.id, col), pCond);
@@ -4309,141 +4537,54 @@ You must output exactly this JSON format. The logic code goes as a single string
                     currX += 140;
                 }
             });
-			// NEU: Zentraler Helfer, der sauber zwischen Hardware-Schaltern und Relais unterscheidet!
-            const getContactNC = (edge) => {
-                if (!edge) return false;
-                let t = contactTypeMap[edge.sourceId] || 'relais';
-                // Relais-Kontakte übernehmen einfach 1:1 die Logik (inverted = NC)
-                if (['relais', 'ton', 'tof', 'tp', 'ctu'].includes(t)) return edge.inverted;
-                // Hardware-Taster müssen ihren physischen Zustand berücksichtigen!
-                let cT = componentTypes[edge.sourceId];
-                let pNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc';
-                return pNC ? !edge.inverted : edge.inverted;
-            };			
-            const nodesToDraw = Array.from(graph.nodes.values()).filter(n => ['GATE', 'RS', 'SR', 'TON', 'TOF', 'TP', 'CTU', 'OUTPUT'].includes(n.type)).sort((a,b) => a.level - b.level);
-            // --- NEU: DIE REKURSIVEN BAUM-GENERATOREN ---
-            function getTreeW(nodeId) {
-                let node = graph.nodes.get(nodeId);
-                if (!node || node.type !== 'GATE') return 90; // Standardbreite eines Kontakts
-                let inEdges = graph.edges.filter(e => e.targetId === nodeId);
-                if (inEdges.length === 0) return 90;
-                if (node.label === '&') return Math.max(90, ...inEdges.map(e => getTreeW(e.sourceId))); // Serie
-                else return Math.max(90, inEdges.reduce((sum, e) => sum + getTreeW(e.sourceId), 0));    // Parallel
-            }
-            function drawTree(nodeId, cx, y, w, isTargetInverted, basePathNum, baseCond) {
-                let node = graph.nodes.get(nodeId);
-                // Basis-Fall: Ein echter Kontakt (oder ein erzwungenes Relais wie Timer/RS)
-                if (!node || node.type !== 'GATE') {
-                    let name = symMap[nodeId] || nodeId;
-                    let type = contactTypeMap[nodeId] || 'relais';
-                    let cT = componentTypes[nodeId];
-                    let physNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc';
-                    let isNC = physNC ? !isTargetInverted : isTargetInverted;
-                    let col = getNodeColor(nodeId);
-                    let myCond = (isTargetInverted ? "!" : "") + `state['${nodeId}']`;
-                    let totalCond = baseCond === "true" ? myCond : `(${baseCond}) && ${myCond}`;
-                    setPower(drawLine(cx, y, cx, y + 15, 2, nodeId, col, isNC), baseCond);
-                    let g = drawContact(cx, y + 30, name, isNC, type, nodeId, col, basePathNum);
-                    // FIX: Hier stand vorher "true". Jetzt kriegt der Kontakt exakt den Strom, der von oben kommt!
-                    setPower(g, baseCond); 
-                    setPower(drawLine(cx, y + 45, cx, y + 60, 2, nodeId, col, isNC), totalCond);
-                    return { bottomY: y + 60, cond: totalCond };
-                }
-                let inEdges = graph.edges.filter(e => e.targetId === nodeId);
-                let col = node.color;
-                if (node.label === '&') { // REIHENSCHALTUNG
-                    let currY = y;
-                    let currCond = baseCond;
-                    inEdges.forEach(edge => {
-                        let res = drawTree(edge.sourceId, cx, currY, w, edge.inverted, basePathNum, currCond);
-                        currY = res.bottomY;
-                        currCond = res.cond;
-                    });
-                    return { bottomY: currY, cond: currCond };
-                } else if (node.label === '>=1') { // PARALLELSCHALTUNG
-                    let branches = inEdges.length;
-                    let startXArray = [];
-                    let totalW = getTreeW(nodeId);
-                    let startX = cx - totalW/2;
-                    let currX = startX;
-                    inEdges.forEach(edge => {
-                        let bw = getTreeW(edge.sourceId);
-                        startXArray.push(currX + bw/2);
-                        currX += bw;
-                    });
-                    let firstX = startXArray[0]; let lastX = startXArray[branches - 1];
-                    setPower(drawLine(cx, y, cx, y + 10, 2, nodeId, col), baseCond);
-                    setPower(drawLine(firstX, y + 10, lastX, y + 10, 2, nodeId, col), baseCond);
-                    let maxBottomY = y + 10;
-                    let outConds = [];
-                    let branchResults = [];
-                    inEdges.forEach((edge, idx) => {
-                        let bx = startXArray[idx]; let bw = getTreeW(edge.sourceId);
-                        setPower(drawLine(bx, y + 10, bx, y + 20, 2, edge.sourceId, getNodeColor(edge.sourceId)), baseCond);
-                        let res = drawTree(edge.sourceId, bx, y + 20, bw, edge.inverted, basePathNum, baseCond);
-                        branchResults.push({ x: bx, bottomY: res.bottomY, cond: res.cond });
-                        if (res.bottomY > maxBottomY) maxBottomY = res.bottomY;
-                        outConds.push(res.cond);
-                    });
-                    let totalCond = outConds.join(' || ') || 'false';
-                    if (baseCond !== "true") totalCond = `(${baseCond}) && (${totalCond})`;
-                    branchResults.forEach(res => setPower(drawLine(res.x, res.bottomY, res.x, maxBottomY + 10, 2, nodeId, col), res.cond));
-                    setPower(drawLine(firstX, maxBottomY + 10, lastX, maxBottomY + 10, 2, nodeId, col), totalCond);
-                    setPower(drawLine(cx, maxBottomY + 10, cx, maxBottomY + 20, 2, nodeId, col), totalCond);
-                    return { bottomY: maxBottomY + 20, cond: totalCond };
-                }
-            }
-            function calcPinW(edge) {
-                if (window.configEconMode && edge && graph.nodes.get(edge.sourceId) && graph.nodes.get(edge.sourceId).type === 'GATE') return getTreeW(edge.sourceId);
-                return 90;
-            }
-            // Universal-Helfer für alle Bauteil-Eingänge (Entscheidet live zwischen Einzelkontakt oder Baum)
-            function drawInputPin(edge, cx, yStart, yEnd, pNum, baseCond = "true", forceInvertNC = false) {
-                if (!edge) { setPower(drawLine(cx, yStart, cx, yEnd, 2, 'NONE', '#000'), baseCond); return baseCond; }
-                let sourceNode = graph.nodes.get(edge.sourceId);
-                let col = getNodeColor(edge.sourceId);
-                // Im Wirtschaftlichen Modus lösen wir reine Logikgatter in Kontaktbäume auf
-                if (window.configEconMode && sourceNode && sourceNode.type === 'GATE') {
-                    let totalW = getTreeW(edge.sourceId);
-                    setPower(drawLine(cx, yStart, cx, yStart + 15, 2, edge.sourceId, col), baseCond);
-                    let res = drawTree(edge.sourceId, cx, yStart + 15, totalW, edge.inverted, pNum, baseCond);
-                    setPower(drawLine(cx, res.bottomY, cx, yEnd, 2, edge.sourceId, col), res.cond);
-                    return res.cond;
-                } else {
-                    let name = symMap[edge.sourceId] || edge.sourceId;
-                    let type = contactTypeMap[edge.sourceId] || 'relais';
-                    let isNC = getContactNC(edge);
-                    if (forceInvertNC) isNC = !isNC; // Speziell für Latch-Resets
-                    let cy = (yStart + yEnd) / 2;
-                    setPower(drawLine(cx, yStart, cx, cy - 15, 2, edge.sourceId, col, isNC), baseCond);
-                    // FIX: Auch hier stand vorher "true". Wir vererben jetzt sauber den Stromfluss von oben!
-                    let g = drawContact(cx, cy, name, isNC, type, edge.sourceId, col, pNum);
-                    setPower(g, baseCond); 
-                    let myCond = getCond(edge);
-                    let totalCond = baseCond === "true" ? myCond : `(${baseCond}) && ${myCond}`;
-                    setPower(drawLine(cx, cy + 15, cx, yEnd, 2, edge.sourceId, col, isNC), totalCond);
-                    return totalCond;
-                }
-            }
+
             nodesToDraw.forEach(node => {
                 let inEdges = graph.edges.filter(e => e.targetId === node.id);
                 let col = node.color;
                 if (node.type === 'GATE') {
-                    if (window.configEconMode) return; // Im wirtschaftlichen Modus zeichnen wir Gatter NICHT mehr einzeln!
+                    if (window.configEconMode) return; 
                     let p = pathCounter++;
                     drawText(currX, yTop - 25, p.toString(), true);
+                    
                     if (node.label === '&') { 
                         let y = 110, dy = 260 / Math.max(1, inEdges.length);
                         let pCond = "true";
                         setPower(drawLine(currX, yTop, currX, y - 15, 2, node.id, col), pCond);
                         inEdges.forEach((edge, idx) => {
-                            let name = symMap[edge.sourceId] || edge.sourceId;
-                            let type = contactTypeMap[edge.sourceId] || 'relais';
-                            let isNC = getContactNC(edge);
-                            let srcCol = getNodeColor(edge.sourceId);
-                            setPower(drawContact(currX, y, name, isNC, type, edge.sourceId, srcCol, p), pCond);
-                            let thisCond = getCond(edge);
-                            pCond = pCond === "true" ? thisCond : `(${pCond}) && ${thisCond}`;
+                            let prefix = window.getLinePrefixForEdge(edge);
+                            
+                            if (edge.sourceId === 'TRUE') {
+                                setPower(drawLine(currX, y - 15, currX, y + 15, 2, 'TRUE', col), pCond);
+                            } else if (edge.sourceId === 'FALSE') {
+                                setPower(drawLine(currX, y - 15, currX, y - 2, 2, 'FALSE', col), pCond);
+                                setPower(drawLine(currX, y + 2, currX, y + 15, 2, 'FALSE', col), "false");
+                                pCond = "false";
+                            } else {
+                                let isHardwareInput = globalInputs.includes(edge.sourceId);
+                                let cT = componentTypes[edge.sourceId] || 'taster';
+                                let pNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc' || cT === 'light_curtain';
+                                
+                                let isNC = getContactNC(edge);
+                                let isAlreadyRelay = contactTypeMap[edge.sourceId] === 'relais';
+                                let requiresAux = window.configStrictHardware && isHardwareInput && !isAlreadyRelay && (isNC !== pNC);
+
+                                let name = symMap[edge.sourceId] || edge.sourceId;
+                                let type = contactTypeMap[edge.sourceId] || 'relais';
+
+                                if (requiresAux) {
+                                    requiredAuxRelays.add(edge.sourceId);
+                                    if (!auxRelayNames[edge.sourceId]) auxRelayNames[edge.sourceId] = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (AUX_${edge.sourceId})` : '');
+                                    name = auxRelayNames[edge.sourceId];
+                                    type = 'relais';
+                                    isNC = edge.inverted;
+                                }
+
+                                let srcCol = getNodeColor(edge.sourceId);
+                                setPower(drawContact(currX, y, name, isNC, type, edge.sourceId, srcCol, p, prefix), pCond);
+                                let thisCond = getCond(edge);
+                                pCond = pCond === "true" ? thisCond : `(${pCond}) && ${thisCond}`;
+                            }
+                            
                             if (idx < inEdges.length - 1) setPower(drawLine(currX, y + 15, currX, y + dy - 15, 2, node.id, col), pCond);
                             y += dy;
                         });
@@ -4461,15 +4602,40 @@ You must output exactly this JSON format. The logic code goes as a single string
                             inEdges.forEach((edge, idx) => {
                                 let bx = currX + idx * 90;
                                 let bp = (idx === 0) ? p : pathCounter++;
+                                let prefix = window.getLinePrefixForEdge(edge);
                                 if (idx > 0) drawText(bx, yTop - 25, bp.toString(), true);
-                                let name = symMap[edge.sourceId] || edge.sourceId;
-                                let type = contactTypeMap[edge.sourceId] || 'relais';
-                                let isNC = getContactNC(edge);
-                                let srcCol = getNodeColor(edge.sourceId);
-                                setPower(drawLine(bx, 90, bx, 220 - 15, 2, edge.sourceId, srcCol, isNC), "true");
-                                setPower(drawContact(bx, 220, name, isNC, type, edge.sourceId, srcCol, bp), "true");
-                                let thisCond = getCond(edge);
-                                setPower(drawLine(bx, 235, bx, 350, 2, edge.sourceId, srcCol, isNC), thisCond);
+                                
+                                if (edge.sourceId === 'TRUE') {
+                                    setPower(drawLine(bx, 90, bx, 350, 2, 'TRUE', col), "true");
+                                } else if (edge.sourceId === 'FALSE') {
+                                    setPower(drawLine(bx, 90, bx, 215, 2, 'FALSE', col), "true");
+                                    setPower(drawLine(bx, 225, bx, 350, 2, 'FALSE', col), "false");
+                                } else {
+                                    let isHardwareInput = globalInputs.includes(edge.sourceId);
+                                    let cT = componentTypes[edge.sourceId] || 'taster';
+                                    let pNC = cT === 'nothalt' || cT === 'taster_nc' || cT === 'schalter_nc' || cT === 'light_curtain';
+                                    
+                                    let isNC = getContactNC(edge);
+                                    let isAlreadyRelay = contactTypeMap[edge.sourceId] === 'relais';
+                                    let requiresAux = window.configStrictHardware && isHardwareInput && !isAlreadyRelay && (isNC !== pNC);
+
+                                    let name = symMap[edge.sourceId] || edge.sourceId;
+                                    let type = contactTypeMap[edge.sourceId] || 'relais';
+
+                                    if (requiresAux) {
+                                        requiredAuxRelays.add(edge.sourceId);
+                                        if (!auxRelayNames[edge.sourceId]) auxRelayNames[edge.sourceId] = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (AUX_${edge.sourceId})` : '');
+                                        name = auxRelayNames[edge.sourceId];
+                                        type = 'relais';
+                                        isNC = edge.inverted;
+                                    }
+
+                                    let srcCol = getNodeColor(edge.sourceId);
+                                    setPower(drawLine(bx, 90, bx, 220 - 15, 2, edge.sourceId, srcCol, isNC), "true");
+                                    setPower(drawContact(bx, 220, name, isNC, type, edge.sourceId, srcCol, bp, prefix), "true");
+                                    let thisCond = getCond(edge);
+                                    setPower(drawLine(bx, 235, bx, 350, 2, edge.sourceId, srcCol, isNC), thisCond);
+                                }
                             });
                             let outCond = `state['${node.id}']`;
                             setPower(drawLine(startX, 350, endX, 350, 2, node.id, col), outCond); 
@@ -4492,9 +4658,9 @@ You must output exactly this JSON format. The logic code goes as a single string
                     setPower(drawLine(startX, 90, parX, 90, 2, node.id, col), "true");
                     let qCond = `state['${node.id}']`;
                     if (node.type === 'RS') {
-                        let sCond = drawInputPin(sEdge, startX, 90, 230, p1, "true");
+                        let sCond = drawInputPin(sEdge, startX, 90, 230, p1, "true", false);
                         setPower(drawLine(parX, 90, parX, 150 - 15, 2, node.id, col), "true"); 
-                        setPower(drawContact(parX, 150, symMap[node.id], false, 'relais', node.id, col, p2), "true"); 
+                        setPower(drawContact(parX, 150, symMap[node.id], false, 'relais', node.id, col, p2, node.id), "true"); 
                         setPower(drawLine(parX, 165, parX, 230, 2, node.id, col), qCond); 
                         let joinCond = `(${sCond} || ${qCond})`;
                         setPower(drawLine(startX, 230, parX, 230, 2, node.id, col), joinCond); 
@@ -4503,10 +4669,10 @@ You must output exactly this JSON format. The logic code goes as a single string
                         setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), rCond);
                     } else { // SR
                         setPower(drawLine(startX, 90, startX, 150 - 15, 2, node.id, col), "true"); 
-                        setPower(drawContact(startX, 150, symMap[node.id], false, 'relais', node.id, col, p1), "true"); 
+                        setPower(drawContact(startX, 150, symMap[node.id], false, 'relais', node.id, col, p1, node.id), "true"); 
                         setPower(drawLine(startX, 165, startX, 230, 2, node.id, col), qCond); 
                         let rCond = drawInputPin(rEdge, startX, 230, 380, p1, qCond, true); 
-                        let sCond = drawInputPin(sEdge, parX, 90, 380, p2, "true");
+                        let sCond = drawInputPin(sEdge, parX, 90, 380, p2, "true", false);
                         setPower(drawLine(startX, 380, parX, 380, 2, node.id, col), qCond); 
                         setPower(drawLine(startX, 380, startX, 430, 2, node.id, col), qCond); 
                         setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'relais', col, p1), qCond); 
@@ -4524,8 +4690,8 @@ You must output exactly this JSON format. The logic code goes as a single string
                     drawText(startX, yTop - 25, p1.toString(), true); drawText(parX, yTop - 25, p2.toString(), true);
                     setPower(drawLine(startX, yTop, startX, 90, 2, node.id, col), "true"); 
                     setPower(drawLine(startX, 90, parX, 90, 2, node.id, col), "true");
-                    let cuCond = drawInputPin(cuEdge, startX, 90, 430, p1, "true");
-                    let rCond = drawInputPin(rEdge, parX, 90, 430, p2, "true", true); 
+                    let cuCond = drawInputPin(cuEdge, startX, 90, 430, p1, "true", false);
+                    let rCond = drawInputPin(rEdge, parX, 90, 430, p2, "true", false);
                     setPower(drawCoil(startX, 450, symMap[node.id], node.id, 'ctu', col, p1), cuCond); 
                     setPower(drawCoil(parX, 450, symMap[node.id] + ' (R)', node.id, 'relais', col, p2), rCond); 
                     setPower(drawLine(startX, 470, startX, yBot, 2, node.id, col), cuCond); 
@@ -4536,27 +4702,20 @@ You must output exactly this JSON format. The logic code goes as a single string
                     let p = pathCounter++;
                     let edge = inEdges[0]; 
                     let w1 = calcPinW(edge);
-                    // 1. Start-X für diesen Pfad festlegen
                     currX += (w1 > 90 ? (w1-90)/2 : 0);
                     drawText(currX, yTop - 25, p.toString(), true);
                     let pCond = "false";
-                    if (edge) {
-                        pCond = drawInputPin(edge, currX, yTop, 430, p, "true");
-                    } else {
-                        setPower(drawLine(currX, yTop, currX, 430, 2, node.id, col), "false"); 
-                    }
-                    // 2. Das Bauteil zeichnen
+                    if (edge) pCond = drawInputPin(edge, currX, yTop, 430, p, "true", false);
+                    else setPower(drawLine(currX, yTop, currX, 430, 2, node.id, col), "false"); 
+                    
                     if (node.isRelay) setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
                     else if (node.outType === 'valve') setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'valve', col, p), pCond);
                     else if (node.outType === 'siren') setPower(drawSiren(currX, 450, symMap[node.id], node.id, col), pCond);
                     else if (node.outType === 'motor') setPower(drawMotor(currX, 450, symMap[node.id], node.id, col), pCond);
-                    else if (node.outType === 'heater') setPower(drawHeater(currX, 450, symMap[node.id], node.id, col), pCond); // NEU
+                    else if (node.outType === 'heater') setPower(drawHeater(currX, 450, symMap[node.id], node.id, col), pCond);
                     else if (node.outType === 'contactor') setPower(drawCoil(currX, 450, symMap[node.id], node.id, 'relais', col, p), pCond);
                     else setPower(drawLED(currX, 450, symMap[node.id], node.id, col, p), pCond);
-                    // 3. Verbindung zur Masseschiene (M)
                     setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
-                    // 🌟 WICHTIG: Den X-Abstand zum NÄCHSTEN Bauteil festlegen
-                    // Wir rechnen hier den Platzbedarf des Bauteils ein
                     currX += Math.max(130, w1 + 40); 
                 }
                 else if (['TON', 'TOF', 'TP'].includes(node.type)) { 
@@ -4565,13 +4724,39 @@ You must output exactly this JSON format. The logic code goes as a single string
                     let w1 = calcPinW(inEdge);
                     currX += (w1 > 90 ? (w1-90)/2 : 0);
                     drawText(currX, yTop - 25, p1.toString(), true);
-                    let pCond = drawInputPin(inEdge, currX, yTop, 430, p1, "true");
+                    let pCond = drawInputPin(inEdge, currX, yTop, 430, p1, "true", false);
                     setPower(drawCoil(currX, 450, symMap[node.id], node.id, node.type.toLowerCase(), col, p1), pCond); 
                     setPower(drawLine(currX, 470, currX, yBot, 2, node.id, col), pCond); 
                     currX += (w1 > 90 ? (w1-90)/2 : 0) + 130;
                 }
             });
-			// Zeichne die Hauptschienen L+ und M									 
+
+            // 🌟 FIX: Koppelrelais Strompfade am Ende des Plans anhängen!
+            requiredAuxRelays.forEach(hwId => {
+                let p = pathCounter++;
+                let cType = componentTypes[hwId] || 'taster';
+                let pNC = cType === 'nothalt' || cType === 'taster_nc' || cType === 'schalter_nc' || cType === 'light_curtain';
+                let srcCol = getNodeColor(hwId);
+                let name = symMap[hwId] || hwId;
+                let auxName = auxRelayNames[hwId]; // Nutzt den generierten -KF Namen!
+
+                currX += (currX === 100 ? 0 : 40);
+                drawText(currX, yTop - 25, p.toString(), true);
+                
+                setPower(drawLine(currX, yTop, currX, 150 - 15, 2, hwId, srcCol), "true");
+                let g = drawContact(currX, 150, name, pNC, cType.replace('_nc', ''), hwId, srcCol, p, hwId);
+                setPower(g, "true");
+                
+                let pCond = `state['${hwId}']`;
+                setPower(drawLine(currX, 165, currX, 430, 2, hwId, srcCol), pCond);
+                
+                let coilG = drawCoil(currX, 450, auxName, `AUX_${hwId}`, 'relais', srcCol, p);
+                setPower(coilG, pCond);
+                setPower(drawLine(currX, 470, currX, yBot, 2, hwId, srcCol), pCond);
+                
+                currX += 130;
+            });
+
             let totalWidth = Math.max(1000, currX + 50);
             let lPlus = drawLine(20, yTop, totalWidth - 20, yTop, 3);
             lPlus.setAttribute('stroke', '#f58231'); lPlus.classList.remove('circ-wire');
@@ -4579,16 +4764,13 @@ You must output exactly this JSON format. The logic code goes as a single string
             let mMinus = drawLine(20, yBot, totalWidth - 20, yBot, 3);
             mMinus.setAttribute('stroke', '#4363d8'); mMinus.classList.remove('circ-wire');
             drawText(25, yBot + 20, 'M (0V DC)', true);
-            // ==============================================================
-            // NEU: GRAFISCHER KONTAKTSPIEGEL (Schützkreuz nach IEC Norm)
-            // ==============================================================
+            
             Object.keys(relayContacts).forEach(id => {
                 let rc = relayContacts[id];
                 if (rc.coilX) {
                     let mirrorY = yBot + 35;
                     let g = createSvgElement('g', {});
                     let tTitle = createSvgElement('text', {x: rc.coilX, y: mirrorY, 'font-size': '11px', 'font-weight': 'bold', fill: '#000', 'text-anchor': 'middle', 'font-family': 'Segoe UI, Tahoma, sans-serif'});
-                    // FIX: Nur den Basis-Namen (alles vor dem Leerzeichen) für die Schützkreuz-Überschrift nutzen!
                     let fullName = symMap[id] || id;
                     tTitle.textContent = fullName.split(' ')[0];
                     g.appendChild(tTitle);
@@ -4604,33 +4786,27 @@ You must output exactly this JSON format. The logic code goes as a single string
                         g.appendChild(createSvgElement('line', {x1: rc.coilX - 16, y1: top + 18, x2: rc.coilX + 16, y2: top + 18, stroke: '#000', 'stroke-width': 1}));
                         g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top, x2: rc.coilX, y2: bottom, stroke: '#000', 'stroke-width': 1}));
                         if (window.configWechsler) {
-                            // --- MINIATUR-SYMBOL: WECHSLER (Drehpunkt unten) ---
-                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 13, x2: rc.coilX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Root-Pin unten
-                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 13, x2: rightX - 1, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Klinge liegt nach oben rechts an (NC)
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // NC Pin
-                            g.appendChild(createSvgElement('line', {x1: rightX - 3, y1: top + 6, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // NC Haken (Kerbe)
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // NO Pin
+                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 13, x2: rc.coilX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: rc.coilX, y1: top + 13, x2: rightX - 1, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: rightX - 3, y1: top + 6, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
                         } else {
-                            // --- MINIATUR-SYMBOL: S & Ö GETRENNT (Drehpunkt unten) ---
-                            // S (Schließer)
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Pin oben
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX - 4, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Klinge offen (nach oben links)
-                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Pin unten
-                            // Ö (Öffner)
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Pin oben
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 6, x2: rightX + 3, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Haken oben rechts
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX + 2.5, y2: top + 6, stroke: '#000', 'stroke-width': 1})); // Klinge liegt schräg oben rechts an
-                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); // Pin unten
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 3, x2: leftX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX - 4, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: leftX, y1: top + 13, x2: leftX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 3, x2: rightX, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 6, x2: rightX + 3, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX + 2.5, y2: top + 6, stroke: '#000', 'stroke-width': 1})); 
+                            g.appendChild(createSvgElement('line', {x1: rightX, y1: top + 13, x2: rightX, y2: top + 16, stroke: '#000', 'stroke-width': 1})); 
                         }
                         noPaths.forEach((p, idx) => {
                             let text = createSvgElement('text', {x: leftX, y: top + 30 + idx * 13, 'font-size': '10px', fill: '#333', 'text-anchor': 'middle', 'font-family': 'monospace'});
-                            text.textContent = p.toString();
-                            g.appendChild(text);
+                            text.textContent = p.toString(); g.appendChild(text);
                         });
                         ncPaths.forEach((p, idx) => {
                             let text = createSvgElement('text', {x: rightX, y: top + 30 + idx * 13, 'font-size': '10px', fill: '#333', 'text-anchor': 'middle', 'font-family': 'monospace'});
-                            text.textContent = p.toString();
-                            g.appendChild(text);
+                            text.textContent = p.toString(); g.appendChild(text);
                         });
                     }
                     circuitContent.appendChild(g);
@@ -4638,17 +4814,12 @@ You must output exactly this JSON format. The logic code goes as a single string
             });
             setTimeout(() => {
                 let pCirc = circuitSvg.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
-                if (pCirc && pCirc.offsetWidth > 0 && pCirc.offsetHeight > 0) { // 🌟 FIX: offsetHeight Check!
+                if (pCirc && pCirc.offsetWidth > 0 && pCirc.offsetHeight > 0) { 
                     if (isFirstRun || !panZoomCircuitInstance) {
                         panZoomCircuitInstance = svgPanZoom(circuitSvg, svgPanZoomOptions);
                     } else {
-                        // Sanftes Update: keepView funktioniert jetzt vollautomatisch!
-                        panZoomCircuitInstance.updateBBox();
-                        panZoomCircuitInstance.resize();
-                        if (!keepView) {
-                            panZoomCircuitInstance.fit();
-                            panZoomCircuitInstance.center();
-                        }
+                        panZoomCircuitInstance.updateBBox(); panZoomCircuitInstance.resize();
+                        if (!keepView) { panZoomCircuitInstance.fit(); panZoomCircuitInstance.center(); }
                     }
                 }
             }, 15);
@@ -6348,20 +6519,43 @@ You must output exactly this JSON format. The logic code goes as a single string
             draggedElement = null; resizingElement = null; resizingElementXY = null; rotatingElement = null; 
         });
         document.addEventListener('contextmenu', (e) => {
-            // 1. In Textfeldern (Code-Editor, Inputs) erlauben wir das normale Browser-Menü (für Copy/Paste)
+            // 1. In Textfeldern erlauben wir das normale Browser-Menü (für Copy/Paste)
             if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+            
             // 2. Überall sonst: Normales Browser-Menü strikt blockieren!
             e.preventDefault(); 
-            // 3. ABBRUCH-LOGIK: Immer zuerst beide Menüs schließen! (Wirkt, wenn man ins Leere klickt)
+            
+            // 3. ABBRUCH-LOGIK: Immer zuerst ALLE Menüs schließen!
             ctxMenu.style.display = 'none';
             let fbsMenu = document.getElementById('fbs-context-menu');
             if (fbsMenu) fbsMenu.style.display = 'none';
-            // 4. Prüfen, ob wir in der 2D-Anlage sind und ein Bauteil getroffen haben
+            let iecMenu = document.getElementById('iec-context-menu');
+            if (iecMenu) iecMenu.style.display = 'none';
+            
+            // 4. Prüfen, ob wir in der 2D-Anlage sind
             if (e.target.closest('#factory-wrapper')) {
                 let target = e.target.closest('.f2d-obj');
                 if (target) {
                     contextTarget = factoryObjects.find(o => o.el === target) || factoryItems.find(o => o.el === target); 
                     if (contextTarget) showContextMenu(e.clientX, e.clientY, contextTarget);
+                }
+                return; // Nach Treffer sofort abbrechen!
+            }
+            
+            // 5. 🌟 FIX: Prüfen, ob wir im IEC-Schaltplan sind!
+            let circWrapper = e.target.closest('#circuit-wrapper') || e.target.closest('#circuit-svg');
+            if (circWrapper) {
+                let target = e.target.closest('.circ-colored-group');
+                if (target) {
+                    // Wir nutzen getAttribute, da dataset bei SVGs in manchen Browsern zickt!
+                    let iecId = target.getAttribute('data-iec-id');
+                    let iecRole = target.getAttribute('data-iec-role');
+                    let iecType = target.getAttribute('data-ctype');
+                    
+                    if (iecId && iecId !== 'NONE') {
+                        // Ruft die Funktion aus Stufe 1 auf!
+                        showIecContextMenu(e.clientX, e.clientY, iecId, iecRole, iecType, target);
+                    }
                 }
             }
         });
@@ -6370,6 +6564,9 @@ You must output exactly this JSON format. The logic code goes as a single string
             ctxMenu.style.display = 'none'; 
             let fbsMenu = document.getElementById('fbs-context-menu');
             if (fbsMenu) fbsMenu.style.display = 'none';
+            // 🌟 NEU: Schaltplan-Menü schließen
+            let iecMenu = document.getElementById('iec-context-menu');
+            if (iecMenu) iecMenu.style.display = 'none';
         });
         document.addEventListener('click', () => { ctxMenu.style.display = 'none'; });
         function showContextMenu(x, y, obj) {
@@ -8689,6 +8886,212 @@ You must output exactly this JSON format. The logic code goes as a single string
             };
             delWrap.appendChild(btnDel); menu.appendChild(delWrap);
             let wrapper = customSvg.closest('.workspace-panel') || document.getElementById('fbs-wrapper');
+            let wrapRect = wrapper.getBoundingClientRect();
+            menu.style.left = (x - wrapRect.left + 10) + 'px'; 
+            menu.style.top = (y - wrapRect.top + 10) + 'px'; 
+            menu.style.display = 'block';
+        };
+		window.showIecContextMenu = function(x, y, iecId, role, cType, svgElement) {
+            const menu = document.getElementById('iec-context-menu');
+            menu.innerHTML = '';
+
+            let textVar = window.getFbsVariableDisplay(iecId); 
+            // 🌟 FIX: Hier ist der magische Schlüssel! Wir greifen die echte Code-Zeile ab
+            let linePrefix = svgElement.getAttribute('data-line-prefix');
+            if (!linePrefix) return; // Sicherheitsabbruch
+
+            let title = document.createElement('div');
+            title.style.cssText = 'padding: 6px 15px; color: #ffeb3b; font-size: 11px; border-bottom: 1px solid #555; font-weight: bold; cursor: default;';
+            title.textContent = `🛠️ Edit: ${textVar}`;
+            menu.appendChild(title);
+
+            if (role === 'contact' && textVar.includes('(')) {
+                let msg = document.createElement('div');
+                msg.style.cssText = 'padding: 10px 15px; color: #aaa; font-size: 10px; font-style: italic;';
+                msg.textContent = "Komplexe Gruppen-Kontakte können nur direkt im Code bearbeitet werden.";
+                menu.appendChild(msg);
+                menu.style.display = 'block';
+                return;
+            } 
+
+            // ==========================================
+            // WENN EIN KONTAKT (SCHALTER/RELAIS) GEKLICKT WURDE
+            // ==========================================
+            else if (role === 'contact') {
+                let isHardwareInput = globalInputs.includes(iecId);
+                let currentType = componentTypes[iecId] || 'taster';
+                // Sensoren dürfen nicht zu Tastern gewandelt werden!
+                let isSensor = currentType.startsWith('sensor_') || currentType === 'mech_sensor' || currentType === 'light_curtain';
+                let canSwapHardware = isHardwareInput && !isSensor;
+
+                // 🌟 FIX: Erlaubt in MULTI-Modus oder bei Relais
+                if (!window.configStrictHardware || !isHardwareInput) {
+                    let btnLogic = document.createElement('div');
+                    btnLogic.className = 'ctx-item';
+                    btnLogic.innerHTML = `🔀 <b>Kontakt-Belegung</b> wechseln (NO ↔ NC)`;
+                    btnLogic.onclick = () => {
+                        let code = textarea.value;
+                        let lines = code.split('\n');
+                        let assignStr = "(?::=|=|<-|\\\\bIST\\\\b|\\\\bIS\\\\b|\\\\bGLEICH\\\\b)";
+                        
+                        let safePrefix = linePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        let regexLine = new RegExp(`^\\s*${safePrefix}\\s*${assignStr}`, 'i');
+                        let lineIdx = lines.findIndex(l => regexLine.test(l));
+                        
+                        if (lineIdx !== -1) {
+                            let parts = lines[lineIdx].split('//')[0].replace(/(:=|=|<-|\bIST\b|\bIS\b|\bGLEICH\b)/i, ':=').split(':=');
+                            let left = parts[0];
+                            let right = parts.slice(1).join(':='); 
+                            
+                            let regexNot = new RegExp(`([¬!]\\s*)\\b${textVar}\\b|\\b(NOT\\s+|NICHT\\s+)${textVar}\\b`, 'gi');
+                            let regexPos = new RegExp(`\\b${textVar}\\b`, 'g');
+                            
+                            if (regexNot.test(right)) right = right.replace(regexNot, textVar);
+                            else right = right.replace(regexPos, `¬${textVar}`);
+                            
+                            lines[lineIdx] = `${left}:=${right}`;
+                            textarea.value = lines.join('\n');
+                            updateHighlighting(); updateEditor(); saveToStorage();
+                        }
+                        menu.style.display = 'none';
+                    };
+                    menu.appendChild(btnLogic);
+                }
+
+                // Option 2: Echte Hardware tauschen (Nur bei echten Eingängen, Keine Sensoren!)
+                if (canSwapHardware) {
+                    let btnHard = document.createElement('div');
+                    btnHard.className = 'ctx-item';
+                    btnHard.innerHTML = `⚙️ <b>Anlagen-Hardware</b> umbauen (NO ↔ NC)`;
+                    btnHard.onclick = () => {
+                        if (currentType.endsWith('_nc')) componentTypes[iecId] = currentType.replace('_nc', '');
+                        else if (currentType === 'nothalt') componentTypes[iecId] = 'taster'; 
+                        else componentTypes[iecId] = currentType + '_nc';
+                        
+                        localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
+                        if (spsState.hasOwnProperty(iecId)) spsState[iecId] = !spsState[iecId];
+                        updateEditor(); saveToStorage();
+                        menu.style.display = 'none';
+                    };
+                    menu.appendChild(btnHard);
+                }
+
+                // Option 3: Kontakt Löschen
+                let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; menu.appendChild(sep);
+                let titleDel = document.createElement('div'); titleDel.style.padding = '0 10px'; titleDel.style.color = '#ff5252'; titleDel.style.fontSize = '10px'; titleDel.textContent = 'Kontakt löschen:'; menu.appendChild(titleDel);
+
+                const deleteContact = (replaceWith) => {
+                    let code = textarea.value;
+                    let lines = code.split('\n');
+                    let assignStr = "(?::=|=|<-|\\\\bIST\\\\b|\\\\bIS\\\\b|\\\\bGLEICH\\\\b)";
+                    
+                    let safePrefix = linePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    let regexLine = new RegExp(`^\\s*${safePrefix}\\s*${assignStr}`, 'i');
+                    let lineIdx = lines.findIndex(l => regexLine.test(l));
+                    
+                    if (lineIdx !== -1) {
+                        let parts = lines[lineIdx].split('//')[0].replace(/(:=|=|<-|\bIST\b|\bIS\b|\bGLEICH\b)/i, ':=').split(':=');
+                        let left = parts[0];
+                        let right = parts.slice(1).join(':=');
+                        
+                        let regexNot = new RegExp(`([¬!]\\s*)\\b${textVar}\\b|\\b(NOT\\s+|NICHT\\s+)${textVar}\\b`, 'gi');
+                        let regexPos = new RegExp(`\\b${textVar}\\b`, 'g');
+                        
+                        if (regexNot.test(right)) right = right.replace(regexNot, replaceWith);
+                        else right = right.replace(regexPos, replaceWith);
+                        
+                        lines[lineIdx] = `${left}:=${right}`;
+                        textarea.value = lines.join('\n');
+                        updateHighlighting(); updateEditor(); saveToStorage();
+                    }
+                    menu.style.display = 'none';
+                };
+
+                let btnDelBridge = document.createElement('div');
+                btnDelBridge.className = 'ctx-item';
+                btnDelBridge.innerHTML = `➖ Drahtbrücke setzen (Dauerstrom)`;
+                btnDelBridge.onclick = () => deleteContact('TRUE');
+                menu.appendChild(btnDelBridge);
+
+                let btnDelBreak = document.createElement('div');
+                btnDelBreak.className = 'ctx-item';
+                btnDelBreak.innerHTML = `✂️ Kontakt ausbauen (Leitung offen)`;
+                btnDelBreak.onclick = () => deleteContact('FALSE');
+                menu.appendChild(btnDelBreak);
+            } 
+            else if (role === 'coil') {
+                let isOutput = globalOutputs.includes(iecId) && !['ton', 'tof', 'tp', 'ctu'].includes(cType);
+                let isInternal = iecId.startsWith('AND_') || iecId.startsWith('OR_') || iecId.startsWith('GATE_') || iecId.startsWith('TON_') || iecId.startsWith('TOF_') || iecId.startsWith('TP_') || iecId.startsWith('CTU_') || iecId.match(/^[RS]\d+(_SR)?$/i);
+
+                // 🌟 FIX: Interne Logik-Spulen (Timer, Zähler, RS/SR) dürfen nicht verändert oder gelöscht werden!
+                if (isInternal) {
+                    let msg = document.createElement('div');
+                    msg.style.cssText = 'padding: 10px 15px; color: #aaa; font-size: 10px; font-style: italic; line-height: 1.4; text-align: center;';
+                    msg.textContent = "Interne System-Bausteine können nur über ihren Ausgang oder direkt im Code bearbeitet werden.";
+                    menu.appendChild(msg);
+                    menu.style.display = 'block';
+                    return;
+                }
+
+                if (isOutput && !isInternal) {
+                    let typeWrap = document.createElement('div'); typeWrap.style.padding = '5px 15px'; typeWrap.onclick = e => e.stopPropagation();
+                    typeWrap.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">Bauteil-Typ ändern:</div>`;
+                    let selType = document.createElement('select');
+                    selType.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px; outline: none; cursor: pointer;";
+                    ['led', 'valve', 'contactor', 'motor', 'heater', 'siren'].forEach(t => {
+                        let opt = document.createElement('option'); opt.value = t; opt.textContent = window.t('type_' + t) || t.toUpperCase();
+                        if (cType === t) opt.selected = true;
+                        selType.appendChild(opt);
+                    });
+                    selType.onchange = (e) => {
+                        componentTypes[iecId] = e.target.value;
+                        localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
+                        updateEditor(); saveToStorage();
+                        menu.style.display = 'none';
+                    };
+                    typeWrap.appendChild(selType); menu.appendChild(typeWrap);
+                }
+
+                if (!isInternal) {
+                    let renameWrap = document.createElement('div'); renameWrap.style.padding = '5px 15px'; renameWrap.onclick = e => e.stopPropagation();
+                    renameWrap.innerHTML = `<div style="color: #aaa; font-size: 10px; margin-bottom: 3px;">Variable umbenennen:</div>`;
+                    let inpRename = document.createElement('input'); inpRename.type = 'text'; inpRename.value = iecId;
+                    inpRename.style.cssText = "width: 100%; padding: 4px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 11px; outline: none; box-sizing: border-box;";
+                    let doRename = () => { renameSpsVariable(iecId, inpRename.value.trim().toUpperCase()); menu.style.display = 'none'; };
+                    inpRename.onchange = doRename;
+                    inpRename.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); doRename(); } };
+                    renameWrap.appendChild(inpRename); menu.appendChild(renameWrap);
+                }
+
+                let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; menu.appendChild(sep);
+                let btnDelRung = document.createElement('div');
+                btnDelRung.className = 'ctx-item';
+                btnDelRung.innerHTML = `<span style="color: #ff5252;">🗑️ Gesamten Strompfad löschen</span>`;
+                btnDelRung.onclick = () => {
+                    let code = textarea.value;
+                    let lines = code.split('\n');
+                    const assignStr = "(?::=|=|<-|\\\\bIST\\\\b|\\\\bIS\\\\b|\\\\bGLEICH\\\\b)";
+                    
+                    let outVar = iecId.replace(/^(TON_|TOF_|TP_|CTU_)/i, '');
+                    if (outVar.match(/^Q\d+(_SR)?$/i) || outVar.match(/^[RS]\d+(_SR)?$/i)) {
+                        let num = outVar.match(/\d+/)[0];
+                        let isSR = outVar.toUpperCase().includes('_SR');
+                        let sVar = isSR ? `S${num}_SR` : `S${num}`;
+                        let rVar = isSR ? `R${num}_SR` : `R${num}`;
+                        lines = lines.filter(l => !(new RegExp(`^\\s*${sVar}\\s*${assignStr}`, 'i').test(l) || new RegExp(`^\\s*${rVar}\\s*${assignStr}`, 'i').test(l)));
+                    } else {
+                        let regex = new RegExp(`^\\s*${outVar}\\s*${assignStr}`, 'i');
+                        lines = lines.filter(l => !regex.test(l));
+                    }
+                    
+                    textarea.value = lines.join('\n');
+                    updateHighlighting(); updateEditor(); saveToStorage();
+                    menu.style.display = 'none';
+                };
+                menu.appendChild(btnDelRung);
+            }
+
+            let wrapper = svgElement.closest('.workspace-panel') || document.getElementById('circuit-wrapper');
             let wrapRect = wrapper.getBoundingClientRect();
             menu.style.left = (x - wrapRect.left + 10) + 'px'; 
             menu.style.top = (y - wrapRect.top + 10) + 'px'; 
