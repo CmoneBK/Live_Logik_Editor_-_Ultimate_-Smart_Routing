@@ -3476,11 +3476,10 @@ You must output exactly this JSON format. The logic code goes as a single string
 		// --- NEU: WORKSPACE PANEL MANAGEMENT ---
         function updateWorkspace() {
             if (!window.popOutWindows) window.popOutWindows = {};
-            // Genialer Check: Wenn es in den popOutWindows steht, ist es drüben. 
-            // Wenn document.getElementById es findet, ist es hier!
+            // Prüft ob ein Panel ausgelagert (Monitor 2) oder lokal sichtbar ist
             const checkState = (id) => {
                 let isDetached = window.popOutWindows[id] && !window.popOutWindows[id].closed;
-                let el = document.getElementById(id); // Gibt null zurück, wenn es auf Monitor 2 liegt!
+                let el = document.getElementById(id);
                 let isMainVisible = !isDetached && el && el.style.display !== 'none';
                 return { isDetached, isMainVisible, el };
             };
@@ -3489,26 +3488,32 @@ You must output exactly this JSON format. The logic code goes as a single string
             let fac = checkState('factory-wrapper');
             const resizer1 = document.getElementById('ws-resizer-1');
             const resizer2 = document.getElementById('ws-resizer-2');
-            if (currentLayout.startsWith('grid-')) {
+            const isGrid = currentLayout.startsWith('grid-');
+            // Im Grid-Modus gelten alle Panels als aktiv (für Resizer- und Button-Logik)
+            let p0 = fbs.isMainVisible || isGrid;
+            let p1 = circ.isMainVisible || isGrid;
+            let p2 = fac.isMainVisible || isGrid;
+            if (isGrid) {
                 if (resizer1) resizer1.style.display = 'none';
                 if (resizer2) resizer2.style.display = 'none';
             } else {
-                if (resizer1) resizer1.style.display = (fbs.isMainVisible && (circ.isMainVisible || fac.isMainVisible)) ? 'block' : 'none';
-                if (resizer2) resizer2.style.display = (circ.isMainVisible && fac.isMainVisible) ? 'block' : 'none';
+                if (resizer1) resizer1.style.display = (p0 && (p1 || p2)) ? 'block' : 'none';
+                if (resizer2) resizer2.style.display = (p1 && p2) ? 'block' : 'none';
             }
-            const updateBtn = (btnId, state) => {
+            // Button-Zustände: detached = blau, active = orange
+            const updateBtn = (btnId, state, pVisible) => {
                 let b = document.getElementById(btnId);
                 if (!b) return;
                 b.classList.remove('active', 'detached');
-                if (state.isDetached) b.classList.add('detached'); // Macht den Button BLAU
-                else if (state.isMainVisible || currentLayout.startsWith('grid-')) b.classList.add('active'); // Macht ihn ORANGE
+                if (state.isDetached) b.classList.add('detached');
+                else if (pVisible) b.classList.add('active');
             };
-            updateBtn('btn-view-fbs', fbs);
-            updateBtn('btn-view-iec', circ);
-            updateBtn('btn-view-fac', fac);
+            updateBtn('btn-view-fbs', fbs, p0);
+            updateBtn('btn-view-iec', circ, p1);
+            updateBtn('btn-view-fac', fac, p2);
             requestAnimationFrame(() => {
-                if (fbs.isMainVisible && panZoomInstance && fbs.el.offsetWidth > 0) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
-                if (circ.isMainVisible && panZoomCircuitInstance && circ.el.offsetWidth > 0) { panZoomCircuitInstance.resize(); panZoomCircuitInstance.fit(); panZoomCircuitInstance.center(); }
+                if (fbs.isMainVisible && panZoomInstance && fbs.el.offsetWidth > 0 && fbs.el.offsetHeight > 0) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
+                if (circ.isMainVisible && panZoomCircuitInstance && circ.el.offsetWidth > 0 && circ.el.offsetHeight > 0) { panZoomCircuitInstance.resize(); panZoomCircuitInstance.fit(); panZoomCircuitInstance.center(); }
             });
         }
         window.toggleWorkspaceView = function(panelId) {
@@ -3521,7 +3526,7 @@ You must output exactly this JSON format. The logic code goes as a single string
             // 2. Es ist hier im Hauptfenster.
             let panel = document.getElementById(panelId);
             if (!panel) return;
-            // 3. Zählen: Wie viele sind HIER noch sichtbar?
+            // 3. Zählen: Wie viele sind HIER noch sichtbar? (nur lokale, nicht ausgelagerte Panels)
             let mainVisibleCount = 0;
             ['fbs-wrapper', 'circuit-wrapper', 'factory-wrapper'].forEach(id => {
                 let p = document.getElementById(id);
@@ -3553,9 +3558,8 @@ You must output exactly this JSON format. The logic code goes as a single string
             }
             // 6. Den verbleibenden Platz fair aufteilen
             if (!currentLayout.startsWith('grid-')) {
-                ['fbs-wrapper', 'circuit-wrapper', 'factory-wrapper'].forEach(id => {
-                    let p = document.getElementById(id);
-                    if (p && p.style.display !== 'none') p.style.flex = '1 1 0%';
+                document.querySelectorAll('.workspace-panel').forEach(p => {
+                    if (p.style.display !== 'none') p.style.flex = '1 1 0%';
                 });
             }
             updateWorkspace();
@@ -3603,65 +3607,6 @@ You must output exactly this JSON format. The logic code goes as a single string
                         p.style.width = 'auto'; // Bereinigt eventuelle Grid-Artefakte
                         p.style.height = 'auto';
                     }
-                });
-            }
-            updateWorkspace();
-        };
-        function updateWorkspace() {
-            const panels = [
-                document.getElementById('fbs-wrapper'),
-                document.getElementById('circuit-wrapper'),
-                document.getElementById('factory-wrapper')
-            ];
-            const resizer1 = document.getElementById('ws-resizer-1');
-            const resizer2 = document.getElementById('ws-resizer-2');
-            let p0 = panels[0].style.display !== 'none' || currentLayout.startsWith('grid-');
-            let p1 = panels[1].style.display !== 'none' || currentLayout.startsWith('grid-');
-            let p2 = panels[2].style.display !== 'none' || currentLayout.startsWith('grid-');
-            if (currentLayout.startsWith('grid-')) {
-                resizer1.style.display = 'none';
-                resizer2.style.display = 'none';
-            } else {
-                resizer1.style.display = (p0 && (p1 || p2)) ? 'block' : 'none';
-                resizer2.style.display = (p1 && p2) ? 'block' : 'none';
-            }
-            document.getElementById('btn-view-fbs').classList.toggle('active', p0);
-            document.getElementById('btn-view-iec').classList.toggle('active', p1);
-            document.getElementById('btn-view-fac').classList.toggle('active', p2);
-            requestAnimationFrame(() => {
-                if(p0 && panZoomInstance && panels[0].offsetWidth > 0 && panels[0].offsetHeight > 0) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
-                if(p1 && panZoomCircuitInstance && panels[1].offsetWidth > 0 && panels[1].offsetHeight > 0) { panZoomCircuitInstance.resize(); panZoomCircuitInstance.fit(); panZoomCircuitInstance.center(); }
-            });
-        }
-        window.toggleWorkspaceView = function(panelId) {
-            const panel = document.getElementById(panelId);
-            const visiblePanels = document.querySelectorAll('.workspace-panel[style*="display: flex"], .workspace-panel:not([style*="display: none"])');
-            if (visiblePanels.length === 1 && panel.style.display !== 'none') return;
-            // INTELLIGENTER FALLBACK: Wenn ein festes Grid aktiv ist und der Nutzer ein Panel schließt, 
-            // ergibt das 3er-Grid keinen Sinn mehr. Wir werfen ihn automatisch ins Flexible-Layout zurück!
-            if (currentLayout.startsWith('grid-') && panel.style.display !== 'none') {
-                document.getElementById('btn-layout-text').textContent = 'Layout: ◫';
-                currentLayout = 'flex-row';
-                const wc = document.getElementById('workspace-container');
-                wc.classList.remove('layout-grid', 'grid-sim-bottom', 'grid-sim-top', 'grid-sim-right', 'grid-sim-left');
-                wc.style.flexDirection = 'row';
-            }
-            if (panel.style.display === 'none') {
-                panel.style.display = 'flex';
-                requestAnimationFrame(() => {
-                    if (panelId === 'fbs-wrapper' && currentGraph) drawGraph(currentGraph);
-                    if (panelId === 'circuit-wrapper' && currentGraph) drawCircuitPlan(currentGraph, globalInputs, globalOutputs);
-                    if (panelId === 'factory-wrapper') startFactoryEngine();
-                    updateWorkspace();
-                });
-            } else {
-                panel.style.display = 'none';
-                if (panelId === 'fbs-wrapper' && panZoomInstance) { panZoomInstance.destroy(); panZoomInstance = null; }
-                if (panelId === 'circuit-wrapper' && panZoomCircuitInstance) { panZoomCircuitInstance.destroy(); panZoomCircuitInstance = null; }
-            }
-            if (!currentLayout.startsWith('grid-')) {
-                document.querySelectorAll('.workspace-panel').forEach(p => {
-                    if (p.style.display !== 'none') p.style.flex = '1 1 0%';
                 });
             }
             updateWorkspace();
@@ -9868,14 +9813,21 @@ You must output exactly this JSON format. The logic code goes as a single string
                 btn.textContent = '☰'; // Burger-Menu Icon, wenn eingeklappt
                 btn.title = t('sidebar_expand');
             }
-            // WICHTIG: Den SVG-Engines und dem Oszilloskop einen Moment Zeit geben, 
+            // Panels auf flex: 1 zurücksetzen, damit sie den neuen Platz ausfüllen
+            // (nach Splitter-Drag haben sie fixe Pixelwerte via flex: 0 0 Xpx)
+            if (!currentLayout.startsWith('grid-')) {
+                document.querySelectorAll('.workspace-panel').forEach(p => {
+                    if (p.style.display !== 'none') p.style.flex = '1 1 0%';
+                });
+            }
+            // WICHTIG: Den SVG-Engines und dem Oszilloskop einen Moment Zeit geben,
             // den neuen Platz zu erkennen, und sie dann neu zentrieren lassen!
             setTimeout(() => {
-                if (panZoomInstance && document.getElementById('fbs-wrapper').style.display !== 'none') { 
-                    panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); 
+                if (panZoomInstance && document.getElementById('fbs-wrapper').style.display !== 'none') {
+                    panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center();
                 }
-                if (panZoomCircuitInstance && document.getElementById('circuit-wrapper').style.display !== 'none') { 
-                    panZoomCircuitInstance.resize(); panZoomCircuitInstance.fit(); panZoomCircuitInstance.center(); 
+                if (panZoomCircuitInstance && document.getElementById('circuit-wrapper').style.display !== 'none') {
+                    panZoomCircuitInstance.resize(); panZoomCircuitInstance.fit(); panZoomCircuitInstance.center();
                 }
                 if (isAnalyzerOpen) drawAnalyzer();
             }, 15);
