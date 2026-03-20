@@ -26,12 +26,29 @@ Eine leistungsstarke, browserbasierte Logik-IDE, Schaltplangenerator und 2D-Phys
 1. **Logikplan (FBS):** Sofortige Generierung von knotenbasierten Logikgattern mit intelligenter, überlappungsfreier Kabelführung.
 2. **Schaltplan (IEC):** Automatische Erstellung von klassischen Stromlaufplänen (Relais, Kontakte, Ventile, Meldeleuchten). Passt sich dynamisch an Öffner (NC) und Schließer (NO) an.
 3. **SVG-Export:** Laden Sie die Pläne als saubere `.svg`-Dateien herunter.
+4. **Zweikreis-Schaltplan (DUAL):** Mit dem ⊕-Schalter in der Symbolleiste wird der Stromlaufplan in zwei Kreise aufgeteilt: **Steuerkreis** (oben, 24V-Logik mit Relais und Kontakten) und **Lastkreis** (unten, Leistungsverteilung zu Antrieben und Aktoren). Entspricht dem industriellen Standard für Schalt- und Steuertechnik.
+
+### ⚙️ Schaltplan-Konfiguration (Symbolleiste)
+
+Die Symbolleiste über dem IEC-Stromlaufplan bietet mehrere Schalter zur Anpassung der Darstellung:
+
+* **🏷️ Details (3 Stufen):** Steuert die Beschriftungstiefe: `Aus` → keine Bezeichner | `E/A` → nur Klemmenbezeichnungen | `Alle` → vollständige Baustein- und Gatter-Ausdrücke sichtbar.
+* **🛑 Hardware-Limit (Strikter Modus):** Wenn aktiv, werden automatisch Koppelrelais (-KF) eingefügt, wo die Schaltlogik nicht direkt durch einen physischen Hardwaretyp realisierbar ist (z.B. NC-Öffner eines Tasters als Schließer-Kontakt). Ideal für elektrotechnisch korrekte Pläne.
+* **💼 Modus (Relais / Direkt):** Wechselt zwischen klassischer Relais-Logik (vollständig mit Koppelrelais) und direkter Kontaktlogik (kompakter, ohne Hilfsglieder).
+* **🌈 Bunte Pfade:** Hebt aktive Strompfade im Plan in individuellen Farben hervor – jeder logische Pfad erhält eine eigene Farbe für maximale Übersichtlichkeit.
+* **🔀 Wechslernummerierung:** Aktiviert alternative Zählweise für Wechslerkontakte.
+* **🔢 Fortlaufende Nummerierung:** Schaltet auf sequenzielle Bauteilnummerierung (KF1, KF2, KF3 …) über alle Stränge hinweg um.
 
 ### 🎛️ Interaktiver Visueller Editor (Two-Way Binding)
 * **Klicken & Bearbeiten (FBS):** Per Rechtsklick auf Bausteine im Logikplan (FBS) können Sie direkt in die Logik eingreifen. Variablen umbenennen, Gatter-Typen tauschen (UND <-> ODER), Timer-Zeiten ändern oder Knoten löschen.
 * **Klicken & Bearbeiten (Schaltplan):** Per Rechtsklick auf Elemente im IEC-Stromlaufplan lassen sich Kontakte negieren oder tauschen (Öffner ↔ Schließer), Hardwaretypen und Sensortypen wechseln, Spulentypen ändern, Leitungen trennen oder verbinden sowie Komponenten und Stränge löschen. Alle Änderungen werden sofort in den Quellcode zurückgeschrieben.
 * **Smart Reverse-Parsing:** Jede visuelle Änderung wird in Millisekunden in den Quellcode links zurückgeschrieben. Abgeklemmte Variablen gehen nicht verloren, sondern werden sicher im Limbus (`INPUT`) geparkt.
 * **Drag & Drop:** Ziehen Sie Logikbausteine (UND, ODER, Timer, Zähler) direkt aus der oberen Werkzeugleiste auf bestehende Verbindungslinien im Plan. Die Engine splittet das Kabel auf und integriert den neuen Baustein (inklusive korrekter Klammersetzung und Hilfsvariablen) vollautomatisch in den Text-Code.
+* **Schaltplan-Palette (✏️):** Aktivieren Sie den Bearbeitungsmodus im IEC-Stromlaufplan über die ✏️-Schaltfläche in der Symbolleiste. Danach können Sie Elemente aus der Palette per Drag & Drop auf Zonen im Plan ziehen:
+  * **Neuer Strang:** Fügt einen komplett neuen Logikstrang (Rung) ein.
+  * **Strang erweitern:** Zieht man auf einen bestehenden Strang, öffnet sich ein Dialog zum Hinzufügen in Reihe (AND) oder parallel (OR).
+  * **Verfügbare Elemente:** ⊣⊢ Kontakt (mit Bauteiltyp-Auswahl), ⊣K⊢ Relais-Kontakt (Spiegelung eines Ausgangs-Relais inkl. UND/ODER-Gatter-Ausgänge), ( ) Spule, RS/SR-Glied, TON / TOF / TP (Timer), CTU (Zähler).
+  * **Klick-to-Fill:** Bei geöffnetem Dialog können Elemente im Plan angeklickt werden, um Variablenfelder automatisch vorzubefüllen.
 
 ### 🏭 2D Anlagen-Physiksimulator (Digitaler Zwilling)
 * **Hintergrund-Simulation:** Die Physikengine läuft nahtlos im Hintergrund weiter. Löst ein Sensor in der 2D-Fabrik aus, schaltet das Logikgatter und zieht den IEC-Schütz an – alles synchron in Echtzeit.
@@ -83,6 +100,7 @@ Der Editor verwendet eine einfache Syntax im Pseudocode-Stil, um Logikgatter und
 * **`¬`** : NICHT / Invertierung (Aliase: `!`, `NOT`)
 * **`()`** : Klammern für Ausführungsreihenfolge
 * **`//`** : Kommentar (Rest der Zeile wird ignoriert)
+* **`INPUT Variable`**: Deklariert eine Variable explizit als reinen Eingang. Nützlich, um Eingangsvariablen vorzudeklarieren, die noch nicht in einer Zuweisung verwendet werden. Abgeklemmte Variablen werden automatisch in diesen Zustand geparkt (Limbus).
 
 ### Spezielle Variablen (RS- & SR-Flip-Flops)
 Wenn Sie Ihre Variablen mit `S`, `R` und `Q` gefolgt von einer Zahl (z.B. `1`) benennen, gruppiert die Engine diese automatisch in einen **Flip-Flop-Baustein**. Über Suffixe bestimmen Sie das Dominanz-Verhalten:
@@ -153,13 +171,30 @@ A powerful, browser-based logic circuit IDE, electrical schematic generator, and
 1. **Logikplan (FBD/FBS):** Instant generation of graphical node-based logic gates with smart, non-overlapping cable routing.
 2. **Schaltplan (IEC):** Automatic generation of traditional electrical circuit diagrams (relays, contacts, valves, LEDs). Adapts dynamically to NC (Normally Closed) and NO (Normally Open) logic.
 3. **SVG Export:** Download your cleanly routed diagrams as `.svg` files (retains CSS rendering properties).
+4. **Dual-Circuit Mode (DUAL):** Toggle the ⊕ switch in the toolbar to split the diagram into two separate circuits: a **control circuit** (top, 24V relay/contact logic) and a **load circuit** (bottom, power distribution to actuators). Follows industrial standards for separation of control and power wiring.
+
+### ⚙️ Circuit Configuration (Toolbar)
+
+The toolbar above the IEC circuit diagram offers several toggles to customize the visualization:
+
+* **🏷️ Details (3 levels):** Controls label verbosity: `Off` → no labels | `I/O` → terminal designations only | `All` → full block and gate expression labels visible.
+* **🛑 Strict Hardware Mode:** When enabled, coupling relays (-KF) are automatically inserted wherever the logical switching action cannot be realized directly by a physical hardware type (e.g., using an NC push-button contact as a NO contact). Ideal for electrically correct professional diagrams.
+* **💼 Mode (Relay / Direct):** Switches between classic relay logic (full coupling relays) and direct contact logic (compact, without auxiliary elements).
+* **🌈 Colored Paths:** Highlights active current paths in distinct colors — each logical path receives a unique color for maximum clarity.
+* **🔀 Changeover Numbering:** Activates an alternative numbering scheme for changeover contacts.
+* **🔢 Sequential Numbering:** Switches to sequential component numbering (KF1, KF2, KF3 …) across all rungs.
 
 ### 🎛️ Interactive Visual Editor (Two-Way Binding)
 * **Click-to-Edit (FBS):** Right-click any block in the Logic Plan (FBS) to seamlessly alter its configuration. Change variables, swap logic gates (AND <-> OR), cycle timer types, or delete components.
 * **Click-to-Edit (Circuit):** Right-click any element in the IEC circuit diagram to invert or swap contacts (NC ↔ NO), change hardware and sensor types, cycle coil types, bridge or break connections, and delete components or entire rungs. All changes are written back to source code instantly.
 * **Smart Reverse-Parsing:** Any visual change made in the logic graph instantly rewrites the underlying text code perfectly formatted. Disconnected variables are safely stored in a "Limbo" (`INPUT`) state to prevent data loss.
 * **Drag & Drop:** Drag logic blocks (AND, OR, Timers, Counters) directly from the top toolbar onto existing wires in the diagram. The engine automatically splices the connection and integrates the new component (including correct parenthesis and helper variables) flawlessly into your source code.
-  
+* **Circuit Palette (✏️):** Activate the IEC circuit edit mode via the ✏️ button in the toolbar. Drag elements from the palette directly onto drop zones in the diagram:
+  * **New Rung:** Inserts a brand-new logic rung.
+  * **Extend Rung:** Dropping onto an existing rung opens a dialog to add in-series (AND) or in-parallel (OR).
+  * **Available Elements:** ⊣⊢ Contact (with component type selector), ⊣K⊢ Relay Contact (mirrors any output coil state, including AND/OR gate outputs), ( ) Coil, RS/SR block, TON / TOF / TP (timers), CTU (counter).
+  * **Click-to-Fill:** While a dialog is open, clicking any element in the diagram auto-fills the corresponding variable fields.
+
 ### 🏭 2D Factory Physics Simulator (Digital Twin)
 * **Background Simulation:** The physics engine runs seamlessly in the background. If a sensor triggers in the factory, the logic gate switches, and the IEC relay activates—all in real-time.
 * **Kinematics & Attachments:** Mount objects (like pushers, windows, or sensors) to cylinder rods. When the cylinder extends, all attached children move with it perfectly synchronized.
@@ -210,6 +245,7 @@ The editor uses a straightforward, pseudo-code style syntax to define logic gate
 * **`¬`** : NOT / Inverter (Aliases: `!`, `NOT`)
 * **`()`** : Parentheses for execution order and grouping
 * **`//`** : Comment (remainder of the line is ignored)
+* **`INPUT Variable`**: Explicitly declares a variable as a pure input node. Useful for pre-declaring input variables not yet used in any assignment. Disconnected variables are automatically parked in this state (Limbo).
 
 ### Special Variables (RS & SR Flip-Flops)
 If you name your variables using `S`, `R`, and `Q` followed by a number (e.g., `1`), the engine automatically groups them into a **Flip-Flop block**. You can define priority behavior by adding suffixes:
