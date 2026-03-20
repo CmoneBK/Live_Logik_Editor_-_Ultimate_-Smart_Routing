@@ -2135,6 +2135,7 @@ You must output exactly this JSON format. The logic code goes as a single string
             }, // <--- WICHTIG: Hier ein Komma anfügen!
             // NEU: Die Master-Demo als völlig eigenständiges Paket
             full_demo: {
+            layout: "grid-sim-bottom",
             code: `// --- 1. HAUPTSCHALTER (RS-Glied) ---\nS1 := START && FREIGABE\nR1 := ¬STOP || Q2_SR\nSYS_ON := Q1\n\n// --- 2. NOT-HALT SPEICHER (SR-Glied) ---\nS2_SR := ¬NOTHALT\nR2_SR := RESET\nALARM := Q2_SR\n\n// --- 3. MATERIALFLUSS & ZÄHLER ---\nBAND := SYS_ON && ¬STAMP_PULSE && ¬BOX_FULL\nBOX_FULL := CTU(S_ENDE, RESET, 5)\n\n// --- 4. BEARBEITUNG (TP & TOF) ---\nSTAMP_REQ := S_MITTE && SYS_ON\nSTAMP_PULSE := TP(STAMP_REQ, 1.5)\nSTEMPEL := STAMP_PULSE\nLUEFTER := TOF(STAMP_PULSE, 3.0)\n\n// --- 5. ABTRANSPORT (TON) ---\nEJECT_READY := TON(S_ENDE, 1.0)\nAUSWERFER := EJECT_READY && SYS_ON`,
             types: {
                 "START": "taster", "STOP": "taster_nc", "NOTHALT": "nothalt", "RESET": "taster",
@@ -2146,29 +2147,28 @@ You must output exactly this JSON format. The logic code goes as a single string
             },
             factory: {
                 globalViewMode: "side",
-                items: [], // Werkstücke entfernt für einen sauberen Start
+                items: [],
                 objects: [
-                    { id: "b1", type: "taster", x: 64, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "START", color: "green", useCollision: true, labelPinned: false },
-                    { id: "b2", type: "taster", x: 114, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "STOP", color: "red", useCollision: true, labelPinned: false },
-                    { id: "b3", type: "nothalt", x: 164, y: 11, width: 45, height: 45, rotation: 0, linkedVar: "NOTHALT", color: "red", useCollision: true, labelPinned: false },
-                    { id: "b4", type: "taster", x: 224, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "RESET", color: "blue", useCollision: true, labelPinned: false },
-                    { id: "l1", type: "led", x: 20, y: 70, width: 30, height: 30, rotation: 0, linkedVar: "SYS_ON", color: "green", useCollision: true, labelPinned: false },
-                    { id: "l2", type: "stacklight", x: 78, y: 70, width: 24, height: 70, rotation: 0, linkedVar: "ALARM", linkedVarRet: "BOX_FULL", linkedVar3: "SYS_ON", useCollision: false, labelPinned: false },
-                    { id: "l3", type: "led", x: 180, y: 70, width: 30, height: 30, rotation: 0, linkedVar: "LUEFTER", color: "blue", useCollision: true, labelPinned: false },
-                    { id: "disp1", type: "display", x: 110, y: 110, width: 60, height: 30, rotation: 0, linkedVar: "CTU_BOX_FULL", useCollision: false, labelPinned: false },
+                    { id: "b1", type: "taster", x: 64, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "START", color: "green", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "b2", type: "taster", x: 114, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "STOP", color: "red", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "b3", type: "nothalt", x: 164, y: 11, width: 45, height: 45, rotation: 0, linkedVar: "NOTHALT", color: "red", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "b4", type: "taster", x: 224, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "RESET", color: "blue", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "l1", type: "led", x: 20, y: 70, width: 30, height: 30, rotation: 0, linkedVar: "SYS_ON", color: "green", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "l2", type: "stacklight", x: 78, y: 70, width: 24, height: 70, rotation: 0, linkedVar: "ALARM", linkedVarRet: "BOX_FULL", linkedVar3: "SYS_ON", interval: 3, useCollision: false, labelPinned: false },
+                    { id: "l3", type: "led", x: 180, y: 70, width: 30, height: 30, rotation: 0, linkedVar: "LUEFTER", color: "blue", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "disp1", type: "display", x: 110, y: 110, width: 60, height: 30, rotation: 0, linkedVar: "CTU_BOX_FULL", interval: 3, useCollision: false, labelPinned: false },
                     { id: "sp1", type: "spawner_metall", x: 20, y: 180, width: 50, height: 50, rotation: 0, linkedVar: "BAND", spawnSolid: true, color: "green", interval: 3, useCollision: true, labelPinned: false },
-                    { id: "cv1", type: "conveyor", x: 20, y: 300, width: 400, height: 40, rotation: 0, linkedVar: "BAND", color: "green", useCollision: true, labelPinned: false },
-                    { id: "sens1", type: "sensor_ind", x: 249, y: 258, width: 20, height: 40, rotation: 180, linkedVar: "S_MITTE", color: "green", useCollision: false, labelPinned: false },
-                    { id: "zyl1", type: "zylinder_single", x: 200, y: 131, width: 50, height: 30, rotation: 90, linkedVarExt: "STEMPEL", useCollision: true, labelPinned: false },
-                    { id: "pr1", type: "press", x: 196, y: 170, width: 60, height: 40, rotation: 0, parentId: "zyl1", attachmentType: "rod", useCollision: true, labelPinned: false },
-                    { id: "fan1", type: "fan", x: 130, y: 220, width: 60, height: 60, rotation: 0, linkedVar: "LUEFTER", useCollision: false, labelPinned: false },
-                    { id: "sens2", type: "sensor_opt", x: 269, y: 181, width: 20, height: 40, rotation: 90, linkedVar: "S_ENDE", color: "green", useCollision: false, labelPinned: false },
-                    { id: "zyl2", type: "zylinder_single", x: 312, y: 383, width: 100, height: 30, rotation: 0, linkedVarExt: "AUSWERFER", color: "yellow", useCollision: true, labelPinned: false },
-                    { id: "pu1", type: "pusher", x: 412, y: 350, width: 341, height: 94, rotation: 0, thickness: 15, parentId: "zyl2", attachmentType: "rod", useCollision: true, labelPinned: false },
-                    { id: "dp1", type: "despawner", x: 662, y: 355, width: 50, height: 50, rotation: 0, useCollision: false, labelPinned: false },
-                    { id: "zvjqcmp4l", type: "despawner", x: 209, y: 387, width: 50, height: 50, rotation: 0, useCollision: false, labelPinned: false },
-                    { id: "d05skvk7o", type: "key_switch", x: 13, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "FREIGABE", color: "green", useCollision: true, labelPinned: false },
-                    { id: "e6viun474", type: "siren", x: 277, y: -28, width: 40, height: 40, rotation: 0, linkedVar: "ALARM", useCollision: false, labelPinned: false }
+                    { id: "cv1", type: "conveyor", x: 20, y: 300, width: 400, height: 40, rotation: 0, linkedVar: "BAND", color: "green", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "sens1", type: "sensor_ind", x: 249, y: 258, width: 20, height: 40, rotation: 180, linkedVar: "S_MITTE", color: "green", interval: 3, useCollision: false, labelPinned: false },
+                    { id: "zyl1", type: "zylinder_single", x: 200, y: 131, width: 50, height: 30, rotation: 90, linkedVarExt: "STEMPEL", linkedVarRet: null, interval: 3, useCollision: true, labelPinned: false },
+                    { id: "pr1", type: "press", x: 196, y: 170, width: 60, height: 40, rotation: 0, parentId: "zyl1", attachmentType: "rod", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "fan1", type: "fan", x: 130, y: 220, width: 60, height: 60, rotation: 0, linkedVar: "LUEFTER", interval: 3, useCollision: false, labelPinned: false },
+                    { id: "sens2", type: "sensor_opt", x: 269, y: 181, width: 20, height: 40, rotation: 90, linkedVar: "S_ENDE", color: "green", interval: 3, useCollision: false, labelPinned: false },
+                    { id: "zyl2", type: "zylinder_single", x: 312, y: 383, width: 100, height: 30, rotation: 0, linkedVarExt: "AUSWERFER", linkedVarRet: null, color: "yellow", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "pu1", type: "pusher", x: 412, y: 350, width: 341, height: 94, rotation: 0, thickness: 15, parentId: "zyl2", attachmentType: "rod", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "dp1", type: "despawner", x: 662, y: 355, width: 50, height: 50, rotation: 0, interval: 3, useCollision: false, labelPinned: false },
+                    { id: "d05skvk7o", type: "key_switch", x: 13, y: 13, width: 40, height: 40, rotation: 0, linkedVar: "FREIGABE", color: "green", interval: 3, useCollision: true, labelPinned: false },
+                    { id: "e6viun474", type: "siren", x: 295, y: 81, width: 40, height: 40, rotation: 0, linkedVar: "ALARM", interval: 3, useCollision: false, labelPinned: false }
                 ]
             }
         },
@@ -3340,6 +3340,7 @@ You must output exactly this JSON format. The logic code goes as a single string
                     let newTypes = typeof exData === 'string' ? EXAMPLES.types : exData.types;
                     let newFactory = typeof exData === 'string' ? EXAMPLES.factory : exData.factory;
                     let newKeys = typeof exData === 'string' ? {} : (exData.keyBindings || {}); // 🌟 NEU: KeyBindings auslesen
+                    let newLayout = typeof exData === 'object' ? (exData.layout || null) : null;
                     textarea.value = newCode;
                     if (newTypes) {
                         componentTypes = { ...newTypes };
@@ -3354,13 +3355,15 @@ You must output exactly this JSON format. The logic code goes as a single string
                     updateHighlighting(); 
                     updateEditor(); 
                     saveToStorage();
+                    // Layout anwenden falls im Beispiel definiert
+                    if (newLayout) changeWorkspaceLayout(newLayout);
                     // Anlage aufbauen und Physik vorbereiten
                     if (newFactory) {
                         newFactory.globalViewMode = 'side';
                         localStorage.setItem('logikFactoryState', JSON.stringify(newFactory));
                         loadFactoryState();
                     } else {
-                        clearFactory(true); 
+                        clearFactory(true);
                     }
                 } catch (e) {
                     console.error("Fehler beim Laden des Beispiels:", e);
