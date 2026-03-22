@@ -467,16 +467,35 @@
         .tb-dropdown { position: relative; display: inline-block; }
         .tb-dropdown-content { display: none; position: absolute; background-color: #2d2d30; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.6); z-index: 1000; border-radius: 4px; border: 1px solid #555; top: 100%; left: 0; }
         /* FIX: Wir sprechen nur noch direkte Listeneinträge an, damit Untermenüs nicht komplett blau aufleuchten! */
-        .tb-dropdown-content > div:not(.tb-submenu):not(.tb-col-wrap), .tb-submenu > div:first-child, .tb-submenu-content > div { color: white; padding: 10px 15px; font-size: 11px; cursor: pointer; border-bottom: 1px solid #444; font-weight: bold; transition: background 0.1s; }
-        .tb-dropdown-content > div:not(.tb-submenu):not(.tb-col-wrap):hover, .tb-submenu > div:first-child:hover, .tb-submenu-content > div:hover { background-color: #007acc; }
-        .tb-dropdown-content > .tb-col-wrap { padding: 0; border-bottom: none; cursor: default; }
-        .tb-dropdown-content > div:last-child, .tb-submenu-content > div:last-child { border-bottom: none; }
+        .tb-dropdown-content > div:not(.tb-submenu):not(.tb-col-wrap):not(.dd-col), .tb-dropdown-content .dd-col > div:not(.tb-submenu):not(.tb-col-wrap), .tb-submenu > div:first-child, .tb-submenu-content > div { color: white; padding: 10px 15px; font-size: 11px; cursor: pointer; border-bottom: 1px solid #444; font-weight: bold; transition: background 0.1s; }
+        .tb-dropdown-content > div:not(.tb-submenu):not(.tb-col-wrap):not(.dd-col):hover, .tb-dropdown-content .dd-col > div:not(.tb-submenu):not(.tb-col-wrap):hover, .tb-submenu > div:first-child:hover, .tb-submenu-content > div:hover { background-color: #007acc; }
+        .tb-dropdown-content > .tb-col-wrap, .tb-dropdown-content > .dd-col { padding: 0; border-bottom: none; cursor: default; background: none !important; }
+        .tb-dropdown-content > div:last-child, .tb-dropdown-content .dd-col > div:last-child, .tb-submenu-content > div:last-child { border-bottom: none; }
         .tb-menu-cat { padding: 5px 12px 3px !important; color: #888 !important; font-size: 10px !important; text-transform: uppercase !important; letter-spacing: 0.8px !important; cursor: default !important; background: #252526 !important; font-weight: bold !important; pointer-events: none !important; border-top: 1px solid #3a3a3a !important; }
         .tb-menu-cat:hover { background: #252526 !important; }
         .tb-dropdown:hover .tb-dropdown-content { display: block; }
-        .tb-dropdown-content.multi-col { column-gap: 0; column-fill: auto; }
-        .tb-dropdown-content.multi-col .tb-menu-cat { column-span: all; }
-        .tb-dropdown-content.multi-col .tb-submenu { column-span: all; }
+        .tb-dropdown:hover .tb-dropdown-content.multi-col { display: flex !important; flex-direction: row; align-items: flex-start; }
+        .tb-dropdown-content.multi-col .dd-col { display: flex; flex-direction: column; min-width: 180px; }
+        .tb-dropdown-content.multi-col .dd-col + .dd-col { border-left: 1px solid #444; }
+        /* === AUFGABEN-MODUS === */
+        .task-cond { display:flex; align-items:center; gap:6px; padding:3px 0; font-size:11px; }
+        .task-cond-icon { width:16px; text-align:center; flex-shrink:0; }
+        .task-cond.done .task-cond-icon::before { content:'✅'; }
+        .task-cond.pending .task-cond-icon::before { content:'⬜'; }
+        .task-cond.done { color:#aaa; text-decoration:line-through; }
+        .task-ed-label { color:#aaa; font-size:10px; margin-bottom:3px; margin-top:10px; display:block; }
+        .task-ed-input { width:100%; padding:5px; background:#1e1e1e; color:#fff; border:1px solid #555; border-radius:3px; font-size:11px; box-sizing:border-box; }
+        .task-ed-input:focus { outline:none; border-color:#1565c0; }
+        .task-cond-row { background:#1e1e1e; border:1px solid #444; border-radius:4px; padding:8px; margin-bottom:6px; }
+        .task-mgr-card { background:#1e2a3a; border:1px solid #1565c0; border-radius:6px; padding:10px 12px; margin-bottom:8px; }
+        .task-mgr-card-name { font-weight:bold; font-size:13px; color:#fff; margin-bottom:2px; }
+        .task-mgr-card-meta { font-size:10px; color:#78909c; margin-bottom:8px; }
+        .task-mgr-btn { background:#263238; color:#fff; border:1px solid #455a64; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:11px; margin-right:4px; }
+        .task-mgr-btn:hover { background:#37474f; }
+        .task-mgr-btn.primary { background:#1565c0; border-color:#1976d2; }
+        .task-mgr-btn.primary:hover { background:#1976d2; }
+        .task-mgr-btn.danger { background:#c62828; border-color:#b71c1c; }
+        .task-mgr-btn.danger:hover { background:#b71c1c; }
 		.tb-drop-btn { background: #444; color: #fff; border: 1px solid #666; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: background 0.1s; }
         .tb-drop-btn:hover { background: #555; border-color: #888; }
         /* F2D-CSS-START */
@@ -654,6 +673,9 @@
         .btn-gravity.active { background-color: #4caf50; box-shadow: 0 0 10px #4caf50; border-color: #fff; }
         /* NEU: Kontextmenü Styles */
         #factory-context-menu { display: none; position: absolute; background: #2d2d30; border: 1px solid #555; padding: 5px 0; border-radius: 3px; z-index: 200; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); font-family: sans-serif; }
+        #factory-context-menu.ctx-multicol { display: flex; flex-direction: row; align-items: flex-start; padding: 0; }
+        #factory-context-menu.ctx-multicol .ctx-col { display: flex; flex-direction: column; min-width: 200px; padding: 5px 0; }
+        #factory-context-menu.ctx-multicol .ctx-col + .ctx-col { border-left: 1px solid #444; }
 		#fbs-context-menu { display: none; position: absolute; background: #2d2d30; border: 1px solid #555; padding: 5px 0; border-radius: 3px; z-index: 2000; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); font-family: sans-serif; }
         .ctx-item { padding: 6px 15px; cursor: pointer; font-size: 12px; color: #fff; white-space: nowrap; }
         .ctx-item:hover { background: #007acc; }
@@ -981,6 +1003,7 @@
                     </div>
                 </div>
                 <button onclick="startTutorial()" class="btn-export" style="background-color: #5c6bc0; box-shadow: none;" title="Interaktive Schritt-für-Schritt-Tour">🎓 Tour</button>
+                <button onclick="window._openTaskManager()" class="btn-export" style="background-color: #e67e22; box-shadow: none;" title="Aufgaben-Modus">🎯 Aufgaben [beta]</button>
                 <div class="info-hover-wrapper">
                     <button class="btn-export" id="btn-info" style="background-color: #17a2b8; cursor: help;" onclick="toggleInfoPanel()">ℹ️ Info</button>
                     <div class="info-hover-content" id="info-panel"></div>
@@ -1259,8 +1282,17 @@
                     </div>
                 </div>
                 <div id="factory-context-menu"></div>
+                <div id="path-edit-banner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1565c0;color:#fff;padding:8px 16px;border-radius:20px;z-index:9999;align-items:center;gap:10px;font-size:12px;box-shadow:0 2px 10px rgba(0,0,0,0.6);white-space:nowrap;">
+                    ✏️ Pfad-Editor: <b>Linksklick</b> = Punkt setzen &nbsp;|&nbsp; <b>Rechtsklick</b> auf Punkt = Löschen &nbsp;|&nbsp;
+                    Modus: <select id="path-mode-sel" style="background:#0d47a1;color:#fff;border:1px solid #64b5f6;border-radius:6px;padding:2px 6px;font-size:11px;" onchange="if(window.pathEditingObj){window.pathEditingObj.pathMode=this.value;window._renderPathOverlay();}">
+                        <option value="linear">Linear</option><option value="spline">Spline (Catmull-Rom)</option>
+                    </select>
+                    &nbsp;<label style="cursor:pointer;"><input type="checkbox" id="path-loop-chk" style="margin-right:3px;" onchange="if(window.pathEditingObj){window.pathEditingObj.pathLoop=this.checked;}"> Loop</label>
+                    &nbsp;<button onclick="window._stopPathEdit()" style="background:#fff;color:#1565c0;border:none;border-radius:10px;padding:3px 12px;cursor:pointer;font-weight:bold;">✔ Fertig</button>
+                    &nbsp;<button onclick="if(window.pathEditingObj){window.pathEditingObj.waypoints=[];window._renderPathOverlay();}" style="background:#c62828;color:#fff;border:none;border-radius:10px;padding:3px 10px;cursor:pointer;">🗑 Alle Punkte</button>
+                </div>
                 <div id="factory-canvas-area">
-                    <div id="factory-content"></div>
+                    <div id="factory-content"><svg id="factory-path-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:98;overflow:visible;"></svg></div>
                 </div>
                 <!-- Minimap (innerhalb factory-wrapper, nicht canvas-area, damit kein Mitscrollen) -->
                 <div id="factory-minimap" style="display:none;">
@@ -1295,6 +1327,56 @@
                 </div>
             </div>
         </div>
+        <!-- ====== AUFGABEN-MODUS MODALS ====== -->
+        <!-- Aufgaben-Panel (aktive Aufgabe) -->
+        <div id="task-panel" style="display:none; position:fixed; top:60px; right:16px; width:280px; background:#1e2a3a; border:1px solid #1565c0; border-radius:8px; z-index:500; font-size:12px; color:#fff; box-shadow:0 4px 16px rgba(0,0,0,0.5);">
+            <div id="task-panel-header" style="background:#1565c0; padding:8px 12px; border-radius:7px 7px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                <span id="task-panel-name" style="font-weight:bold;"></span>
+                <span id="task-panel-diff" style="font-size:10px; opacity:0.8;"></span>
+            </div>
+            <div id="task-panel-body" style="padding:10px 12px;">
+                <div id="task-panel-desc" style="color:#b0bec5; margin-bottom:8px; line-height:1.5;"></div>
+                <div id="task-panel-timer" style="display:none; color:#ffb300; margin-bottom:6px; font-size:11px;">⏱ <span id="task-timer-val">0:00</span></div>
+                <div id="task-conditions-list" style="margin-bottom:8px;"></div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button id="task-hint-btn" onclick="window._taskShowHint()" style="display:none; background:#37474f; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:11px;">💡 Hinweis</button>
+                    <button onclick="window._taskAbandon()" style="background:#c62828; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:11px;">✖ Abbrechen</button>
+                </div>
+            </div>
+        </div>
+        <!-- Erfolgs-Modal -->
+        <div id="task-success-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1b2a1b; border:2px solid #4caf50; border-radius:10px; z-index:3000; padding:28px 32px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.7);">
+            <div style="font-size:48px;">🎉</div>
+            <div style="color:#4caf50; font-size:20px; font-weight:bold; margin:8px 0;">Aufgabe gelöst!</div>
+            <div id="task-success-name" style="color:#aaa; margin-bottom:8px;"></div>
+            <div id="task-success-time" style="color:#ffb300; font-size:12px; margin-bottom:16px;"></div>
+            <button onclick="window._taskAbandon()" style="background:#4caf50; color:#fff; border:none; border-radius:6px; padding:8px 20px; cursor:pointer; font-size:13px;">✔ Fertig</button>
+        </div>
+        <!-- Task-Manager Modal -->
+        <div id="task-manager-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2900; justify-content:center; align-items:center;">
+            <div style="background:#1e2a3a; border:1px solid #1565c0; border-radius:10px; width:520px; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,0.7);">
+                <div style="background:#1565c0; padding:12px 16px; border-radius:9px 9px 0 0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                    <span style="color:#fff; font-weight:bold; font-size:14px;">🎯 Aufgaben-Modus</span>
+                    <button onclick="document.getElementById('task-manager-modal').style.display='none'" style="background:none; border:none; color:#fff; cursor:pointer; font-size:16px;">✖</button>
+                </div>
+                <div style="padding:12px 16px; border-bottom:1px solid #263238; flex-shrink:0; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button onclick="document.getElementById('task-upload').click()" class="task-mgr-btn primary">📥 .valitask importieren</button>
+                    <button onclick="window._openTaskEditor(null)" class="task-mgr-btn">✏️ Neue Aufgabe erstellen</button>
+                </div>
+                <div id="task-mgr-list" style="overflow-y:auto; padding:12px 16px; flex:1; color:#fff; font-size:12px;"></div>
+            </div>
+        </div>
+        <!-- Aufgaben-Editor Modal -->
+        <div id="task-editor-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2d2d30; border:1px solid #555; border-radius:8px; z-index:3100; padding:0; width:640px; max-height:90vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.7); flex-direction:column;">
+            <div style="background:#1565c0; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-radius:7px 7px 0 0; position:sticky; top:0; z-index:10; flex-shrink:0;">
+                <span style="color:#fff; font-weight:bold;">✏️ Aufgaben-Editor</span>
+                <button onclick="document.getElementById('task-editor-modal').style.display='none'" style="background:none; border:none; color:#fff; cursor:pointer; font-size:16px;">✖</button>
+            </div>
+            <div id="task-editor-body" style="padding:16px; color:#fff; font-size:12px;"></div>
+        </div>
+        <!-- Versteckter File-Input für .valitask Import -->
+        <input type="file" id="task-upload" accept=".valitask" style="display:none;">
+        <!-- ====== ENDE AUFGABEN-MODUS ====== -->
 		<div id="fbs-add-modal" style="display: none; position: absolute; top: 15%; left: 35%; background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.8); z-index: 3000; width: 320px;">
             <h3 id="fbs-add-title" style="margin-top: 0; font-size: 14px; color: #fff; border-bottom: 1px solid #555; padding-bottom: 8px;" data-i18n="fbs_add_title">Baustein hinzufügen</h3>
             <input type="hidden" id="fbs-add-type">
@@ -5090,8 +5172,17 @@ You must output exactly this JSON format. The logic code goes as a single string
                 // Wir kopieren den aktuellen Booleschen Zustand aller Variablen
                 analyzerHistory.push({ ...spsState });
                 // Begrenze auf 2000 Einträge, damit der RAM nicht platzt
-                if (analyzerHistory.length > 2000) analyzerHistory.shift(); 
+                if (analyzerHistory.length > 2000) analyzerHistory.shift();
                 if (isAnalyzerOpen) drawAnalyzer();
+            }
+            // 6. Aufgaben-Modus: Simulationszeit tracken und Bedingungen prüfen
+            if (activeTask && !taskSolved) {
+                if (isSimulationActive) taskSimSeconds += deltaMs / 1000;
+                let _tnow = Date.now();
+                if (_tnow - _taskCheckThrottle > 400) {
+                    _taskCheckThrottle = _tnow;
+                    window._taskCheckConditions();
+                }
             }
         }
 		// --- SCHALTPLAN GENERATOR (IEC) ---
@@ -6139,6 +6230,426 @@ You must output exactly this JSON format. The logic code goes as a single string
         window.simTimers = {}; // Globaler Speicher für Zeiten/Zähler
         let lastSimulationTime = performance.now(); // Hochpräzise Zeiterfassung
 		let lastSoundState = {}; // Merkt sich den Zustand für die Flankenauswertung
+
+        // =========================================================
+        // AUFGABEN-MODUS (Task/Challenge Mode)
+        // =========================================================
+        let activeTask = null;
+        let taskStartTime = null;
+        let taskSimSeconds = 0;
+        let taskSolved = false;
+        let taskDespawnCount = 0;
+        let _taskCheckThrottle = 0;
+        let _taskTimerInterval = null;
+
+        function _escHtml(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function _fmtTaskTime(seconds) {
+            let m = Math.floor(seconds / 60);
+            let s = Math.round(seconds % 60);
+            return m + ':' + String(s).padStart(2, '0');
+        }
+        function _getDiffColor(d) {
+            return { 'leicht':'#4caf50', 'mittel':'#ff9800', 'schwer':'#f44336' }[d] || '#607d8b';
+        }
+        function _getLocalTasks() {
+            try { return JSON.parse(localStorage.getItem('valisTasks') || '[]'); } catch(e) { return []; }
+        }
+        function _saveTaskLocally(task) {
+            let tasks = _getLocalTasks();
+            let idx = tasks.findIndex(t => t.id === task.id);
+            if (idx >= 0) tasks[idx] = task; else tasks.push(task);
+            localStorage.setItem('valisTasks', JSON.stringify(tasks));
+        }
+        function _deleteLocalTask(taskId) {
+            localStorage.setItem('valisTasks', JSON.stringify(_getLocalTasks().filter(t => t.id !== taskId)));
+        }
+        function _exportTask(task) {
+            const blob = new Blob([JSON.stringify(task, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = (task.name || 'aufgabe').replace(/[^a-zA-Z0-9_\-]/g, '-') + '.valitask';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        window._openTaskManager = function() {
+            let modal = document.getElementById('task-manager-modal');
+            let list = document.getElementById('task-mgr-list');
+            let tasks = _getLocalTasks();
+            modal._tasks = tasks;
+            if (tasks.length === 0) {
+                list.innerHTML = '<div style="color:#607d8b;text-align:center;padding:24px 0;font-size:12px;">Keine Aufgaben gespeichert.<br>Importiere eine <b>.valitask</b>-Datei oder erstelle eine neue.</div>';
+            } else {
+                list.innerHTML = '';
+                tasks.forEach((task, i) => {
+                    let card = document.createElement('div');
+                    card.className = 'task-mgr-card';
+                    let diffColor = _getDiffColor(task.difficulty);
+                    card.innerHTML = `
+                        <div class="task-mgr-card-name">${_escHtml(task.name || 'Unbenannte Aufgabe')}</div>
+                        <div class="task-mgr-card-meta">
+                            <span style="color:${diffColor}">${_escHtml(task.difficulty || 'k.A.')}</span>
+                            ${task.category ? ' &bull; ' + _escHtml(task.category) : ''}
+                            ${task.conditions ? ' &bull; ' + task.conditions.length + ' Bedingung(en)' : ''}
+                        </div>
+                        <div>
+                            <button class="task-mgr-btn primary" data-action="start" data-idx="${i}">▶ Starten</button>
+                            <button class="task-mgr-btn" data-action="edit" data-idx="${i}">✏️ Bearbeiten</button>
+                            <button class="task-mgr-btn" data-action="export" data-idx="${i}">📤 Export</button>
+                            <button class="task-mgr-btn danger" data-action="delete" data-idx="${i}">🗑</button>
+                        </div>`;
+                    card.querySelectorAll('[data-action]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            let t = modal._tasks[parseInt(btn.dataset.idx)];
+                            if (!t) return;
+                            if (btn.dataset.action === 'start') {
+                                document.getElementById('task-manager-modal').style.display = 'none';
+                                window._startTask(t);
+                            } else if (btn.dataset.action === 'edit') {
+                                window._openTaskEditor(t);
+                            } else if (btn.dataset.action === 'export') {
+                                _exportTask(t);
+                            } else if (btn.dataset.action === 'delete') {
+                                if (confirm('Aufgabe "' + t.name + '" löschen?')) {
+                                    _deleteLocalTask(t.id);
+                                    window._openTaskManager();
+                                }
+                            }
+                        });
+                    });
+                    list.appendChild(card);
+                });
+            }
+            modal.style.display = 'flex';
+        };
+
+        window._startTask = function(taskObj) {
+            if (taskObj.preset) {
+                let presetData = {
+                    code: taskObj.preset.code || '',
+                    factory: taskObj.preset.factory || null,
+                    types: taskObj.preset.types || {},
+                    layout: taskObj.preset.layout || 'flex-row'
+                };
+                let saveloadText = document.getElementById('saveload-text');
+                if (saveloadText) {
+                    saveloadText.value = JSON.stringify(presetData);
+                    window.applyRawCode();
+                }
+            }
+            activeTask = taskObj;
+            taskSolved = false;
+            taskStartTime = Date.now();
+            taskSimSeconds = 0;
+            taskDespawnCount = 0;
+            _taskCheckThrottle = 0;
+            if (_taskTimerInterval) { clearInterval(_taskTimerInterval); _taskTimerInterval = null; }
+
+            document.getElementById('task-panel-name').textContent = taskObj.name || 'Aufgabe';
+            let diffEl = document.getElementById('task-panel-diff');
+            diffEl.textContent = taskObj.difficulty || '';
+            diffEl.style.color = _getDiffColor(taskObj.difficulty);
+            document.getElementById('task-panel-desc').textContent = taskObj.description || '';
+            document.getElementById('task-hint-btn').style.display = taskObj.hint ? 'inline-block' : 'none';
+            _taskRenderConditions();
+
+            if (taskObj.timeLimit && taskObj.timeLimit > 0) {
+                document.getElementById('task-panel-timer').style.display = 'block';
+                document.getElementById('task-timer-val').textContent = _fmtTaskTime(taskObj.timeLimit);
+                _taskTimerInterval = setInterval(() => {
+                    if (!activeTask) { clearInterval(_taskTimerInterval); return; }
+                    let remaining = activeTask.timeLimit - Math.floor((Date.now() - taskStartTime) / 1000);
+                    if (remaining <= 0) {
+                        clearInterval(_taskTimerInterval); _taskTimerInterval = null;
+                        document.getElementById('task-timer-val').textContent = '0:00';
+                        if (!taskSolved) { alert('Zeit abgelaufen!'); window._taskAbandon(); }
+                    } else {
+                        document.getElementById('task-timer-val').textContent = _fmtTaskTime(remaining);
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('task-panel-timer').style.display = 'none';
+            }
+            document.getElementById('task-panel').style.display = 'block';
+        };
+
+        function _taskRenderConditions() {
+            if (!activeTask) return;
+            let list = document.getElementById('task-conditions-list');
+            list.innerHTML = '';
+            (activeTask.conditions || []).forEach((cond, i) => {
+                let div = document.createElement('div');
+                div.className = 'task-cond pending';
+                div.id = 'task-cond-' + i;
+                div.innerHTML = '<span class="task-cond-icon"></span><span>' + _escHtml(cond.label || cond.type) + '</span>';
+                list.appendChild(div);
+            });
+        }
+
+        window._taskAbandon = function() {
+            activeTask = null;
+            taskSolved = false;
+            if (_taskTimerInterval) { clearInterval(_taskTimerInterval); _taskTimerInterval = null; }
+            document.getElementById('task-panel').style.display = 'none';
+            document.getElementById('task-success-modal').style.display = 'none';
+        };
+
+        window._taskShowHint = function() {
+            if (activeTask && activeTask.hint) alert('💡 Hinweis:\n\n' + activeTask.hint);
+        };
+
+        function _checkCondition(cond) {
+            try {
+                switch(cond.type) {
+                    case 'sps_output':      return spsState[cond.variable] === cond.value;
+                    case 'sps_input':       return spsState[cond.variable] === cond.value;
+                    case 'variable_exists': return (globalInputs||[]).includes(cond.variable) || (globalOutputs||[]).includes(cond.variable);
+                    case 'code_contains':   return new RegExp(cond.pattern).test(document.getElementById('code').value);
+                    case 'factory_object':  return factoryObjects.some(o => o.type === cond.objectType && o.linkedVar === cond.linkedVar);
+                    case 'sim_running':     return taskSimSeconds >= cond.minSeconds;
+                    case 'despawner_count': return taskDespawnCount >= cond.count;
+                    case 'custom_js':       return !!new Function('spsState','factoryObjects','globalInputs','globalOutputs','taskSimSeconds','return '+cond.expression)(spsState,factoryObjects,globalInputs,globalOutputs,taskSimSeconds);
+                    default: return false;
+                }
+            } catch(e) { return false; }
+        }
+
+        window._taskCheckConditions = function() {
+            if (!activeTask || taskSolved) return;
+            let allDone = true;
+            let conds = activeTask.conditions || [];
+            conds.forEach((cond, i) => {
+                let done = _checkCondition(cond);
+                if (!done) allDone = false;
+                let el = document.getElementById('task-cond-' + i);
+                if (el) el.className = 'task-cond ' + (done ? 'done' : 'pending');
+            });
+            if (allDone && conds.length > 0) window._taskSolve();
+        };
+
+        window._taskSolve = function() {
+            if (taskSolved) return;
+            taskSolved = true;
+            if (_taskTimerInterval) { clearInterval(_taskTimerInterval); _taskTimerInterval = null; }
+            let elapsed = Math.round((Date.now() - taskStartTime) / 1000);
+            document.getElementById('task-success-name').textContent = activeTask.name || '';
+            document.getElementById('task-success-time').textContent = 'Benötigte Zeit: ' + _fmtTaskTime(elapsed);
+            document.getElementById('task-success-modal').style.display = 'block';
+            try {
+                let solved = JSON.parse(localStorage.getItem('valisTasksSolved') || '{}');
+                solved[activeTask.id] = { solvedAt: Date.now(), time: elapsed };
+                localStorage.setItem('valisTasksSolved', JSON.stringify(solved));
+            } catch(e) {}
+        };
+
+        // === Aufgaben-Editor ===
+        const _COND_TYPES = [
+            { value:'sps_output',      label:'SPS Ausgang (Output)' },
+            { value:'sps_input',       label:'SPS Eingang (Input)' },
+            { value:'variable_exists', label:'Variable deklariert' },
+            { value:'code_contains',   label:'Code enthält Muster (Regex)' },
+            { value:'factory_object',  label:'Fabrikobjekt vorhanden' },
+            { value:'sim_running',     label:'Simulation läuft (Mindestzeit)' },
+            { value:'despawner_count', label:'Teile verarbeitet (Despawner)' },
+            { value:'custom_js',       label:'Eigener JS-Ausdruck' },
+        ];
+
+        function _buildCondExtra(cond) {
+            switch(cond.type) {
+                case 'sps_output': case 'sps_input':
+                    return `<div style="display:flex;gap:6px;">
+                        <div style="flex:1;"><label class="task-ed-label">Variable</label><input class="task-ed-input cond-var" type="text" value="${_escHtml(cond.variable||'')}" placeholder="z.B. A_MOTOR"></div>
+                        <div style="flex:1;"><label class="task-ed-label">Erwarteter Wert</label>
+                            <select class="task-ed-input cond-val">
+                                <option value="true" ${cond.value===true?'selected':''}>true (1)</option>
+                                <option value="false" ${cond.value===false?'selected':''}>false (0)</option>
+                            </select>
+                        </div></div>`;
+                case 'variable_exists':
+                    return `<label class="task-ed-label">Variable</label><input class="task-ed-input cond-var" type="text" value="${_escHtml(cond.variable||'')}" placeholder="z.B. A_LAMPE">`;
+                case 'code_contains':
+                    return `<label class="task-ed-label">Regex-Muster</label><input class="task-ed-input cond-pattern" type="text" value="${_escHtml(cond.pattern||'')}" placeholder="z.B. SR oder TON">`;
+                case 'factory_object':
+                    return `<div style="display:flex;gap:6px;">
+                        <div style="flex:1;"><label class="task-ed-label">Objekttyp</label><input class="task-ed-input cond-objtype" type="text" value="${_escHtml(cond.objectType||'')}" placeholder="z.B. led, conveyor"></div>
+                        <div style="flex:1;"><label class="task-ed-label">Verknüpfte Variable</label><input class="task-ed-input cond-linkedvar" type="text" value="${_escHtml(cond.linkedVar||'')}" placeholder="z.B. A_LAMPE"></div>
+                    </div>`;
+                case 'sim_running':
+                    return `<label class="task-ed-label">Mindest-Simulationszeit (Sekunden)</label><input class="task-ed-input cond-minsec" type="number" min="0" value="${cond.minSeconds||5}">`;
+                case 'despawner_count':
+                    return `<label class="task-ed-label">Anzahl verarbeiteter Teile</label><input class="task-ed-input cond-count" type="number" min="1" value="${cond.count||10}">`;
+                case 'custom_js':
+                    return `<label class="task-ed-label">JS-Ausdruck (Rückgabe: boolean)</label><input class="task-ed-input cond-expr" type="text" value="${_escHtml(cond.expression||'')}" placeholder="spsState['A_X']===true">`;
+                default: return '';
+            }
+        }
+
+        function _taskRenderCondRow(cond, index) {
+            let list = document.getElementById('ted-cond-list');
+            let row = document.createElement('div');
+            row.className = 'task-cond-row';
+            row.dataset.condIdx = index;
+            let typeOpts = _COND_TYPES.map(t => `<option value="${t.value}" ${cond.type===t.value?'selected':''}>${_escHtml(t.label)}</option>`).join('');
+            row.innerHTML = `
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                    <select class="task-ed-input cond-type-sel" style="flex:1;">${typeOpts}</select>
+                    <button style="background:#c62828;color:#fff;border:none;border-radius:3px;padding:3px 7px;cursor:pointer;font-size:12px;" title="Löschen">🗑</button>
+                </div>
+                <div class="cond-extra">${_buildCondExtra(cond)}</div>
+                <div><label class="task-ed-label">Anzeigetext</label><input class="task-ed-input cond-label-inp" type="text" value="${_escHtml(cond.label||'')}" placeholder="z.B. Motor läuft"></div>`;
+            row.querySelector('.cond-type-sel').addEventListener('change', function() {
+                row.querySelector('.cond-extra').innerHTML = _buildCondExtra({ type: this.value });
+            });
+            row.querySelector('button').addEventListener('click', () => { row.remove(); });
+            list.appendChild(row);
+        }
+
+        window._taskAddCondition = function() {
+            let list = document.getElementById('ted-cond-list');
+            _taskRenderCondRow({ type:'sps_output', variable:'', value:true, label:'' }, list.children.length);
+        };
+
+        function _taskCollectConditions() {
+            let conds = [];
+            document.getElementById('ted-cond-list').querySelectorAll('.task-cond-row').forEach(row => {
+                let type = row.querySelector('.cond-type-sel').value;
+                let label = row.querySelector('.cond-label-inp').value.trim();
+                let cond = { type, label };
+                switch(type) {
+                    case 'sps_output': case 'sps_input':
+                        cond.variable = (row.querySelector('.cond-var')||{value:''}).value.trim();
+                        let vs = row.querySelector('.cond-val');
+                        cond.value = vs ? (vs.value === 'true') : true;
+                        break;
+                    case 'variable_exists':
+                        cond.variable = (row.querySelector('.cond-var')||{value:''}).value.trim(); break;
+                    case 'code_contains':
+                        cond.pattern = (row.querySelector('.cond-pattern')||{value:''}).value; break;
+                    case 'factory_object':
+                        cond.objectType = (row.querySelector('.cond-objtype')||{value:''}).value.trim();
+                        cond.linkedVar = (row.querySelector('.cond-linkedvar')||{value:''}).value.trim(); break;
+                    case 'sim_running':
+                        cond.minSeconds = parseFloat((row.querySelector('.cond-minsec')||{value:'5'}).value) || 5; break;
+                    case 'despawner_count':
+                        cond.count = parseInt((row.querySelector('.cond-count')||{value:'10'}).value) || 10; break;
+                    case 'custom_js':
+                        cond.expression = (row.querySelector('.cond-expr')||{value:''}).value; break;
+                }
+                conds.push(cond);
+            });
+            return conds;
+        }
+
+        function _taskCollectFromEditor() {
+            let modal = document.getElementById('task-editor-modal');
+            let task = modal._editTask;
+            task.name = document.getElementById('ted-name').value.trim();
+            task.description = document.getElementById('ted-desc').value.trim();
+            task.hint = document.getElementById('ted-hint').value.trim();
+            task.category = document.getElementById('ted-cat').value.trim();
+            task.difficulty = document.getElementById('ted-diff').value;
+            let tl = parseInt(document.getElementById('ted-time').value) || 0;
+            task.timeLimit = tl > 0 ? tl : null;
+            task.conditions = _taskCollectConditions();
+            return task;
+        }
+
+        window._taskCapturePreset = function() {
+            let modal = document.getElementById('task-editor-modal');
+            if (!modal._editTask) return;
+            modal._editTask.preset = {
+                code: document.getElementById('code') ? document.getElementById('code').value : '',
+                factory: getFactoryStateObj(),
+                types: JSON.parse(JSON.stringify(componentTypes)),
+                layout: currentLayout
+            };
+            let infoEl = document.getElementById('ted-preset-info');
+            if (infoEl) infoEl.textContent = '✅ Preset gespeichert (Code + Fabrik-Zustand)';
+        };
+
+        window._openTaskEditor = function(taskObj) {
+            let modal = document.getElementById('task-editor-modal');
+            let task = taskObj ? JSON.parse(JSON.stringify(taskObj)) : {
+                version:'1.0', type:'valitask',
+                id:'task-' + Date.now() + '-' + Math.random().toString(36).substr(2,6),
+                name:'', description:'', hint:'', category:'', difficulty:'leicht',
+                timeLimit:null, preset:null, conditions:[]
+            };
+            modal._editTask = task;
+            let body = document.getElementById('task-editor-body');
+            body.innerHTML = `
+                <label class="task-ed-label">Name *</label>
+                <input id="ted-name" class="task-ed-input" type="text" value="${_escHtml(task.name)}" placeholder="Aufgabentitel">
+                <label class="task-ed-label">Beschreibung</label>
+                <textarea id="ted-desc" class="task-ed-input" rows="3" style="resize:vertical;" placeholder="Was soll der Nutzer tun?">${_escHtml(task.description||'')}</textarea>
+                <label class="task-ed-label">Hinweis (optional, wird auf Knopfdruck angezeigt)</label>
+                <input id="ted-hint" class="task-ed-input" type="text" value="${_escHtml(task.hint||'')}" placeholder="Tipp für den Lernenden">
+                <div style="display:flex;gap:10px;">
+                    <div style="flex:1;"><label class="task-ed-label">Kategorie</label><input id="ted-cat" class="task-ed-input" type="text" value="${_escHtml(task.category||'')}" placeholder="z.B. Grundlagen"></div>
+                    <div style="flex:1;"><label class="task-ed-label">Schwierigkeit</label>
+                        <select id="ted-diff" class="task-ed-input">
+                            <option value="leicht" ${task.difficulty==='leicht'?'selected':''}>Leicht</option>
+                            <option value="mittel" ${task.difficulty==='mittel'?'selected':''}>Mittel</option>
+                            <option value="schwer" ${task.difficulty==='schwer'?'selected':''}>Schwer</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;"><label class="task-ed-label">Zeitlimit (Sek., 0=keins)</label><input id="ted-time" class="task-ed-input" type="number" min="0" max="3600" value="${task.timeLimit||0}"></div>
+                </div>
+                <div style="margin-top:14px;padding:10px;background:#151515;border-radius:4px;border:1px solid #333;">
+                    <div style="color:#90a4ae;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;">📸 Preset (Ausgangszustand der Aufgabe)</div>
+                    <div id="ted-preset-info" style="color:#607d8b;font-size:11px;margin-bottom:8px;">${task.preset ? '✅ Preset gespeichert' : '⬜ Kein Preset – Aufgabe startet im aktuellen Zustand'}</div>
+                    <button onclick="window._taskCapturePreset()" style="background:#37474f;color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;">📸 Aktuellen Zustand übernehmen</button>
+                    ${task.preset ? '<button onclick="document.getElementById(\'task-editor-modal\')._editTask.preset=null;document.getElementById(\'ted-preset-info\').textContent=\'⬜ Kein Preset\'" style="background:#c62828;color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;margin-left:6px;">🗑 Preset löschen</button>' : ''}
+                </div>
+                <div style="margin-top:14px;">
+                    <div style="color:#90a4ae;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">✅ Bedingungen (alle müssen erfüllt sein)</div>
+                    <div id="ted-cond-list"></div>
+                    <button onclick="window._taskAddCondition()" style="background:#1565c0;color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;">+ Bedingung hinzufügen</button>
+                </div>
+                <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #444;padding-top:12px;">
+                    <button onclick="window._taskEditorSave()" style="background:#2e7d32;color:#fff;border:none;border-radius:4px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:bold;">💾 Lokal speichern</button>
+                    <button onclick="window._taskEditorExport()" style="background:#1565c0;color:#fff;border:none;border-radius:4px;padding:6px 14px;cursor:pointer;font-size:12px;">📤 Als .valitask exportieren</button>
+                    <button onclick="document.getElementById('task-editor-modal').style.display='none'" style="background:#555;color:#fff;border:none;border-radius:4px;padding:6px 14px;cursor:pointer;font-size:12px;">✖ Schließen</button>
+                </div>`;
+            (task.conditions || []).forEach((cond, i) => _taskRenderCondRow(cond, i));
+            modal.style.display = 'flex';
+        };
+
+        window._taskEditorSave = function() {
+            let task = _taskCollectFromEditor();
+            if (!task.name) { alert('Bitte einen Aufgabennamen eingeben.'); return; }
+            _saveTaskLocally(task);
+            alert('✅ Aufgabe "' + task.name + '" gespeichert.');
+        };
+
+        window._taskEditorExport = function() {
+            let task = _taskCollectFromEditor();
+            if (!task.name) { alert('Bitte einen Aufgabennamen eingeben.'); return; }
+            _exportTask(task);
+        };
+
+        // Import .valitask
+        document.getElementById('task-upload').addEventListener('change', function(e) {
+            let file = e.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    let task = JSON.parse(ev.target.result);
+                    if (task.type !== 'valitask') { alert('Keine gültige .valitask-Datei!'); return; }
+                    if (!task.id) task.id = 'task-' + Date.now();
+                    _saveTaskLocally(task);
+                    window._openTaskManager();
+                } catch(ex) { alert('Fehler beim Lesen: ' + ex.message); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+        // =========================================================
+
         function updateEditor() {
             const code = textarea.value;
             window.simTimers = {}; // Zurücksetzen beim Tippen
@@ -6591,9 +7102,286 @@ You must output exactly this JSON format. The logic code goes as a single string
             if (e.touches.length === 0) isPanActive = false;
         });
         const ctxMenu = document.getElementById('factory-context-menu');
+        // Positioniert ctxMenu bei (clientX, clientY) und wechselt bei Bedarf zu 2-Spalten-Layout
+        function _positionContextMenu(x, y) {
+            const wrapRect = document.getElementById('factory-wrapper').getBoundingClientRect();
+            const caRaw    = document.getElementById('factory-canvas-area').getBoundingClientRect();
+            // Sichtbarer Bereich = Schnitt von factory-canvas-area mit dem Viewport
+            const visLeft   = Math.max(caRaw.left,   0);
+            const visTop    = Math.max(caRaw.top,    0);
+            const visRight  = Math.min(caRaw.right,  window.innerWidth);
+            const visBottom = Math.min(caRaw.bottom, window.innerHeight);
+            const availH = visBottom - visTop - 8;
+            const availW = visRight  - visLeft;
+            ctxMenu.classList.remove('ctx-multicol');
+            ctxMenu.querySelectorAll('.ctx-col').forEach(c => c.remove());
+            ctxMenu.style.left = (x - wrapRect.left) + 'px';
+            ctxMenu.style.top  = (y - wrapRect.top)  + 'px';
+            ctxMenu.style.display = 'block';
+            requestAnimationFrame(() => {
+                const mr = ctxMenu.getBoundingClientRect();
+                if (mr.height > availH) {
+                    // Spalten-Umbau: alle direkten Kinder gleichmäßig auf 2 Spalten verteilen
+                    const children = Array.from(ctxMenu.children);
+                    const col1 = document.createElement('div'); col1.className = 'ctx-col';
+                    const col2 = document.createElement('div'); col2.className = 'ctx-col';
+                    const half = Math.ceil(children.length / 2);
+                    children.forEach((c, i) => { ctxMenu.removeChild(c); (i < half ? col1 : col2).appendChild(c); });
+                    ctxMenu.appendChild(col1); ctxMenu.appendChild(col2);
+                    ctxMenu.classList.add('ctx-multicol');
+                    ctxMenu.style.display = 'flex'; // Inline-Style überschreibt sonst das CSS
+                }
+                const mr2 = ctxMenu.getBoundingClientRect();
+                if (mr2.right  > visRight)  ctxMenu.style.left = Math.max(0, parseFloat(ctxMenu.style.left) - (mr2.right  - visRight))  + 'px';
+                if (mr2.bottom > visBottom) ctxMenu.style.top  = Math.max(0, parseFloat(ctxMenu.style.top)  - (mr2.bottom - visBottom)) + 'px';
+            });
+        }
         let factoryObjects = [];
         let factoryItems = [];
         let factoryPins = [];
+        // =========================================================
+        // 🦾 ROBOT ARM – Hilfsfunktionen (IK + Pfadverfolgung)
+        // WEGPUNKTE sind in LOKALEN Koordinaten (relativ zur Arm-Basis)
+        // → Pfad bewegt sich mit dem Roboter mit
+        // =========================================================
+        window._robotUpdateIK = function(obj) {
+            let l1 = obj.arm1Len || 80, l2 = obj.arm2Len || 60;
+            let tx = obj.targetX || 0, ty = obj.targetY || (l1 + l2);
+            let d = Math.sqrt(tx * tx + ty * ty);
+            let maxR = l1 + l2 - 0.5;
+            if (d > maxR) { tx = tx * maxR / d; ty = ty * maxR / d; d = maxR; }
+            if (d < Math.abs(l1 - l2) + 0.5) d = Math.abs(l1 - l2) + 0.5;
+            let cos2 = (d * d - l1 * l1 - l2 * l2) / (2 * l1 * l2);
+            cos2 = Math.max(-1, Math.min(1, cos2));
+            let a2 = -Math.acos(cos2);
+            let a1 = Math.atan2(ty, tx) - Math.atan2(l2 * Math.sin(a2), l1 + l2 * Math.cos(a2));
+            let j1x = l1 * Math.cos(a1), j1y = l1 * Math.sin(a1);
+            let j2x = j1x + l2 * Math.cos(a1 + a2), j2y = j1y + l2 * Math.sin(a1 + a2);
+            obj._gripperX = j2x; obj._gripperY = j2y;
+            if (obj._svgLink1) { obj._svgLink1.setAttribute('x2', j1x.toFixed(1)); obj._svgLink1.setAttribute('y2', j1y.toFixed(1)); }
+            if (obj._svgLink2) { obj._svgLink2.setAttribute('x1', j1x.toFixed(1)); obj._svgLink2.setAttribute('y1', j1y.toFixed(1)); obj._svgLink2.setAttribute('x2', j2x.toFixed(1)); obj._svgLink2.setAttribute('y2', j2y.toFixed(1)); }
+            if (obj._svgJoint2) { obj._svgJoint2.setAttribute('cx', j1x.toFixed(1)); obj._svgJoint2.setAttribute('cy', j1y.toFixed(1)); }
+            if (obj._svgGripG) obj._svgGripG.setAttribute('transform', `translate(${j2x.toFixed(1)},${j2y.toFixed(1)})`);
+        };
+        // Wegpunkte sind LOKAL (relative Offsets vom Arm-Ursprung)
+        // targetX/targetY entspricht direkt dem Greifer-Offset → einfach interpolieren
+        window._robotFollowPath = function(obj, speed) {
+            let pts = obj.waypoints;
+            if (!pts || pts.length < 2) return;
+            // Loop: Startpunkt ans Ende hängen → schließendes Segment wird mitgefahren
+            let ePts = obj.pathLoop ? [...pts, pts[0]] : pts;
+            let maxT = ePts.length - 1;
+            obj._pathT = obj._pathT || 0;
+            let seg = Math.floor(obj._pathT);
+            if (seg >= maxT) { seg = maxT - 1; obj._pathT = maxT - 0.0001; }
+            let t = obj._pathT - seg;
+            let p0 = ePts[seg], p1 = ePts[seg + 1];
+            obj.targetX = p0.x + (p1.x - p0.x) * t;
+            obj.targetY = p0.y + (p1.y - p0.y) * t;
+            let segLen = Math.sqrt((p1.x - p0.x) ** 2 + (p1.y - p0.y) ** 2) || 1;
+            obj._pathT += speed / segLen;
+            if (obj._pathT >= maxT) {
+                if (obj.pathLoop) obj._pathT = 0;
+                else obj._pathT = maxT - 0.0001;
+            }
+        };
+        // =========================================================
+        // ✏️ PFAD-EDITOR
+        // =========================================================
+        window.pathEditingObj = null;
+        // Koordinaten-Hilfsfunktion: Canvas-Klick → lokale Arm-Koordinaten
+        function _canvasToLocal(obj, clientX, clientY) {
+            let rect = factoryCanvas.getBoundingClientRect();
+            let scl = factoryScale || 1;
+            let absX = (clientX - rect.left) / scl;
+            let absY = (clientY - rect.top) / scl;
+            return { x: Math.round(absX - obj.x), y: Math.round(absY - obj.y) };
+        }
+        // Lokale → absolute Koordinaten (für SVG-Rendering)
+        function _localToAbs(obj, p) {
+            return { x: obj.x + p.x, y: obj.y + p.y };
+        }
+        window._startPathEdit = function(obj) {
+            window.pathEditingObj = obj;
+            if (!obj.waypoints) obj.waypoints = [];
+            // Pointer-Events aktivieren damit Wegpunkt-Kreise klickbar sind
+            let pathSvg = document.getElementById('factory-path-svg');
+            if (pathSvg) pathSvg.style.pointerEvents = 'all';
+            // Cursor auf Crosshair setzen (erzwungen für alle Kindelemente via Style-Tag)
+            document.getElementById('factory-canvas-area').style.cursor = 'crosshair';
+            factoryCanvas.style.cursor = 'crosshair';
+            let cs = document.getElementById('_path-edit-cursor');
+            if (!cs) { cs = document.createElement('style'); cs.id = '_path-edit-cursor'; document.head.appendChild(cs); }
+            cs.textContent = '#factory-canvas-area, #factory-canvas-area *:not(#factory-path-svg circle) { cursor: crosshair !important; }';
+            let banner = document.getElementById('path-edit-banner');
+            if (banner) {
+                banner.style.display = 'flex';
+                let mSel = document.getElementById('path-mode-sel');
+                if (mSel) mSel.value = obj.pathMode || 'linear';
+                let lChk = document.getElementById('path-loop-chk');
+                if (lChk) lChk.checked = !!obj.pathLoop;
+            }
+            window._renderPathOverlay();
+        };
+        window._stopPathEdit = function() {
+            if (window.pathEditingObj) { try { saveFactoryState(); } catch(e){} }
+            window.pathEditingObj = null;
+            // Pointer-Events zurücksetzen
+            let pathSvg = document.getElementById('factory-path-svg');
+            if (pathSvg) pathSvg.style.pointerEvents = 'none';
+            // Cursor zurücksetzen
+            document.getElementById('factory-canvas-area').style.cursor = '';
+            factoryCanvas.style.cursor = '';
+            let cs = document.getElementById('_path-edit-cursor');
+            if (cs) cs.remove();
+            let banner = document.getElementById('path-edit-banner');
+            if (banner) banner.style.display = 'none';
+            window._renderPathOverlay();
+        };
+        window._catmullRomPath = function(abspts) {
+            if (abspts.length < 2) return '';
+            let d = `M${abspts[0].x},${abspts[0].y}`;
+            for (let i = 0; i < abspts.length - 1; i++) {
+                let p0 = abspts[Math.max(0,i-1)], p1 = abspts[i], p2 = abspts[i+1], p3 = abspts[Math.min(abspts.length-1,i+2)];
+                let cp1x = p1.x+(p2.x-p0.x)/6, cp1y = p1.y+(p2.y-p0.y)/6;
+                let cp2x = p2.x-(p3.x-p1.x)/6, cp2y = p2.y-(p3.y-p1.y)/6;
+                d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x},${p2.y}`;
+            }
+            return d;
+        };
+        window._renderPathOverlay = function() {
+            let svgEl = document.getElementById('factory-path-svg');
+            if (!svgEl) return;
+            svgEl.innerHTML = '';
+            let svgNS = 'http://www.w3.org/2000/svg';
+            factoryObjects.forEach(obj => {
+                if (!obj.waypoints || obj.waypoints.length < 1) return;
+                let isEd = (window.pathEditingObj === obj);
+                // Umrechnen: lokale Punkte → absolute SVG-Koordinaten
+                let absPts = obj.waypoints.map(p => _localToAbs(obj, p));
+                if (absPts.length >= 2) {
+                    let loopPts = obj.pathLoop ? [...absPts, absPts[0]] : absPts;
+                    let d = (obj.pathMode === 'spline' && loopPts.length >= 3)
+                        ? window._catmullRomPath(loopPts)
+                        : `M${loopPts[0].x},${loopPts[0].y}` + loopPts.slice(1).map(p => `L${p.x},${p.y}`).join('');
+                    let pathEl = document.createElementNS(svgNS, 'path');
+                    pathEl.setAttribute('d', d);
+                    pathEl.setAttribute('fill', 'none');
+                    pathEl.setAttribute('stroke', isEd ? '#2196f3' : 'rgba(33,150,243,0.4)');
+                    pathEl.setAttribute('stroke-width', isEd ? '2' : '1.5');
+                    pathEl.setAttribute('stroke-dasharray', '7 4');
+                    pathEl.style.pointerEvents = 'none';
+                    svgEl.appendChild(pathEl);
+                    // Pfeilspitze am Ende
+                    let lp = absPts[absPts.length-1], pp = absPts[absPts.length-2];
+                    let ang = Math.atan2(lp.y-pp.y, lp.x-pp.x);
+                    let ax = lp.x-Math.cos(ang)*10, ay = lp.y-Math.sin(ang)*10, r = 6;
+                    let arrEl = document.createElementNS(svgNS,'polygon');
+                    arrEl.setAttribute('points', [[lp.x,lp.y],[ax+Math.sin(ang)*r,ay-Math.cos(ang)*r],[ax-Math.sin(ang)*r,ay+Math.cos(ang)*r]].map(p=>p.join(',')).join(' '));
+                    arrEl.setAttribute('fill', isEd ? '#2196f3' : 'rgba(33,150,243,0.5)');
+                    arrEl.style.pointerEvents = 'none';
+                    svgEl.appendChild(arrEl);
+                }
+                // Snap-Ring um Startpunkt anzeigen (wenn ≥2 Punkte im Edit-Modus)
+                if (isEd && absPts.length >= 2) {
+                    let snapR = document.createElementNS(svgNS, 'circle');
+                    snapR.setAttribute('cx', absPts[0].x); snapR.setAttribute('cy', absPts[0].y);
+                    snapR.setAttribute('r', '20'); snapR.setAttribute('fill', 'rgba(76,175,80,0.12)');
+                    snapR.setAttribute('stroke', '#4caf50'); snapR.setAttribute('stroke-width', '1.5');
+                    snapR.setAttribute('stroke-dasharray', '4 3');
+                    snapR.style.pointerEvents = 'none';
+                    svgEl.appendChild(snapR);
+                }
+                // Wegpunkt-Kreise
+                absPts.forEach((ap, i) => {
+                    let c = document.createElementNS(svgNS, 'circle');
+                    c.setAttribute('cx', ap.x); c.setAttribute('cy', ap.y);
+                    c.setAttribute('r', isEd ? '8' : '4');
+                    c.setAttribute('fill', i===0 ? '#4caf50' : (i===absPts.length-1 ? '#ff5722' : (isEd ? '#2196f3' : 'rgba(33,150,243,0.55)')));
+                    c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', '1.5');
+                    c.dataset.wpIndex = String(i); // Für Snap-Erkennung im Capture-Handler
+                    if (isEd) {
+                        // Startpunkt: Cursor auf Crosshair (signalisiert "hier klicken zum Schließen")
+                        c.style.cursor = i === 0 && obj.waypoints.length >= 2 ? 'crosshair' : 'grab';
+                        // Rechtsklick → Punkt löschen
+                        c.addEventListener('contextmenu', ev => {
+                            ev.preventDefault(); ev.stopPropagation();
+                            obj.waypoints.splice(i, 1);
+                            window._renderPathOverlay();
+                        });
+                        if (i === 0 && obj.waypoints.length >= 2) {
+                            // Startpunkt: mousedown schließt Pfad und stoppt Bubbling
+                            c.addEventListener('mousedown', ev => {
+                                if (ev.button !== 0) return;
+                                ev.stopPropagation(); ev.preventDefault();
+                                obj.pathLoop = true; obj.pathEnabled = true;
+                                let lChk = document.getElementById('path-loop-chk');
+                                if (lChk) lChk.checked = true;
+                                window._stopPathEdit();
+                            });
+                        } else {
+                            // Andere Punkte: Drag zum Verschieben
+                            c.addEventListener('mousedown', ev => {
+                                if (ev.button !== 0) return;
+                                ev.stopPropagation(); ev.preventDefault();
+                                c.style.cursor = 'grabbing';
+                                let onMove = mv => {
+                                    let loc = _canvasToLocal(obj, mv.clientX, mv.clientY);
+                                    obj.waypoints[i].x = loc.x; obj.waypoints[i].y = loc.y;
+                                    window._renderPathOverlay();
+                                };
+                                let onUp = () => { c.style.cursor='grab'; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+                                document.addEventListener('mousemove', onMove);
+                                document.addEventListener('mouseup', onUp);
+                            });
+                        }
+                    }
+                    svgEl.appendChild(c);
+                    if (isEd) {
+                        let txt = document.createElementNS(svgNS,'text');
+                        txt.setAttribute('x', ap.x+10); txt.setAttribute('y', ap.y+4);
+                        txt.setAttribute('fill','#fff'); txt.setAttribute('font-size','9');
+                        txt.style.pointerEvents = 'none';
+                        txt.textContent = i+1;
+                        svgEl.appendChild(txt);
+                    }
+                });
+            });
+        };
+        // Pfad-Punkte setzen: capturing mousedown auf factoryScrollArea
+        // → feuert VOR Drag/Selektion-Handlers; blockiert alles andere im Edit-Modus
+        factoryScrollArea.addEventListener('mousedown', function(ev) {
+            if (!window.pathEditingObj || ev.button !== 0) return;
+            // Alle SVG-Kreise des Pfad-SVGs bekommen ihren eigenen Handler → hier nicht eingreifen
+            if (ev.target && ev.target.tagName === 'circle' && ev.target.closest && ev.target.closest('#factory-path-svg')) return;
+            let obj = window.pathEditingObj;
+            let loc = _canvasToLocal(obj, ev.clientX, ev.clientY);
+            // Koordinaten-Snap: Klick nahe Startpunkt (aber nicht direkt auf den Kreis)
+            if (obj.waypoints.length >= 2) {
+                let p0 = obj.waypoints[0];
+                let snapDist = 20 / (factoryScale || 1);
+                if (Math.sqrt((loc.x-p0.x)**2 + (loc.y-p0.y)**2) < snapDist) {
+                    ev.stopPropagation(); ev.preventDefault();
+                    obj.pathLoop = true; obj.pathEnabled = true;
+                    let lChk = document.getElementById('path-loop-chk');
+                    if (lChk) lChk.checked = true;
+                    window._stopPathEdit();
+                    return;
+                }
+            }
+            ev.stopPropagation();
+            ev.preventDefault();
+            // Reichweite begrenzen: Punkt darf nicht außerhalb des Arm-Radius liegen
+            let maxR = (obj.arm1Len || 80) + (obj.arm2Len || 60) - 1;
+            let minR = Math.abs((obj.arm1Len || 80) - (obj.arm2Len || 60)) + 2;
+            let dist = Math.sqrt(loc.x * loc.x + loc.y * loc.y);
+            if (dist > 0.5) {
+                if (dist > maxR) { let f = maxR / dist; loc.x = Math.round(loc.x * f); loc.y = Math.round(loc.y * f); }
+                else if (dist < minR) { let f = minR / dist; loc.x = Math.round(loc.x * f); loc.y = Math.round(loc.y * f); }
+            }
+            obj.waypoints.push(loc);
+            window._renderPathOverlay();
+        }, true); // capture=true → feuert zuerst
         let _pinDragActive = null;
         let engineRunning = false;
         let factoryHistory = [];
@@ -8305,6 +9093,218 @@ You must output exactly this JSON format. The logic code goes as a single string
             },
             // Stubs für Built-in-Typen: nur Metadaten, keine build/animate-Logik
             'sensor_opt': { role: 'input', sensorSteps: 5, color: '#ff9800', hideFromPluginManager: true },
+            // =========================================================
+            // 📷 INSPEKTIONSKAMERA
+            // =========================================================
+            'inspection_camera': {
+                i18n: { de: { name: 'Inspektionskamera', desc: 'Prüft Werkstücke auf OK/NOK (liest Qualitätsflag vom Spawner)' }, en: { name: 'Inspection Camera', desc: 'Checks workpieces for OK/NOK (reads quality flag from spawner)' } },
+                meta: { icon: '📷' },
+                menuTarget: '#menu-sensoren',
+                modalConfig: { t: 'Inspektionskamera zuweisen:', l1: 'OK-Signal (SPS-Eingang)', out: false },
+                menuHtml: `<div onclick="addFactoryDevice('inspection_camera')">📷 <span data-i18n="plug_inspection_camera_name">Inspektionskamera</span></div>`,
+                css: `
+                    .f2d-insp-cam { position:absolute; background:#263238; border:2px solid #37474f; border-radius:6px; z-index:20; display:flex; align-items:center; justify-content:center; flex-direction:column; overflow:visible; }
+                    .f2d-insp-cam-body { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; }
+                    .f2d-insp-cam-lens { width:28px; height:28px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #1565c0, #0a1929); border:3px solid #1976d2; box-shadow:0 0 8px #2196f3; flex-shrink:0; }
+                    .f2d-insp-cam-result { font-size:10px; font-weight:bold; margin-top:3px; color:#90a4ae; letter-spacing:1px; }
+                    .f2d-insp-cam-result.ok { color:#4caf50; }
+                    .f2d-insp-cam-result.nok { color:#f44336; }
+                    .f2d-insp-cam-beam { position:absolute; top:100%; left:50%; transform:translateX(-50%); width:44px; height:70px; background:linear-gradient(to bottom, rgba(33,150,243,0.25), rgba(33,150,243,0.0)); pointer-events:none; clip-path:polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); }
+                    @keyframes cam-flash { 0%{box-shadow:0 0 8px #2196f3} 50%{box-shadow:0 0 24px #fff,0 0 50px #2196f3} 100%{box-shadow:0 0 8px #2196f3} }
+                    .f2d-insp-cam.scanning .f2d-insp-cam-lens { animation:cam-flash 0.35s ease-out; }
+                `,
+                build(obj, el, var1) {
+                    obj.linkedVar = var1;
+                    obj.width = 54; obj.height = 46;
+                    obj.useCollision = false;
+                    el.className = 'f2d-obj f2d-insp-cam';
+                    el.style.width = obj.width + 'px'; el.style.height = obj.height + 'px';
+                    el.innerHTML = `<div class="f2d-insp-cam-body"><div class="f2d-insp-cam-lens"></div><div class="f2d-insp-cam-result">—</div></div><div class="f2d-insp-cam-beam"></div>`;
+                    let rotator = document.createElement('div'); rotator.className = 'f2d-rotate-handle'; el.appendChild(rotator);
+                    let label = document.createElement('div'); label.className = 'f2d-label'; label.textContent = var1 ? `📷 (${var1})` : '📷 Kamera'; el.appendChild(label);
+                    obj.resultEl = el.querySelector('.f2d-insp-cam-result');
+                },
+                animate(obj, spsState) {
+                    if (obj._lastResult !== undefined && obj.linkedVar) {
+                        spsState[obj.linkedVar] = (obj._lastResult === 'OK');
+                    }
+                },
+                physics(obj, item) {
+                    // Detektionszone: Beam unterhalb der Kamera
+                    let bx = obj.x + 2, by = obj.y + obj.height, bw = obj.width - 4, bh = 72;
+                    let inBeam = isBlockInLocalRect(item, { x: bx, y: by, rotation: 0 }, 0, 0, bw, bh);
+                    if (inBeam) {
+                        if (!item._camScanned) {
+                            item._camScanned = true;
+                            let result = item.quality || 'OK';
+                            obj._lastResult = result;
+                            if (obj.resultEl) {
+                                obj.resultEl.textContent = result;
+                                obj.resultEl.className = 'f2d-insp-cam-result ' + result.toLowerCase();
+                            }
+                            obj.el.classList.add('scanning');
+                            clearTimeout(obj._scanTimer);
+                            obj._scanTimer = setTimeout(() => obj.el && obj.el.classList.remove('scanning'), 380);
+                        }
+                    } else {
+                        item._camScanned = false;
+                    }
+                }
+            },
+            // =========================================================
+            // 🦾 2D-ROBOTERARM (SCARA Pick & Place)
+            // =========================================================
+            'robot_arm_2d': {
+                i18n: { de: { name: '2D-Roboterarm', desc: 'SCARA Pick & Place Roboter (2 Achsen, Pfadverfolgung)' }, en: { name: '2D Robot Arm', desc: 'SCARA Pick & Place robot (2 axes, path following)' } },
+                meta: { icon: '🦾' },
+                menuTarget: '#menu-aktoren',
+                insertBefore: '#menu-act-cat-env',
+                directSpawn: true,
+                menuHtml: `<div onclick="addFactoryDevice('robot_arm_2d')">🦾 <span data-i18n="plug_robot_arm_2d_name">2D-Roboterarm</span></div>`,
+                css: `
+                    .f2d-robot-arm { position:absolute; overflow:visible; z-index:15; cursor:move; }
+                    .f2d-robot-arm > svg { overflow:visible; position:absolute; top:0; left:0; }
+                    .f2d-ra-base { fill:#455a64; stroke:#78909c; stroke-width:2; }
+                    .f2d-ra-joint { fill:#546e7a; stroke:#78909c; stroke-width:1.5; }
+                    .f2d-ra-link1 { stroke:#78909c; stroke-width:8; stroke-linecap:round; }
+                    .f2d-ra-link2 { stroke:#546e7a; stroke-width:6; stroke-linecap:round; }
+                    .f2d-ra-grip { fill:none; stroke:#4caf50; stroke-width:3; stroke-linecap:round; transition:stroke 0.1s; }
+                    .f2d-ra-grip.closed { stroke:#ef5350; }
+                    .f2d-ra-grip-line { stroke:inherit; stroke-width:2.5; }
+                    .f2d-ra-reach { fill:rgba(33,150,243,0.06); stroke:rgba(33,150,243,0.25); stroke-width:1; stroke-dasharray:5 4; }
+                `,
+                build(obj, el) {
+                    obj.arm1Len = 80; obj.arm2Len = 60;
+                    obj.targetX = 0; obj.targetY = obj.arm1Len + obj.arm2Len;
+                    obj.isGrabbing = false; obj.grabbedItem = null;
+                    obj.width = 24; obj.height = 24;
+                    obj.useCollision = false;
+                    el.className = 'f2d-obj f2d-robot-arm';
+                    el.style.width = '24px'; el.style.height = '24px';
+                    let svgNS = 'http://www.w3.org/2000/svg';
+                    let svg = document.createElementNS(svgNS, 'svg');
+                    svg.setAttribute('width','1'); svg.setAttribute('height','1');
+                    svg.style.overflow = 'visible';
+                    // Reach circle
+                    let reach = document.createElementNS(svgNS,'circle'); reach.setAttribute('class','f2d-ra-reach');
+                    reach.setAttribute('cx','0'); reach.setAttribute('cy','0'); reach.setAttribute('r', String(obj.arm1Len + obj.arm2Len));
+                    svg.appendChild(reach);
+                    // Links
+                    let link1 = document.createElementNS(svgNS,'line'); link1.setAttribute('class','f2d-ra-link1'); link1.setAttribute('x1','0'); link1.setAttribute('y1','0'); link1.setAttribute('x2','0'); link1.setAttribute('y2','80');
+                    let link2 = document.createElementNS(svgNS,'line'); link2.setAttribute('class','f2d-ra-link2'); link2.setAttribute('x1','0'); link2.setAttribute('y1','80'); link2.setAttribute('x2','0'); link2.setAttribute('y2','140');
+                    // Joints
+                    let joint1 = document.createElementNS(svgNS,'circle'); joint1.setAttribute('class','f2d-ra-joint'); joint1.setAttribute('cx','0'); joint1.setAttribute('cy','0'); joint1.setAttribute('r','7');
+                    let joint2 = document.createElementNS(svgNS,'circle'); joint2.setAttribute('class','f2d-ra-joint'); joint2.setAttribute('cx','0'); joint2.setAttribute('cy','80'); joint2.setAttribute('r','5');
+                    // Gripper
+                    let gripG = document.createElementNS(svgNS,'g'); gripG.setAttribute('class','f2d-ra-grip');
+                    let gripCirc = document.createElementNS(svgNS,'circle'); gripCirc.setAttribute('cx','0'); gripCirc.setAttribute('cy','0'); gripCirc.setAttribute('r','8');
+                    let gripL1 = document.createElementNS(svgNS,'line'); gripL1.setAttribute('class','f2d-ra-grip-line'); gripL1.setAttribute('x1','-6'); gripL1.setAttribute('y1','6'); gripL1.setAttribute('x2','-6'); gripL1.setAttribute('y2','12');
+                    let gripL2 = document.createElementNS(svgNS,'line'); gripL2.setAttribute('class','f2d-ra-grip-line'); gripL2.setAttribute('x1','6'); gripL2.setAttribute('y1','6'); gripL2.setAttribute('x2','6'); gripL2.setAttribute('y2','12');
+                    gripG.appendChild(gripCirc); gripG.appendChild(gripL1); gripG.appendChild(gripL2);
+                    // Base
+                    let base = document.createElementNS(svgNS,'circle'); base.setAttribute('class','f2d-ra-base'); base.setAttribute('cx','0'); base.setAttribute('cy','0'); base.setAttribute('r','12');
+                    svg.appendChild(link1); svg.appendChild(link2); svg.appendChild(joint1); svg.appendChild(joint2); svg.appendChild(gripG); svg.appendChild(base);
+                    el.appendChild(svg);
+                    let rotator = document.createElement('div'); rotator.className = 'f2d-rotate-handle'; el.appendChild(rotator);
+                    let label = document.createElement('div'); label.className = 'f2d-label'; label.textContent = '🦾 Roboter'; el.appendChild(label);
+                    obj._svgLink1 = link1; obj._svgLink2 = link2; obj._svgJoint2 = joint2; obj._svgGripG = gripG; obj._svgReach = reach;
+                },
+                animate(obj, spsState) {
+                    let speed = (obj.pathSpeed || 2.5) * (window.simSpeed || 1);
+                    if (obj.pathEnabled && obj.waypoints && obj.waypoints.length >= 2) {
+                        let pathActive = !obj.linkedVarEnable || !!spsState[obj.linkedVarEnable];
+                        if (pathActive) window._robotFollowPath(obj, speed);
+                    } else {
+                        if (spsState[obj.linkedVarX_Plus])  obj.targetX += speed;
+                        if (spsState[obj.linkedVarX_Minus]) obj.targetX -= speed;
+                        if (spsState[obj.linkedVarY_Plus])  obj.targetY += speed;
+                        if (spsState[obj.linkedVarY_Minus]) obj.targetY -= speed;
+                    }
+                    window._robotUpdateIK(obj);
+                    let grabNow = !!spsState[obj.linkedVarGrab];
+                    obj.isGrabbing = grabNow;
+                    if (obj._svgGripG) obj._svgGripG.classList.toggle('closed', grabNow);
+                    if (obj.grabbedItem && (!grabNow || !factoryItems.includes(obj.grabbedItem))) {
+                        if (obj.grabbedItem) obj.grabbedItem.useGravity = true;
+                        obj.grabbedItem = null;
+                    }
+                    if (obj.grabbedItem) {
+                        let gx = obj.x + (obj._gripperX || 0), gy = obj.y + (obj._gripperY || 0);
+                        obj.grabbedItem.x = gx - obj.grabbedItem.width / 2;
+                        obj.grabbedItem.y = gy - obj.grabbedItem.height / 2;
+                        updateObjTransform(obj.grabbedItem);
+                    }
+                },
+                physics(obj, item, isActive) {
+                    if (!obj.isGrabbing || obj.grabbedItem) return;
+                    let gx = obj.x + (obj._gripperX || 0), gy = obj.y + (obj._gripperY || 0);
+                    let dx = (item.x + item.width / 2) - gx, dy = (item.y + item.height / 2) - gy;
+                    if (Math.sqrt(dx * dx + dy * dy) < 22) {
+                        obj.grabbedItem = item;
+                        item.useGravity = false;
+                        item.vx = 0; item.vy = 0;
+                    }
+                },
+                contextMenu(obj, ctxMenu, saveCallback) {
+                    let sep = document.createElement('div'); sep.style.borderTop = '1px solid #555'; sep.style.margin = '5px 0'; ctxMenu.appendChild(sep);
+                    // Info-Box
+                    let infoToggle = document.createElement('div'); infoToggle.style.padding = '4px 15px'; infoToggle.style.cursor = 'pointer'; infoToggle.onclick = e => { e.stopPropagation(); infoBox.style.display = infoBox.style.display === 'none' ? 'block' : 'none'; };
+                    infoToggle.innerHTML = `<span style="color:#ffb300;font-size:10px;">ℹ️ Variablen-Hilfe anzeigen</span>`;
+                    ctxMenu.appendChild(infoToggle);
+                    let infoBox = document.createElement('div'); infoBox.style.display = 'none'; infoBox.style.padding = '5px 15px'; infoBox.style.background = '#1a2a3a'; infoBox.style.margin = '0 0 4px'; infoBox.style.fontSize = '9.5px'; infoBox.style.lineHeight = '1.5'; infoBox.onclick = e => e.stopPropagation();
+                    infoBox.innerHTML = `<div style="color:#ffb300;font-weight:bold;margin-bottom:3px;">Modus 1 – Manuell (SPS-Jogging)</div>
+<div style="color:#aaa;"><b style="color:#fff">X+ / X−</b> → SPS-Ausgänge: Greifer fährt horizontal<br><b style="color:#fff">Y+ / Y−</b> → SPS-Ausgänge: Greifer fährt vertikal<br><b style="color:#fff">Greifer</b> → SPS-Ausgang: HIGH = Werkstück greifen<br><span style="color:#64b5f6">✦ Variablen im VALIS-Code als Ausgänge deklarieren (A_...)</span></div>
+<div style="color:#ffb300;font-weight:bold;margin:4px 0 2px;">Modus 2 – Pfadverfolgung</div>
+<div style="color:#aaa;">Pfad über Rechtsklick → <i>Pfad bearbeiten</i> festlegen.<br>Aktivieren: <i>Pfadverfolgung aktivieren</i><br><b style="color:#fff">Aktivierung</b> → SPS-Ausgang: HIGH = Pfad abfahren (optional, ohne Variable immer aktiv)<br>Der Arm ignoriert X+/X− und folgt dem Pfad automatisch.<br><b style="color:#fff">Greifer-Variable weiterhin gültig.</b><br><span style="color:#64b5f6">✦ Startpunkt anklicken (Fang) → Pfad automatisch schließen (Loop)</span></div>`;
+                    ctxMenu.appendChild(infoBox);
+                    let title = document.createElement('div'); title.style.padding = '0 10px 3px'; title.style.color = '#03a9f4'; title.style.fontSize = '10px'; title.style.fontWeight = 'bold'; title.textContent = '🦾 Achsen-Variablen (SPS-Ausgänge):'; ctxMenu.appendChild(title);
+                    const createVarSel = (label, propName) => {
+                        let wrap = document.createElement('div'); wrap.style.padding = '2px 15px'; wrap.onclick = e => e.stopPropagation();
+                        wrap.innerHTML = `<div style="color:#aaa;font-size:10px;margin-bottom:1px;">🔌 ${label}</div>`;
+                        let sel = document.createElement('select');
+                        sel.style.cssText = "width:100%;padding:2px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;font-size:10px;outline:none;cursor:pointer;";
+                        let optN = document.createElement('option'); optN.value = ''; optN.textContent = '-- Keine --'; sel.appendChild(optN);
+                        globalOutputs.forEach(o => { let op = document.createElement('option'); op.value = o; op.textContent = o; if (o === obj[propName]) op.selected = true; sel.appendChild(op); });
+                        sel.onchange = e => { obj[propName] = e.target.value || null; saveCallback(); };
+                        wrap.appendChild(sel); ctxMenu.appendChild(wrap);
+                    };
+                    createVarSel('X+ (Ausfahren rechts)', 'linkedVarX_Plus');
+                    createVarSel('X- (Einfahren links)', 'linkedVarX_Minus');
+                    createVarSel('Y+ (Abwärts)', 'linkedVarY_Plus');
+                    createVarSel('Y- (Aufwärts)', 'linkedVarY_Minus');
+                    createVarSel('Greifer (Greifen/Halten)', 'linkedVarGrab');
+                    createVarSel('Aktivierung Pfadmodus (optional)', 'linkedVarEnable');
+                    let sep2 = document.createElement('div'); sep2.style.borderTop = '1px solid #555'; sep2.style.margin = '5px 0'; ctxMenu.appendChild(sep2);
+                    // Path speed
+                    let speedWrap = document.createElement('div'); speedWrap.style.padding = '3px 15px'; speedWrap.onclick = e => e.stopPropagation();
+                    speedWrap.innerHTML = `<div style="color:#aaa;font-size:10px;margin-bottom:3px;">⚡ Pfadgeschwindigkeit (px/Frame)</div>`;
+                    let speedInp = document.createElement('input'); speedInp.type = 'number'; speedInp.min = '0.1'; speedInp.max = '20'; speedInp.step = '0.1'; speedInp.value = obj.pathSpeed || 2.5;
+                    speedInp.style.cssText = "width:100%;padding:3px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;font-size:10px;box-sizing:border-box;";
+                    speedInp.onclick = e => e.stopPropagation();
+                    speedInp.onchange = e => { obj.pathSpeed = Math.max(0.1, +e.target.value || 2.5); saveCallback(); };
+                    speedWrap.appendChild(speedInp); ctxMenu.appendChild(speedWrap);
+                    let lenWrap = document.createElement('div'); lenWrap.style.padding = '3px 15px'; lenWrap.onclick = e => e.stopPropagation();
+                    lenWrap.innerHTML = `<div style="color:#aaa;font-size:10px;margin-bottom:3px;">📏 Arm 1 / Arm 2 Länge (px)</div>`;
+                    let inp1style = "width:47%;padding:3px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;font-size:10px;box-sizing:border-box;";
+                    let inp1 = document.createElement('input'); inp1.type='number'; inp1.min='20'; inp1.max='300'; inp1.value = obj.arm1Len||80; inp1.style.cssText = inp1style + 'margin-right:3px;';
+                    let inp2 = document.createElement('input'); inp2.type='number'; inp2.min='20'; inp2.max='300'; inp2.value = obj.arm2Len||60; inp2.style.cssText = inp1style;
+                    inp1.onclick = e => e.stopPropagation(); inp2.onclick = e => e.stopPropagation();
+                    inp1.onchange = e => { obj.arm1Len = +e.target.value || 80; if (obj._svgReach) obj._svgReach.setAttribute('r', String(obj.arm1Len + (obj.arm2Len||60))); saveCallback(); };
+                    inp2.onchange = e => { obj.arm2Len = +e.target.value || 60; if (obj._svgReach) obj._svgReach.setAttribute('r', String((obj.arm1Len||80) + obj.arm2Len)); saveCallback(); };
+                    lenWrap.appendChild(inp1); lenWrap.appendChild(inp2); ctxMenu.appendChild(lenWrap);
+                    let pathToggle = document.createElement('div'); pathToggle.className = 'ctx-item';
+                    pathToggle.textContent = obj.pathEnabled ? '⏹ Pfadverfolgung deaktivieren' : '▶ Pfadverfolgung aktivieren';
+                    pathToggle.onclick = () => { obj.pathEnabled = !obj.pathEnabled; saveCallback(); };
+                    ctxMenu.appendChild(pathToggle);
+                    let pathEdit = document.createElement('div'); pathEdit.className = 'ctx-item';
+                    pathEdit.textContent = '✏️ Pfad bearbeiten';
+                    pathEdit.onclick = () => {
+                        document.getElementById('factory-context-menu').style.display = 'none';
+                        window._startPathEdit(obj);
+                    };
+                    ctxMenu.appendChild(pathEdit);
+                }
+            },
 			'hmi_panel': {
                 directSpawn: true, hasHeight: true, noRotate: true, noRodAttach: true,
                 i18n: {
@@ -9127,8 +10127,21 @@ You must output exactly this JSON format. The logic code goes as a single string
                         if (i === currentVal) o.selected = true;
                         sel.appendChild(o);
                     });
+                    // "+ Neue Variable anlegen"
+                    let optNew = document.createElement('option'); optNew.value = '__new__'; optNew.textContent = '＋ Neue Variable anlegen…'; optNew.style.color = '#4caf50'; sel.appendChild(optNew);
                     sel.onchange = (e) => {
-                        obj[varProp] = e.target.value || null;
+                        if (e.target.value === '__new__') {
+                            let name = prompt('Variablenname (z.B. E_START oder A_BAND):', '');
+                            if (name) {
+                                name = name.trim().toUpperCase().replace(/\s+/g,'_');
+                                if (listType === 'in' && !globalInputs.includes(name)) globalInputs.push(name);
+                                if (listType === 'out' && !globalOutputs.includes(name)) globalOutputs.push(name);
+                                let newOpt = document.createElement('option'); newOpt.value = name; newOpt.textContent = name;
+                                sel.insertBefore(newOpt, optNew);
+                                sel.value = name;
+                            } else { sel.value = obj[varProp] || ''; return; }
+                        }
+                        obj[varProp] = (sel.value && sel.value !== '__new__') ? sel.value : null;
                         let v1 = obj.linkedVar || obj.linkedVarExt || ''; let v2 = obj.linkedVarRet || '';
                         if (['taster', 'schalter', 'nothalt', 'led'].includes(obj.type)) {
                             let span = obj.el.querySelector('span'); if (span) span.textContent = v1 ? (v1.length > 5 ? v1.substring(0,4)+'..' : v1) : '---';
@@ -9288,6 +10301,37 @@ You must output exactly this JSON format. The logic code goes as a single string
                     if (newVal > 0) { obj.meltTemp = newVal; saveFactoryState(); }
                 };
                 meltWrapper.appendChild(meltInput); ctxMenu.appendChild(meltWrapper);
+                // Qualitätsverteilung
+                let qWrap = document.createElement('div'); qWrap.style.padding = '5px 15px'; qWrap.onclick = e => e.stopPropagation();
+                qWrap.innerHTML = `<div style="color:#aaa;font-size:10px;margin-bottom:3px;">🔍 Qualitätsverteilung</div>`;
+                let qSel = document.createElement('select');
+                qSel.style.cssText = "width:100%;padding:4px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;font-size:11px;margin-bottom:4px;";
+                [['always_ok','Immer OK (Standard)'],['random','Zufällig (Chance)'],['every_n','Jedes n-te NOK'],['always_nok','Immer NOK']].forEach(([v,t]) => {
+                    let o = document.createElement('option'); o.value = v; o.textContent = t;
+                    if ((obj.qualityMode || 'always_ok') === v) o.selected = true;
+                    qSel.appendChild(o);
+                });
+                qWrap.appendChild(qSel);
+                let qChanceWrap = document.createElement('div'); qChanceWrap.style.marginTop = '3px';
+                qChanceWrap.innerHTML = `<div style="color:#aaa;font-size:9px;margin-bottom:2px;">OK-Wahrscheinlichkeit: <span id="_qcv_${obj.id}">${Math.round((obj.qualityChance??0.8)*100)}</span>%</div>`;
+                let qChanceSlider = document.createElement('input'); qChanceSlider.type = 'range'; qChanceSlider.min = '0'; qChanceSlider.max = '100'; qChanceSlider.value = Math.round((obj.qualityChance??0.8)*100);
+                qChanceSlider.style.width = '100%';
+                qChanceSlider.oninput = e => { obj.qualityChance = e.target.value/100; qChanceWrap.querySelector(`#_qcv_${obj.id}`).textContent = e.target.value; saveFactoryState(); };
+                qChanceWrap.appendChild(qChanceSlider); qWrap.appendChild(qChanceWrap);
+                let qNthWrap = document.createElement('div'); qNthWrap.style.marginTop = '3px';
+                qNthWrap.innerHTML = `<div style="color:#aaa;font-size:9px;margin-bottom:2px;">Jedes wievielte Teil ist NOK:</div>`;
+                let qNthInp = document.createElement('input'); qNthInp.type = 'number'; qNthInp.min = '2'; qNthInp.max = '100'; qNthInp.value = obj.qualityNth || 3;
+                qNthInp.style.cssText = "width:100%;padding:4px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;font-size:11px;";
+                qNthInp.onchange = e => { obj.qualityNth = parseInt(e.target.value)||3; saveFactoryState(); };
+                qNthWrap.appendChild(qNthInp); qWrap.appendChild(qNthWrap);
+                function _updateQUI() {
+                    let m = obj.qualityMode || 'always_ok';
+                    qChanceWrap.style.display = m === 'random' ? 'block' : 'none';
+                    qNthWrap.style.display = m === 'every_n' ? 'block' : 'none';
+                }
+                qSel.onchange = e => { obj.qualityMode = e.target.value; _updateQUI(); saveFactoryState(); };
+                _updateQUI();
+                ctxMenu.appendChild(qWrap);
             }
             if (obj.type && obj.type.startsWith('zylinder')) {
                 let associatedValve = factoryObjects.find(o => o.type === 'valve_pneu' && o.targetCylinderId === obj.id);
@@ -9447,14 +10491,7 @@ You must output exactly this JSON format. The logic code goes as a single string
                 btnSnip.onclick = () => { ctxMenu.style.display = 'none'; saveAsSnippet(targets); };
                 ctxMenu.appendChild(btnSnip);
             }
-            let wrapRect = document.getElementById('factory-wrapper').getBoundingClientRect();
-            ctxMenu.style.left = (x - wrapRect.left) + 'px'; ctxMenu.style.top = (y - wrapRect.top) + 'px'; ctxMenu.style.display = 'block';
-            requestAnimationFrame(() => {
-                let mr = ctxMenu.getBoundingClientRect();
-                let vw = window.innerWidth, vh = window.innerHeight;
-                if (mr.right > vw) ctxMenu.style.left = (parseFloat(ctxMenu.style.left) - (mr.right - vw)) + 'px';
-                if (mr.bottom > vh) ctxMenu.style.top = (parseFloat(ctxMenu.style.top) - (mr.bottom - vh)) + 'px';
-            });
+            _positionContextMenu(x, y);
         }
         function deleteObjRecursive(obj) {
             obj.el.remove(); factoryObjects = factoryObjects.filter(o => o !== obj); factoryItems = factoryItems.filter(o => o !== obj); 
@@ -9673,9 +10710,15 @@ You must output exactly this JSON format. The logic code goes as a single string
                         let isActive = obj.linkedVar ? resolveLinked(obj, spsState) : true;
                         if (isActive) {
                             obj.timeAccum = (obj.timeAccum || 0) + deltaMs;
-                            if (obj.timeAccum >= obj.interval * 1000) { 
-                                obj.timeAccum -= obj.interval * 1000; 
+                            if (obj.timeAccum >= obj.interval * 1000) {
+                                obj.timeAccum -= obj.interval * 1000;
+                                obj._spawnCount = (obj._spawnCount || 0) + 1;
+                                let _spQuality = 'OK';
+                                if (obj.qualityMode === 'always_nok') _spQuality = 'NOK';
+                                else if (obj.qualityMode === 'random') _spQuality = Math.random() < (obj.qualityChance ?? 0.8) ? 'OK' : 'NOK';
+                                else if (obj.qualityMode === 'every_n') _spQuality = (obj._spawnCount % (obj.qualityNth || 3) === 0) ? 'NOK' : 'OK';
                                 spawnFactoryItem(obj.type.includes('metall') ? 'metall' : 'kunststoff', obj.x + 5, obj.y + 5, obj.spawnSolid, obj.meltTemp);
+                                if (factoryItems.length > 0) factoryItems[factoryItems.length - 1].quality = _spQuality;
                             }
                         } else { 
                             obj.timeAccum = 0; 
@@ -9683,7 +10726,7 @@ You must output exactly this JSON format. The logic code goes as a single string
                     } else if (obj.type === 'despawner') {
                         factoryItems = factoryItems.filter(item => {
                             if (draggedElement && draggedElement.data === item) return true;
-                            if (isBlockInLocalRect(item, obj, 0, 0, obj.width, obj.height)) { item.el.remove(); return false; }
+                            if (isBlockInLocalRect(item, obj, 0, 0, obj.width, obj.height)) { if (activeTask) taskDespawnCount++; item.el.remove(); return false; }
                             return true;
                         });
                     }
@@ -10038,11 +11081,21 @@ You must output exactly this JSON format. The logic code goes as a single string
             if (typeof window.drawPneumaticHoses === 'function') {
                 window.drawPneumaticHoses();
             }
+            if (typeof window._renderPathOverlay === 'function' && (_minimapFrame % 4 === 0 || window.pathEditingObj)) {
+                window._renderPathOverlay();
+            }
             if (++_minimapFrame % 6 === 0) renderMinimap(); // ~10fps Minimap-Update
             requestAnimationFrame(factoryLoop);
         }
+        function _ensurePathSvg() {
+            if (!document.getElementById('factory-path-svg')) {
+                let s = document.createElementNS('http://www.w3.org/2000/svg','svg');
+                s.id = 'factory-path-svg'; s.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:98;overflow:visible;';
+                factoryCanvas.insertBefore(s, factoryCanvas.firstChild);
+            }
+        }
         window.clearFactory = function(force = false) {
-            factoryCanvas.innerHTML = ''; factoryObjects = []; factoryItems = []; factoryPins = []; draggedElement = null; resizingElement = null; resizingElementXY = null; rotatingElement = null; clearSelection(); ctxMenu.style.display = 'none'; saveFactoryState();
+            factoryCanvas.innerHTML = ''; factoryObjects = []; factoryItems = []; factoryPins = []; draggedElement = null; resizingElement = null; resizingElementXY = null; rotatingElement = null; clearSelection(); ctxMenu.style.display = 'none'; _ensurePathSvg(); saveFactoryState();
         };
 		// 🌟 NEU: Funktion für den Klick auf den Zuweisungs-Button
         window.assignKey = function(varName) {
@@ -10225,11 +11278,13 @@ You must output exactly this JSON format. The logic code goes as a single string
                     // 🌟 FIX: opening für Drosseln, extension für Zylinder-Anbauteile hinzugefügt!
                     thickness: o.thickness, speed: o.speed, heatingPower: o.heatingPower, meltTemp: o.meltTemp, opening: o.opening, extension: (o.extension !== undefined ? Math.round(o.extension) : undefined),
                     linkedVar: o.linkedVar, linkedVarExt: o.linkedVarExt, linkedVarRet: o.linkedVarRet, linkedVar3: o.linkedVar3, spawnSolid: o.spawnSolid, linkedFormula: o.linkedFormula || null,
+                    qualityMode: o.qualityMode, qualityChance: o.qualityChance, qualityNth: o.qualityNth,
+                    waypoints: o.waypoints || null, pathMode: o.pathMode || null, pathEnabled: o.pathEnabled || false, pathLoop: o.pathLoop || false, arm1Len: o.arm1Len, arm2Len: o.arm2Len, targetX: o.targetX, targetY: o.targetY,
                     hasPneumatics: o.hasPneumatics, targetCylinderId: o.targetCylinderId, role: o.role, isDouble: o.isDouble,
                     // 🌟 FIX: parentId und attachmentType MÜSSEN gespeichert werden, sonst fällt der Stempel ab!
                     parentId: o.parent ? o.parent.id : null, attachmentType: o.attachmentType, normLabel: o.normLabel, originalLabelText: o.originalLabelText,
                     color: o.color, interval: o.interval, useCollision: o.useCollision, labelPinned: o.labelPinned, muteSound: o.muteSound, locked: o.locked || false,
-					linkedVarX_Plus: o.linkedVarX_Plus, linkedVarX_Minus: o.linkedVarX_Minus, linkedVarY_Plus: o.linkedVarY_Plus, linkedVarY_Minus: o.linkedVarY_Minus, linkedVarGrab: o.linkedVarGrab, posX: o.posX, posY: o.posY,
+					linkedVarX_Plus: o.linkedVarX_Plus, linkedVarX_Minus: o.linkedVarX_Minus, linkedVarY_Plus: o.linkedVarY_Plus, linkedVarY_Minus: o.linkedVarY_Minus, linkedVarGrab: o.linkedVarGrab, linkedVarEnable: o.linkedVarEnable || null, pathSpeed: o.pathSpeed || null, posX: o.posX, posY: o.posY,
                     groupId: o.groupId || null
                 }))
             };
@@ -10266,7 +11321,7 @@ You must output exactly this JSON format. The logic code goes as a single string
             isLoadingFactory = true;
             try {
                 let state = JSON.parse(saved);
-                factoryCanvas.innerHTML = ''; factoryObjects = []; factoryItems = []; factoryPins = []; clearSelection();
+                factoryCanvas.innerHTML = ''; factoryObjects = []; factoryItems = []; factoryPins = []; clearSelection(); _ensurePathSvg();
                 if (state.pins) state.pins.forEach(p => { factoryPins.push(p); createPinEl(p); });
                 if (state.globalViewMode) {
                     globalViewMode = state.globalViewMode;
@@ -10350,6 +11405,11 @@ You must output exactly this JSON format. The logic code goes as a single string
                     if (o.attachmentType) newObj.attachmentType = o.attachmentType;
 					if (o.heatingPower) newObj.heatingPower = o.heatingPower;
                     if (o.meltTemp) newObj.meltTemp = o.meltTemp;
+                    if (o.qualityMode) { newObj.qualityMode = o.qualityMode; newObj.qualityChance = o.qualityChance; newObj.qualityNth = o.qualityNth; }
+                    if (o.waypoints) { newObj.waypoints = o.waypoints; newObj.pathMode = o.pathMode || 'linear'; newObj.pathEnabled = o.pathEnabled || false; newObj.pathLoop = o.pathLoop || false; }
+                    if (o.arm1Len) { newObj.arm1Len = o.arm1Len; newObj.arm2Len = o.arm2Len; newObj.targetX = o.targetX || 0; newObj.targetY = o.targetY !== undefined ? o.targetY : (newObj.arm1Len + newObj.arm2Len); }
+                    if (o.linkedVarEnable) newObj.linkedVarEnable = o.linkedVarEnable;
+                    if (o.pathSpeed) newObj.pathSpeed = o.pathSpeed;
                     if (o.labelPinned) {
                         newObj.labelPinned = true;
                         if (newObj.labelEl) newObj.labelEl.classList.add('f2d-label-pinned');
@@ -10497,18 +11557,80 @@ You must output exactly this JSON format. The logic code goes as a single string
             btnDel.textContent = '🗑️ Pin löschen';
             btnDel.onclick = () => { deletePin(pin.id); ctxMenu.style.display = 'none'; };
             ctxMenu.appendChild(btnDel);
-            const wrapRect = document.getElementById('factory-wrapper').getBoundingClientRect();
-            ctxMenu.style.left = (x - wrapRect.left) + 'px'; ctxMenu.style.top = (y - wrapRect.top) + 'px'; ctxMenu.style.display = 'block';
+            _positionContextMenu(x, y);
         }
         function showCanvasContextMenu(x, y) {
             ctxMenu.innerHTML = '';
             const canvasRect = factoryCanvas.getBoundingClientRect();
             const canvasX = (x - canvasRect.left) / factoryScale;
             const canvasY = (y - canvasRect.top) / factoryScale;
-            const title = document.createElement('div');
-            title.style.cssText = 'padding:5px 15px;color:#aaa;font-size:10px;border-bottom:1px solid #555;cursor:default;';
-            title.textContent = `📍 X: ${Math.round(canvasX)} | Y: ${Math.round(canvasY)}`;
-            ctxMenu.appendChild(title);
+            // --- Komponenten-Suche ---
+            let searchWrap = document.createElement('div'); searchWrap.style.cssText = 'padding:6px 10px 4px;border-bottom:1px solid #555;';
+            searchWrap.onclick = e => e.stopPropagation();
+            let searchInp = document.createElement('input'); searchInp.type = 'text'; searchInp.placeholder = '🔍 Komponente hinzufügen…';
+            searchInp.style.cssText = 'width:100%;padding:4px 6px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:4px;font-size:11px;box-sizing:border-box;outline:none;';
+            searchWrap.appendChild(searchInp); ctxMenu.appendChild(searchWrap);
+            let suggestList = document.createElement('div'); suggestList.style.cssText = 'max-height:180px;overflow-y:auto;';
+            ctxMenu.appendChild(suggestList);
+            // Build component list: ComponentRegistry + built-in types not in registry
+            const lang = (window.currentLang || 'de');
+            const builtins = [
+                { key: 'conveyor',          label: 'Förderband',             icon: '🛤️' },
+                { key: 'zylinder_single',   label: 'Zylinder (Einfach)',     icon: '🦾' },
+                { key: 'zylinder_double',   label: 'Zylinder (Doppelt)',     icon: '🦾' },
+                { key: 'taster',            label: 'Taster (Schließer)',     icon: '🟢' },
+                { key: 'schalter',          label: 'Schalter (rastend)',     icon: '🎚️' },
+                { key: 'nothalt',           label: 'Not-Halt (Öffner)',      icon: '🍄' },
+                { key: 'led',               label: 'Meldeleuchte (LED)',     icon: '💡' },
+                { key: 'sensor_ind',        label: 'Sensor Induktiv',        icon: '🧲' },
+                { key: 'sensor_kap',        label: 'Sensor Kapazitiv',       icon: '🔋' },
+                { key: 'sensor_opt',        label: 'Sensor Optisch',         icon: '🔦' },
+                { key: 'sensor_mag',        label: 'Sensor Magnetisch',      icon: '🧲' },
+                { key: 'spawner_metall',    label: 'Spawner (Metall)',       icon: '⏳' },
+                { key: 'spawner_kunststoff',label: 'Spawner (Kunststoff)',   icon: '⏳' },
+                { key: 'despawner',         label: 'Despawner',              icon: '🗑️' },
+                { key: 'wall',              label: 'Ziegelwand',             icon: '🧱' },
+                { key: 'frame',             label: 'Metallrahmen / Boden',   icon: '⛓️' },
+                { key: 'zone_top',          label: 'Zone (Draufsicht)',      icon: '🛸' },
+                { key: 'zone_side',         label: 'Zone (Seitenansicht)',   icon: '🌍' },
+            ];
+            const registryComponents = Object.entries(ComponentRegistry)
+                .filter(([k, v]) => !v.hideFromPluginManager && !builtins.find(b => b.key === k))
+                .map(([k, v]) => {
+                    let label = (v.i18n && v.i18n[lang] && v.i18n[lang].name) || (v.i18n && v.i18n.de && v.i18n.de.name) || k;
+                    let icon = (v.meta && v.meta.icon) || '⚙️';
+                    return { key: k, label, icon };
+                });
+            const allComponents = [...builtins, ...registryComponents]
+                .sort((a, b) => a.label.localeCompare(b.label));
+            const renderSuggestions = (filter) => {
+                suggestList.innerHTML = '';
+                const matches = filter.trim() === '' ? allComponents : allComponents.filter(c =>
+                    c.label.toLowerCase().includes(filter.toLowerCase()) || c.key.toLowerCase().includes(filter.toLowerCase())
+                );
+                matches.slice(0, 12).forEach(c => {
+                    let item = document.createElement('div'); item.className = 'ctx-item';
+                    item.style.cssText = 'padding:4px 12px;font-size:11px;display:flex;align-items:center;gap:6px;';
+                    item.innerHTML = `<span>${c.icon}</span><span>${c.label}</span><span style="color:#555;font-size:9px;margin-left:auto;">${c.key}</span>`;
+                    item.onmousedown = e => { e.preventDefault(); ctxMenu.style.display = 'none'; addFactoryDevice(c.key); };
+                    suggestList.appendChild(item);
+                });
+                if (matches.length === 0) {
+                    let none = document.createElement('div'); none.style.cssText = 'padding:6px 12px;color:#555;font-size:10px;';
+                    none.textContent = 'Keine Treffer'; suggestList.appendChild(none);
+                }
+            };
+            renderSuggestions('');
+            searchInp.oninput = () => renderSuggestions(searchInp.value);
+            searchInp.onkeydown = e => {
+                if (e.key === 'Escape') { ctxMenu.style.display = 'none'; e.stopPropagation(); }
+                if (e.key === 'Enter') {
+                    let first = suggestList.querySelector('.ctx-item');
+                    if (first) first.onmousedown(e);
+                }
+            };
+            // --- Standard-Aktionen ---
+            let sep = document.createElement('div'); sep.style.cssText = 'border-top:1px solid #444;margin:2px 0;'; ctxMenu.appendChild(sep);
             const btnPin = document.createElement('div'); btnPin.className = 'ctx-item';
             btnPin.textContent = '📌 Kommentar-Pin einfügen';
             btnPin.onclick = () => { addPin(canvasX, canvasY); ctxMenu.style.display = 'none'; };
@@ -10523,8 +11645,8 @@ You must output exactly this JSON format. The logic code goes as a single string
             btnLib.textContent = '📚 Snippet-Bibliothek öffnen';
             btnLib.onclick = () => { ctxMenu.style.display = 'none'; openSnippetLibrary(); };
             ctxMenu.appendChild(btnLib);
-            const wrapRect = document.getElementById('factory-wrapper').getBoundingClientRect();
-            ctxMenu.style.left = (x - wrapRect.left) + 'px'; ctxMenu.style.top = (y - wrapRect.top) + 'px'; ctxMenu.style.display = 'block';
+            _positionContextMenu(x, y);
+            requestAnimationFrame(() => searchInp.focus());
         }
 
         // ==========================================
@@ -11787,6 +12909,7 @@ You must output exactly this JSON format. The logic code goes as a single string
         Object.entries(userPlugins).forEach(([key, code]) => {
             try {
                 const def = new Function('return (' + code + ')')();
+                if (ComponentRegistry[key] && ComponentRegistry[key].hideFromPluginManager) return;
                 def.isUserPlugin = true;
                 ComponentRegistry[key] = def;
                 if (def.i18n) {
@@ -12114,26 +13237,38 @@ You must output exactly this JSON format. The logic code goes as a single string
 
             // Reset to measure natural single-column height
             content.classList.remove('multi-col');
+            content.style.removeProperty('height');
             content.style.removeProperty('column-count');
             content.style.removeProperty('max-height');
 
-            const fw = document.getElementById('factory-wrapper');
-            const fwBottom = fw ? fw.getBoundingClientRect().bottom : window.innerHeight;
-            const available = Math.max(120, fwBottom - dd.getBoundingClientRect().bottom - 10);
+            const ca = document.getElementById('factory-canvas-area');
+            const caBottom = ca ? Math.min(ca.getBoundingClientRect().bottom, window.innerHeight) : window.innerHeight;
+            const available = Math.max(120, caBottom - dd.getBoundingClientRect().bottom - 10);
             const naturalH = content.scrollHeight;
 
             if (naturalH > available) {
-                const cols = Math.min(5, Math.ceil(naturalH / available));
+                const items = Array.from(content.children);
+                const col1 = document.createElement('div'); col1.className = 'dd-col';
+                const col2 = document.createElement('div'); col2.className = 'dd-col';
+                const half = Math.ceil(items.length / 2);
+                items.forEach((item, i) => { content.removeChild(item); (i < half ? col1 : col2).appendChild(item); });
+                content.appendChild(col1); content.appendChild(col2);
                 content.classList.add('multi-col');
-                content.style.columnCount = String(cols);
-                content.style.maxHeight = available + 'px';
             }
         }
 
         document.querySelectorAll('.tb-dropdown').forEach(dd => {
-            // Use rAF so the CSS :hover display:block is fully laid out before measuring
             dd.addEventListener('mouseenter', () => requestAnimationFrame(() => adjustDropdownLayout(dd)));
-            // Re-adjust on window resize while a menu might be open
+            dd.addEventListener('mouseleave', () => {
+                const content = dd.querySelector('.tb-dropdown-content');
+                if (!content || !content.classList.contains('multi-col')) return;
+                // Kinder aus Spalten-Divs zurück in content verschieben
+                content.querySelectorAll('.dd-col').forEach(col => {
+                    Array.from(col.children).forEach(child => content.appendChild(child));
+                    col.remove();
+                });
+                content.classList.remove('multi-col');
+            });
             window.addEventListener('resize', () => { if (dd.matches(':hover')) adjustDropdownLayout(dd); }, { passive: true });
         });
         // INITIALISIERUNG
