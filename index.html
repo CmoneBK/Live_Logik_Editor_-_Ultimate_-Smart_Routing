@@ -467,8 +467,9 @@
         .tb-dropdown { position: relative; display: inline-block; }
         .tb-dropdown-content { display: none; position: absolute; background-color: #2d2d30; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.6); z-index: 1000; border-radius: 4px; border: 1px solid #555; top: 100%; left: 0; }
         /* FIX: Wir sprechen nur noch direkte Listeneinträge an, damit Untermenüs nicht komplett blau aufleuchten! */
-        .tb-dropdown-content > div:not(.tb-submenu), .tb-submenu > div:first-child, .tb-submenu-content > div { color: white; padding: 10px 15px; font-size: 11px; cursor: pointer; border-bottom: 1px solid #444; font-weight: bold; transition: background 0.1s; }
-        .tb-dropdown-content > div:not(.tb-submenu):hover, .tb-submenu > div:first-child:hover, .tb-submenu-content > div:hover { background-color: #007acc; }
+        .tb-dropdown-content > div:not(.tb-submenu):not(.tb-col-wrap), .tb-submenu > div:first-child, .tb-submenu-content > div { color: white; padding: 10px 15px; font-size: 11px; cursor: pointer; border-bottom: 1px solid #444; font-weight: bold; transition: background 0.1s; }
+        .tb-dropdown-content > div:not(.tb-submenu):not(.tb-col-wrap):hover, .tb-submenu > div:first-child:hover, .tb-submenu-content > div:hover { background-color: #007acc; }
+        .tb-dropdown-content > .tb-col-wrap { padding: 0; border-bottom: none; cursor: default; }
         .tb-dropdown-content > div:last-child, .tb-submenu-content > div:last-child { border-bottom: none; }
         .tb-menu-cat { padding: 5px 12px 3px !important; color: #888 !important; font-size: 10px !important; text-transform: uppercase !important; letter-spacing: 0.8px !important; cursor: default !important; background: #252526 !important; font-weight: bold !important; pointer-events: none !important; border-top: 1px solid #3a3a3a !important; }
         .tb-menu-cat:hover { background: #252526 !important; }
@@ -949,14 +950,28 @@
             <div style="display: flex; gap: 5px; align-items: center; margin: 0 auto;">
                 <div class="tb-dropdown">
                     <button class="btn-export" id="btn-layout-text" style="background:#444; border:none; color:white; outline:none; cursor:pointer;">Layout: ◫</button>
-                    <div class="tb-dropdown-content" style="left: 50%; transform: translateX(-50%); min-width: 180px; text-align: left;">
-                        <div onclick="selectLayout('flex-row', '◫')" data-i18n="layout_row">◫ Nebeneinander</div>
-                        <div onclick="selectLayout('flex-col', '⬒')" data-i18n="layout_col">⬒ Untereinander</div>
-                        <div style="border-top: 1px solid #555; margin: 2px 0; padding: 0; pointer-events: none;"></div>
-                        <div onclick="selectLayout('grid-sim-bottom', '🗗')" data-i18n="layout_bottom">🗗 2D-Anlage unten</div>
-                        <div onclick="selectLayout('grid-sim-top', '🗒')" data-i18n="layout_top">🗒 2D-Anlage oben</div>
-                        <div onclick="selectLayout('grid-sim-right', '◧')" data-i18n="layout_right">◧ 2D-Anlage rechts</div>
-                        <div onclick="selectLayout('grid-sim-left', '◨')" data-i18n="layout_left">◨ 2D-Anlage links</div>
+                    <div class="tb-dropdown-content" style="left:50%;transform:translateX(-50%);min-width:340px;text-align:left;padding:0;">
+                      <div class="tb-col-wrap" style="display:flex;flex-direction:row;">
+                        <!-- Linke Spalte: Layout-Optionen -->
+                        <div style="flex:1;border-right:1px solid #444;">
+                            <div style="padding:5px 12px 3px;color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;background:#252526;border-bottom:1px solid #3a3a3a;font-weight:bold;">Layout</div>
+                            <div onclick="selectLayout('flex-row', '◫')" data-i18n="layout_row" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">◫ Nebeneinander</div>
+                            <div onclick="selectLayout('flex-col', '⬒')" data-i18n="layout_col" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">⬒ Untereinander</div>
+                            <div style="padding:5px 12px 3px;color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;background:#252526;border-bottom:1px solid #3a3a3a;border-top:1px solid #3a3a3a;font-weight:bold;" data-i18n="layout_cat_sim">2D-Anlage</div>
+                            <div onclick="selectLayout('grid-sim-bottom', '🗗')" data-i18n="layout_bottom" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">🗗 Unten</div>
+                            <div onclick="selectLayout('grid-sim-top', '🗒')" data-i18n="layout_top" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">🗒 Oben</div>
+                            <div onclick="selectLayout('grid-sim-right', '◧')" data-i18n="layout_right" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">◧ Rechts</div>
+                            <div onclick="selectLayout('grid-sim-left', '◨')" data-i18n="layout_left" style="padding:9px 14px;font-size:11px;cursor:pointer;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">◨ Links</div>
+                        </div>
+                        <!-- Rechte Spalte: Abkoppeln (Multi-Screen) -->
+                        <div style="flex:1;">
+                            <div style="padding:5px 12px 3px;color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;background:#252526;border-bottom:1px solid #3a3a3a;font-weight:bold;" data-i18n="layout_cat_detach">Abkoppeln</div>
+                            <div onclick="detachPanel('fbs-wrapper', 'Logikplan')" data-i18n="extra_detach_fbs" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">⏏️ Logikplan</div>
+                            <div onclick="detachPanel('circuit-wrapper', 'Schaltplan')" data-i18n="extra_detach_iec" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">⏏️ Schaltplan</div>
+                            <div onclick="detachPanel('factory-wrapper', '2D-Anlage')" data-i18n="extra_detach_fac" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">⏏️ 2D-Anlage</div>
+                            <div onclick="detachPanel('analyzer-modal', 'Oszilloskop')" data-i18n="extra_detach_osc" style="padding:9px 14px;font-size:11px;cursor:pointer;border-bottom:1px solid #444;font-weight:bold;color:white;transition:background 0.1s;" onmouseover="this.style.background='#007acc'" onmouseout="this.style.background=''">⏏️ Oszilloskop</div>
+                        </div>
+                      </div><!-- /flex-row wrapper -->
                     </div>
                 </div>
                 <button onclick="startTutorial()" class="btn-export" style="background-color: #5c6bc0; box-shadow: none;" title="Interaktive Schritt-für-Schritt-Tour">🎓 Tour</button>
@@ -973,15 +988,6 @@
                     <button id="btn-extras" class="btn-export" style="background-color: #607d8b; cursor: pointer;" data-i18n="btn_extras">🛠️ Extras ▼</button>
                     <div class="tb-dropdown-content" style="right: 0; left: auto; min-width: 240px; text-align: left;">
                         <div onclick="openAnalyzerModal()" data-i18n="extra_osc">📊 Oszilloskop öffnen</div>
-                        <div onclick="exportSVG('fbs')" data-i18n="extra_svg">📸 Logikplan als SVG speichern</div>
-                        <div onclick="exportSVG('iec')">📸 Schaltplan als SVG speichern</div>
-                        <div onclick="openPdfExportModal()">📄 Als PDF exportieren</div>
-                        <div onclick="exportSCL()" data-i18n="extra_scl">📤 Als Siemens SCL exportieren (TIA Portal)</div>
-                        <div style="border-top: 1px solid #555; margin: 2px 0;"></div>
-                        <div onclick="detachPanel('fbs-wrapper', 'Logikplan')" data-i18n="extra_detach_fbs">⏏️ Logikplan abkoppeln (Multi-Screen)</div>
-                        <div onclick="detachPanel('circuit-wrapper', 'Schaltplan')" data-i18n="extra_detach_iec">⏏️ Schaltplan abkoppeln (Multi-Screen)</div>
-                        <div onclick="detachPanel('factory-wrapper', '2D-Anlage')" data-i18n="extra_detach_fac">⏏️ 2D-Anlage abkoppeln (Multi-Screen)</div>
-                        <div onclick="detachPanel('analyzer-modal', 'Oszilloskop')" data-i18n="extra_detach_osc">⏏️ Oszilloskop abkoppeln (Multi-Screen)</div>
                     </div>
                 </div>
             </div>
@@ -1329,33 +1335,128 @@
                 <div class="examples-grid" id="examples-grid"></div>
             </div>
         </div>
-		<div id="saveload-modal" style="display: none; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.8); z-index: 2000; width: 500px;">
-            <h3 style="margin-top:0; color:#fff; border-bottom: 1px solid #555; padding-bottom: 10px;" data-i18n="sl_title">💾 Projekt Speichern & Laden</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button onclick="downloadValisave()" class="btn-export" style="background-color: #4caf50; flex: 1;" data-i18n="sl_btn_save">⬇️ Als .valisave speichern</button>
-                <button onclick="document.getElementById('valisave-upload').click()" class="btn-export" style="background-color: #ff9800; flex: 1;" data-i18n="sl_btn_load">⬆️ .valisave laden</button>
-                <input type="file" id="valisave-upload" accept=".valisave" style="display: none;" onchange="uploadValisave(event)">
-            </div>
-            <p style="color: #aaa; font-size: 11px; margin-bottom: 5px;" data-i18n="sl_txt_raw">Oder als Raw-Code kopieren / hier einfügen:</p>
-            <textarea id="saveload-text" spellcheck="false" style="width: 100%; height: 180px; background: #1e1e1e; color: #9cdcfe; border: 1px solid #555; border-radius: 3px; font-family: monospace; font-size: 11px; padding: 8px; box-sizing: border-box; resize: vertical;"></textarea>
-            <div style="margin-top: 8px; text-align: left;">
-                <button onclick="openAIPromptModal()" class="btn-export" style="background-color: #673ab7; font-size: 11px; padding: 4px 10px; border: 1px solid #444;" data-i18n="sl_btn_ai">🤖 KI-Prompt Generator öffnen</button>
-            </div>
-            <div style="display: flex; gap: 15px; margin-top: 15px; border-top: 1px solid #555; padding-top: 10px; align-items: center;">
-                <div style="flex: 1; display: flex; flex-direction: column;">
-                    <p style="color: #aaa; font-size: 11px; margin-bottom: 5px;" data-i18n="sl_txt_link">🔗 Anlage als direkten Link teilen:</p>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="text" id="share-link-input" readonly style="flex: 1; background: #1e1e1e; color: #4caf50; border: 1px solid #555; border-radius: 3px; font-family: monospace; font-size: 11px; padding: 6px;">
-                        <button onclick="copyShareLink()" style="background: #2196f3; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold;" data-i18n="sl_btn_copy">Kopieren</button>
+		<style>
+            /* Collapsible Export-Sektionen im Speichern/Laden-Dialog */
+            .sl-section { border: 1px solid #3a3a3a; border-radius: 4px; margin-bottom: 6px; background: #252528; overflow: hidden; }
+            .sl-section > summary { list-style: none; padding: 8px 10px; cursor: pointer; color: #ccc; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 7px; user-select: none; }
+            .sl-section > summary::-webkit-details-marker { display: none; }
+            .sl-section > summary::before { content: '▶'; font-size: 9px; color: #666; transition: transform 0.15s; flex-shrink: 0; }
+            .sl-section[open] > summary::before { transform: rotate(90deg); }
+            .sl-section > summary:hover { background: #2d2d30; }
+            .sl-section[open] > summary { border-bottom: 1px solid #3a3a3a; background: #2a2a2d; }
+            .sl-section-body { padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+            .sl-section-body label { font-size: 11px; color: #bbb; display: flex; align-items: center; gap: 7px; cursor: pointer; }
+            .sl-section-body .sl-btn { background: #37474f; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; width: 100%; text-align: left; transition: background 0.1s; }
+            .sl-section-body .sl-btn:hover { background: #455a64; }
+            .sl-section-body .sl-input { background: #1e1e1e; color: #9cdcfe; border: 1px solid #444; border-radius: 3px; padding: 4px 7px; font-size: 11px; width: 60px; }
+            .sl-hint { color: #556; font-size: 10px; line-height: 1.5; }
+        </style>
+        <div id="saveload-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 25px rgba(0,0,0,0.9); z-index: 2000; width: 860px; max-width: 97vw; max-height: 92vh; overflow: hidden; display: none; flex-direction: column;">
+            <h3 style="margin:0 0 14px; color:#fff; border-bottom: 1px solid #555; padding-bottom: 10px; flex-shrink:0;" data-i18n="sl_title">💾 Speichern / Laden / Exportieren</h3>
+            <!-- Zweispaltig: links Speichern+Export, rechts Raw/Link -->
+            <div style="display: flex; gap: 16px; flex: 1; overflow: hidden; min-height: 0;">
+
+                <!-- ===== LINKE SPALTE: Speichern + Exportieren ===== -->
+                <div style="width: 270px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 4px;">
+
+                    <!-- Speichern / Laden (plain, kein details) -->
+                    <div style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.7px; padding: 2px 2px 4px; border-bottom: 1px solid #383838;">Projekt</div>
+                    <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px;">
+                        <button onclick="downloadValisave()" class="btn-export" style="background-color: #2e7d32; font-size: 12px; padding: 6px 10px; text-align: left;" data-i18n="sl_btn_save">⬇️ Als .valisave speichern</button>
+                        <button onclick="document.getElementById('valisave-upload').click()" class="btn-export" style="background-color: #e65100; font-size: 12px; padding: 6px 10px; text-align: left;" data-i18n="sl_btn_load">⬆️ .valisave laden</button>
+                        <input type="file" id="valisave-upload" accept=".valisave" style="display: none;" onchange="uploadValisave(event)">
                     </div>
-                </div>
-                <div id="qr-code-container" onclick="openLargeQR()" title="Klicken zum Vergrößern" style="width: 90px; height: 90px; background: #fff; padding: 5px; border-radius: 3px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; box-sizing: border-box; cursor: zoom-in; border: 2px solid transparent; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#2196f3'" onmouseout="this.style.borderColor='transparent'">
-                </div>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                <button onclick="closeSaveLoadModal()" style="background: #555; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer;" data-i18n="btn_cancel">Abbrechen</button>
-                <button onclick="applyRawCode()" style="background: #007acc; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-weight: bold;" data-i18n="sl_btn_import">Daten anwenden (Importieren)</button>
-            </div>
+
+                    <div style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.7px; padding: 6px 2px 4px; border-bottom: 1px solid #383838;">Exportieren</div>
+
+                    <!-- SVG -->
+                    <details class="sl-section">
+                        <summary>📸 SVG-Diagramme</summary>
+                        <div class="sl-section-body">
+                            <button class="sl-btn" onclick="exportSVG('fbs')">📸 Logikplan (FBS) als SVG</button>
+                            <button class="sl-btn" onclick="exportSVG('iec')">📸 Schaltplan (IEC) als SVG</button>
+                        </div>
+                    </details>
+
+                    <!-- PDF -->
+                    <details class="sl-section">
+                        <summary>📄 PDF exportieren</summary>
+                        <div class="sl-section-body">
+                            <label><input type="checkbox" id="pdf-chk-code2" checked> 💻 ST-Code (Editor)</label>
+                            <label><input type="checkbox" id="pdf-chk-io2" checked> 🔌 Eingangs- / Ausgangskonfiguration</label>
+                            <label><input type="checkbox" id="pdf-chk-fbs2" checked> 🧩 Logikplan (FBS)</label>
+                            <label><input type="checkbox" id="pdf-chk-iec2" checked> ⚡ Schaltplan (IEC)</label>
+                            <label><input type="checkbox" id="pdf-chk-factory2" checked> 🏭 2D-Anlage (Fabrik)</label>
+                            <button class="sl-btn" style="background:#1565c0;" onclick="generatePdfFromSL()">🖨️ PDF generieren</button>
+                        </div>
+                    </details>
+
+                    <!-- SCL -->
+                    <details class="sl-section">
+                        <summary>📤 Siemens SCL (TIA Portal)</summary>
+                        <div class="sl-section-body">
+                            <div class="sl-hint">Exportiert den Logikplan als Function Block für TIA Portal.</div>
+                            <button class="sl-btn" style="background:#007acc;" onclick="exportSCL(); closeSaveLoadModal();">📤 SCL generieren &amp; anzeigen</button>
+                        </div>
+                    </details>
+
+                    <!-- Embed -->
+                    <details class="sl-section" id="sl-embed-section">
+                        <summary>🖼️ Embed-Code (Moodle / ILIAS)</summary>
+                        <div class="sl-section-body">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                <label style="flex: 1; min-width: 100px;">Breite <input id="sl-embed-w" type="number" value="1200" class="sl-input" style="width:56px;"> px</label>
+                                <label style="flex: 1; min-width: 100px;">Höhe <input id="sl-embed-h" type="number" value="720" class="sl-input" style="width:56px;"> px</label>
+                            </div>
+                            <label><input id="sl-embed-resp" type="checkbox"> Responsiv (100%)</label>
+                            <label><input id="sl-embed-ro" type="checkbox" checked> Nur-Lese-Modus</label>
+                            <button class="sl-btn" onclick="generateSLEmbed()">🔄 Iframe-Code generieren</button>
+                            <textarea id="sl-embed-out" readonly style="width:100%;height:60px;font-family:monospace;font-size:10px;background:#0d1117;color:#9cdcfe;border:1px solid #30363d;border-radius:3px;padding:6px;box-sizing:border-box;resize:none;" placeholder="→ „Generieren" klicken…"></textarea>
+                            <button class="sl-btn" onclick="copySLEmbed()" style="background:#37474f;">📋 Iframe kopieren <span id="sl-embed-hint" style="color:#4caf50;font-size:10px;opacity:0;transition:opacity 0.4s;"></span></button>
+                            <div class="sl-hint">Moodle: HTML-Editor → Quellcode → Iframe einfügen<br>ILIAS: HTML-Seite → Quellcode → Iframe einfügen</div>
+                        </div>
+                    </details>
+
+                    <!-- Versionsverlauf -->
+                    <details class="sl-section">
+                        <summary>🕐 Versionsverlauf</summary>
+                        <div class="sl-section-body">
+                            <div style="display: flex; gap: 6px;">
+                                <input id="sl-snap-name" type="text" placeholder="Name (optional)" style="flex:1;background:#1e1e1e;color:#fff;border:1px solid #444;border-radius:3px;padding:4px 7px;font-size:11px;">
+                                <button class="sl-btn" style="width:auto;background:#2e7d32;padding:4px 9px;" onclick="saveSLSnapshot()">📸</button>
+                            </div>
+                            <button class="sl-btn" onclick="openVersionHistory()">🕐 Verlauf öffnen &amp; verwalten</button>
+                            <div class="sl-hint" id="sl-snap-count"></div>
+                        </div>
+                    </details>
+
+                </div><!-- /linke Spalte -->
+
+                <!-- ===== RECHTE SPALTE: Raw / Link ===== -->
+                <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; gap: 10px; overflow: hidden;">
+                    <p style="color: #aaa; font-size: 11px; margin: 0;" data-i18n="sl_txt_raw">Oder als Raw-Code kopieren / hier einfügen:</p>
+                    <textarea id="saveload-text" spellcheck="false" style="flex: 1; min-height: 120px; background: #1e1e1e; color: #9cdcfe; border: 1px solid #555; border-radius: 3px; font-family: monospace; font-size: 11px; padding: 8px; box-sizing: border-box; resize: none;"></textarea>
+                    <div>
+                        <button onclick="openAIPromptModal()" class="btn-export" style="background-color: #673ab7; font-size: 11px; padding: 4px 10px; border: 1px solid #444;" data-i18n="sl_btn_ai">🤖 KI-Prompt Generator öffnen</button>
+                    </div>
+                    <div style="display: flex; gap: 12px; border-top: 1px solid #555; padding-top: 10px; align-items: center;">
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                            <p style="color: #aaa; font-size: 11px; margin: 0;" data-i18n="sl_txt_link">🔗 Anlage als direkten Link teilen:</p>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" id="share-link-input" readonly style="flex: 1; background: #1e1e1e; color: #4caf50; border: 1px solid #555; border-radius: 3px; font-family: monospace; font-size: 11px; padding: 6px;">
+                                <button onclick="copyShareLink()" style="background: #2196f3; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold;" data-i18n="sl_btn_copy">Kopieren</button>
+                            </div>
+                        </div>
+                        <div id="qr-code-container" onclick="openLargeQR()" title="Klicken zum Vergrößern" style="width: 80px; height: 80px; background: #fff; padding: 4px; border-radius: 3px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; box-sizing: border-box; cursor: zoom-in; border: 2px solid transparent; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#2196f3'" onmouseout="this.style.borderColor='transparent'">
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+                        <button onclick="closeSaveLoadModal()" style="background: #555; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer;" data-i18n="btn_cancel">Abbrechen</button>
+                        <button onclick="applyRawCode()" style="background: #007acc; color: white; border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-weight: bold;" data-i18n="sl_btn_import">Daten anwenden (Importieren)</button>
+                    </div>
+                </div><!-- /rechte Spalte -->
+
+            </div><!-- /zweispaltig -->
         </div>
 		<div id="qr-modal-large" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; flex-direction: column;">
 			<div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,1);">
@@ -1810,6 +1911,71 @@ const aktiv = resolveLinked(obj, spsState);
         </div>
 
 
+        <!-- ===== EMBED-CODE MODAL ===== -->
+        <div id="embed-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e1e2e;padding:20px;border:1px solid #444;border-radius:8px;box-shadow:0 4px 40px rgba(0,0,0,0.95);z-index:4000;width:720px;max-width:95vw;color:#ccc;font-family:'Segoe UI',sans-serif;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #555;padding-bottom:10px;">
+                <div>
+                    <h3 style="margin:0;color:#fff;font-size:15px;">🖼️ Embed-Code für Lernplattformen</h3>
+                    <p style="margin:4px 0 0;color:#888;font-size:11px;">Bettet VALIS mit dem aktuellen Zustand in Moodle, ILIAS oder andere Plattformen ein</p>
+                </div>
+                <button onclick="document.getElementById('embed-modal').style.display='none'" style="background:#555;color:#fff;border:none;padding:4px 11px;border-radius:3px;cursor:pointer;font-size:14px;">✕</button>
+            </div>
+            <div style="display:flex;gap:16px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+                <label style="font-size:12px;">Breite: <input id="embed-width" type="number" value="1200" min="400" max="3840" style="width:70px;background:#2d2d30;color:#fff;border:1px solid #555;border-radius:3px;padding:3px 6px;font-size:12px;"> px</label>
+                <label style="font-size:12px;">Höhe: <input id="embed-height" type="number" value="720" min="300" max="2160" style="width:70px;background:#2d2d30;color:#fff;border:1px solid #555;border-radius:3px;padding:3px 6px;font-size:12px;"> px</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;"><input id="embed-responsive" type="checkbox" style="cursor:pointer;"> Responsiv (100% Breite)</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;"><input id="embed-readonly" type="checkbox" checked style="cursor:pointer;"> Nur-Lese-Modus</label>
+                <button onclick="refreshEmbedCode()" style="background:#37474f;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;font-size:11px;">🔄 Aktualisieren</button>
+            </div>
+            <textarea id="embed-output" readonly style="width:100%;height:120px;font-family:'Consolas','Courier New',monospace;font-size:11px;line-height:1.5;background:#0d1117;color:#9cdcfe;border:1px solid #30363d;border-radius:4px;padding:10px;resize:vertical;box-sizing:border-box;"></textarea>
+            <div style="margin-top:10px;padding:10px;background:#1a2030;border:1px solid #2a3a50;border-radius:4px;font-size:10px;color:#78909c;line-height:1.6;">
+                <strong style="color:#90caf9;">Moodle:</strong> Kurs bearbeiten → Aktivität „Textfeld" → HTML-Editor → Quellcode-Ansicht → Iframe einfügen<br>
+                <strong style="color:#90caf9;">ILIAS:</strong> Seite bearbeiten → HTML-Seite → Quellcode → Iframe einfügen &nbsp;|&nbsp; <strong style="color:#90caf9;">Voraussetzung:</strong> HTTPS + „Externe Medien erlauben" in den Plattform-Einstellungen
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+                <button onclick="copyEmbed()" style="background:#007acc;color:#fff;border:none;padding:7px 16px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;">📋 Iframe kopieren</button>
+                <span id="embed-copy-hint" style="color:#4caf50;font-size:11px;opacity:0;transition:opacity 0.4s;align-self:center;">Kopiert!</span>
+            </div>
+        </div>
+
+        <!-- ===== VERSIONSVERLAUF MODAL ===== -->
+        <div id="history-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e1e2e;padding:20px;border:1px solid #444;border-radius:8px;box-shadow:0 4px 40px rgba(0,0,0,0.95);z-index:4000;width:780px;max-width:95vw;color:#ccc;font-family:'Segoe UI',sans-serif;max-height:90vh;display:none;flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #555;padding-bottom:10px;flex-shrink:0;">
+                <div>
+                    <h3 style="margin:0;color:#fff;font-size:15px;">🕐 Versionsverlauf</h3>
+                    <p style="margin:4px 0 0;color:#888;font-size:11px;">Lokale Snapshots des aktuellen Standes – gespeichert im Browser</p>
+                </div>
+                <button onclick="closeHistoryModal()" style="background:#555;color:#fff;border:none;padding:4px 11px;border-radius:3px;cursor:pointer;font-size:14px;">✕</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+                <input id="snapshot-name" type="text" placeholder="Name (optional, z.B. 'vor Änderung X')" style="flex:1;min-width:180px;background:#2d2d30;color:#fff;border:1px solid #555;border-radius:4px;padding:6px 10px;font-size:12px;">
+                <button onclick="saveSnapshot()" style="background:#4caf50;color:#fff;border:none;padding:7px 14px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;white-space:nowrap;">📸 Snapshot erstellen</button>
+                <label style="font-size:11px;color:#888;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
+                    <input id="auto-snapshot-chk" type="checkbox" style="cursor:pointer;" onchange="toggleAutoSnapshot()">
+                    Auto alle <input id="auto-snapshot-min" type="number" value="10" min="1" max="60" style="width:40px;background:#2d2d30;color:#fff;border:1px solid #555;border-radius:3px;padding:2px 4px;font-size:11px;"> min
+                </label>
+                <span id="history-count" style="color:#666;font-size:11px;margin-left:auto;"></span>
+            </div>
+            <div id="snapshot-list" style="overflow-y:auto;flex:1;max-height:280px;min-height:80px;border:1px solid #333;border-radius:4px;background:#0d1117;"></div>
+            <!-- Diff-Bereich -->
+            <div id="history-diff-panel" style="display:none;margin-top:12px;flex-shrink:0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <span style="color:#90caf9;font-size:12px;font-weight:bold;">🔍 Vergleich: <span id="diff-label"></span></span>
+                    <button onclick="document.getElementById('history-diff-panel').style.display='none'" style="background:#333;color:#aaa;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:11px;">✕ Schließen</button>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <div style="flex:1;">
+                        <div style="color:#f48fb1;font-size:10px;margin-bottom:3px;font-weight:bold;">← Snapshot</div>
+                        <textarea id="diff-old" readonly style="width:100%;height:180px;font-family:'Consolas',monospace;font-size:11px;background:#1a0a0a;color:#ef9a9a;border:1px solid #4a1a1a;border-radius:3px;padding:8px;resize:none;box-sizing:border-box;"></textarea>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="color:#a5d6a7;font-size:10px;margin-bottom:3px;font-weight:bold;">→ Aktuell</div>
+                        <textarea id="diff-new" readonly style="width:100%;height:180px;font-family:'Consolas',monospace;font-size:11px;background:#0a1a0a;color:#a5d6a7;border:1px solid #1a4a1a;border-radius:3px;padding:8px;resize:none;box-sizing:border-box;"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 		<div id="analyzer-modal" style="display:none;position:fixed;top:10vh;left:10vw; background: #2d2d30; padding: 15px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.9); z-index: 3000; width: 80vw; min-width: 400px; height: 75vh; min-height: 300px; flex-direction: column; resize: both; overflow: hidden;">
             <div id="analyzer-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #555; padding-bottom: 10px; margin-bottom: 10px; cursor: move; user-select: none;">
                 <h3 style="margin:0; color:#fff; pointer-events: none;">📊 Logik-Analysator (Oszilloskop)</h3>
@@ -1852,7 +2018,7 @@ const aktiv = resolveLinked(obj, spsState);
             de: {
                 "btn_install": "📱 App installieren",
                 "btn_help": "ℹ️ Hilfe / Tipps",
-                "btn_save_load": "💾 Speichern / Laden",
+                "btn_save_load": "💾 Speichern / Laden / Exportieren",
                 "btn_examples": "📋 Beispiele",
                 "opt_examples": "Beispiele...",
                 "opt_code": "Reiner Code",
@@ -1874,6 +2040,8 @@ const aktiv = resolveLinked(obj, spsState);
                 "layout_top": "🗒 2D-Anlage oben",
                 "layout_right": "◧ 2D-Anlage rechts",
                 "layout_left": "◨ 2D-Anlage links",
+                "layout_cat_sim": "2D-Anlage",
+                "layout_cat_detach": "Abkoppeln",
                 "btn_info": "ℹ️ Info",
                 "info_text": "<strong>⚙️ Willkommen bei VALIS:</strong><br><br>Logik links tippen • \"Simulation starten\" für Live-Test.",
                 "btn_extras": "🛠️ Extras ▼",
@@ -1884,6 +2052,8 @@ const aktiv = resolveLinked(obj, spsState);
                 "extra_detach_fac": "⏏️ 2D-Anlage abkoppeln (Multi-Screen)",
                 "extra_detach_osc": "⏏️ Oszilloskop abkoppeln (Multi-Screen)",
                 "extra_scl": "📤 Als Siemens SCL exportieren (TIA Portal)",
+                "extra_embed": "🖼️ Embed-Code (Moodle / ILIAS)",
+                "extra_history": "🕐 Versionsverlauf",
                 // Sound
                 "sound_off": "🔇 Ton: AUS",
                 "sound_logic": "⚡ Ton: Logik",
@@ -2197,7 +2367,7 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
             en: {
                 "btn_install": "📱 Install App",
                 "btn_help": "ℹ️ Help / Tips",
-                "btn_save_load": "💾 Save / Load",
+                "btn_save_load": "💾 Save / Load / Export",
                 "btn_examples": "📋 Examples",
                 "opt_examples": "Examples...",
                 "opt_code": "Pure Code",
@@ -2219,6 +2389,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 "layout_top": "🗒 Factory Top",
                 "layout_right": "◧ Factory Right",
                 "layout_left": "◨ Factory Left",
+                "layout_cat_sim": "2D Factory",
+                "layout_cat_detach": "Detach",
                 "btn_info": "ℹ️ Info",
                 "info_text": "<strong>⚙️ Welcome to VALIS:</strong><br><br>Type logic on the left • \"Start Simulation\" for live test.",
                 "btn_extras": "🛠️ Extras ▼",
@@ -2229,6 +2401,8 @@ Du musst exakt dieses JSON-Format ausgeben. Der Logik-Code kommt als einzelner S
                 "extra_detach_fac": "⏏️ Detach 2D Factory (Multi-Screen)",
                 "extra_detach_osc": "⏏️ Detach Oscilloscope (Multi-Screen)",
                 "extra_scl": "📤 Export as Siemens SCL (TIA Portal)",
+                "extra_embed": "🖼️ Embed Code (Moodle / ILIAS)",
+                "extra_history": "🕐 Version History",
                 // Sound
                 "sound_off": "🔇 Sound: OFF",
                 "sound_logic": "⚡ Sound: Logic",
@@ -10229,7 +10403,10 @@ You must output exactly this JSON format. The logic code goes as a single string
             } catch(e) {
                 linkInput.value = "Fehler beim Generieren des Links";
             }
-            modal.style.display = 'block';
+            modal.style.display = 'flex';
+            // Snapshot-Zähler aktualisieren
+            const sc = document.getElementById('sl-snap-count');
+            if (sc) { const n = getSnapshots().length; sc.textContent = `${n} von ${SNAPSHOT_MAX} Snapshots belegt`; }
         };
         window.copyShareLink = function() {
             const linkInput = document.getElementById('share-link-input');
@@ -10241,6 +10418,73 @@ You must output exactly this JSON format. The logic code goes as a single string
             ind.style.opacity = '1';
             setTimeout(() => { ind.textContent = "Gespeichert"; ind.style.color = "#3cb44b"; ind.style.opacity = '0.3'; }, 2000);
         };
+        // PDF aus SL-Dialog (nutzt inline Checkboxen pdf-chk-*2)
+        window.generatePdfFromSL = function() {
+            // Werte aus den SL-Checkboxen in die originalen Checkboxen spiegeln (generatePdf() liest diese)
+            ['code','io','fbs','iec','factory'].forEach(k => {
+                const orig = document.getElementById(`pdf-chk-${k}`);
+                const sl   = document.getElementById(`pdf-chk-${k}2`);
+                if (orig && sl) orig.checked = sl.checked;
+            });
+            closeSaveLoadModal();
+            generatePdf();
+        };
+
+        // Embed im SL-Dialog generieren
+        window.generateSLEmbed = function() {
+            const saveData = {
+                version: '1.0', layout: currentLayout, code: textarea.value,
+                types: componentTypes, keyBindings: window.inputKeyBindings,
+                factory: getFactoryStateObj(), plugins: activePlugins, userPlugins: userPlugins
+            };
+            let compressed = '';
+            try { compressed = LZString.compressToEncodedURIComponent(JSON.stringify(saveData)); } catch(e) {}
+            const base = window.location.href.split('#')[0];
+            const url  = base + '#state=' + compressed;
+            const w  = document.getElementById('sl-embed-w').value  || 1200;
+            const h  = document.getElementById('sl-embed-h').value  || 720;
+            const resp = document.getElementById('sl-embed-resp').checked;
+            const ro   = document.getElementById('sl-embed-ro').checked;
+            const src  = ro ? url + (url.includes('?') ? '&' : '?') + 'readonly=1' : url;
+            let code = '';
+            if (resp) {
+                code = `<div style="position:relative;padding-bottom:${Math.round(h/w*100)}%;height:0;overflow:hidden;">\n  <iframe src="${src}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>\n</div>`;
+            } else {
+                code = `<iframe src="${src}" width="${w}" height="${h}" style="border:none;" allowfullscreen loading="lazy"></iframe>`;
+            }
+            document.getElementById('sl-embed-out').value = code;
+        };
+
+        window.copySLEmbed = function() {
+            const ta = document.getElementById('sl-embed-out');
+            if (!ta.value.trim()) { generateSLEmbed(); }
+            ta.select();
+            document.execCommand('copy');
+            const hint = document.getElementById('sl-embed-hint');
+            if (hint) { hint.textContent = ' Kopiert!'; hint.style.opacity = '1'; setTimeout(() => { hint.style.opacity = '0'; }, 2000); }
+        };
+
+        // Snapshot aus dem SL-Dialog
+        window.saveSLSnapshot = function() {
+            const inp = document.getElementById('sl-snap-name');
+            const name = inp ? inp.value.trim() : '';
+            const snap = {
+                id: Date.now().toString(), name, ts: Date.now(),
+                code: textarea.value, types: JSON.stringify(componentTypes),
+                layout: currentLayout, factory: JSON.stringify(getFactoryStateObj()),
+                plugins: JSON.stringify(activePlugins), keyBindings: JSON.stringify(window.inputKeyBindings || {})
+            };
+            const arr = getSnapshots();
+            arr.unshift(snap);
+            while (arr.length > SNAPSHOT_MAX) arr.pop();
+            putSnapshots(arr);
+            if (inp) inp.value = '';
+            const sc = document.getElementById('sl-snap-count');
+            if (sc) sc.textContent = `${arr.length} von ${SNAPSHOT_MAX} Snapshots belegt`;
+            const ind = document.getElementById('save-indicator');
+            if (ind) { ind.textContent = '📸 Snapshot gespeichert'; ind.style.color = '#4caf50'; ind.style.opacity = '1'; setTimeout(() => { ind.textContent = 'Gespeichert'; ind.style.color = '#3cb44b'; ind.style.opacity = '0.3'; }, 1500); }
+        };
+
 		// --- NEU: QR-Code vergrößern ---
         window.openLargeQR = function() {
             const linkInput = document.getElementById('share-link-input').value;
@@ -10593,6 +10837,208 @@ You must output exactly this JSON format. The logic code goes as a single string
             setTimeout(() => { hint.style.opacity = '0'; }, 2000);
         };
 
+        // ============================================================
+        // EMBED-CODE – Iframe für Lernplattformen
+        // ============================================================
+        window.openEmbedModal = function() {
+            refreshEmbedCode();
+            document.getElementById('embed-modal').style.display = 'block';
+        };
+
+        window.refreshEmbedCode = function() {
+            const saveData = {
+                version: '1.0', layout: currentLayout, code: textarea.value,
+                types: componentTypes, keyBindings: window.inputKeyBindings,
+                factory: getFactoryStateObj(), plugins: activePlugins, userPlugins: userPlugins
+            };
+            let compressed = '';
+            try { compressed = LZString.compressToEncodedURIComponent(JSON.stringify(saveData)); } catch(e) {}
+            const base = window.location.href.split('#')[0];
+            const url  = base + '#state=' + compressed;
+            const w    = document.getElementById('embed-width').value  || 1200;
+            const h    = document.getElementById('embed-height').value || 720;
+            const responsive = document.getElementById('embed-responsive').checked;
+            const readonly   = document.getElementById('embed-readonly').checked;
+            const srcUrl = readonly ? url + (url.includes('?') ? '&' : '?') + 'readonly=1' : url;
+
+            let code = '';
+            if (responsive) {
+                code = `<div style="position:relative;padding-bottom:${Math.round(h/w*100)}%;height:0;overflow:hidden;">\n` +
+                       `  <iframe\n    src="${srcUrl}"\n    style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:4px;"\n    allowfullscreen\n    loading="lazy"\n    title="VALIS – Virtual Automation Logic and Industrial Simulator"\n  ></iframe>\n</div>`;
+            } else {
+                code = `<iframe\n  src="${srcUrl}"\n  width="${w}"\n  height="${h}"\n  style="border:none;border-radius:4px;"\n  allowfullscreen\n  loading="lazy"\n  title="VALIS – Virtual Automation Logic and Industrial Simulator"\n></iframe>`;
+            }
+            document.getElementById('embed-output').value = code;
+            // Listener für Live-Aktualisierung der Optionen
+            ['embed-width','embed-height'].forEach(id => {
+                document.getElementById(id).onchange = refreshEmbedCode;
+            });
+            document.getElementById('embed-responsive').onchange = refreshEmbedCode;
+            document.getElementById('embed-readonly').onchange   = refreshEmbedCode;
+        };
+
+        window.copyEmbed = function() {
+            const ta = document.getElementById('embed-output');
+            ta.select();
+            document.execCommand('copy');
+            const hint = document.getElementById('embed-copy-hint');
+            hint.style.opacity = '1';
+            setTimeout(() => { hint.style.opacity = '0'; }, 2000);
+        };
+
+        // ============================================================
+        // VERSIONSVERLAUF – Lokale Snapshots
+        // ============================================================
+        const SNAPSHOT_KEY  = 'valis_snapshots';
+        const SNAPSHOT_MAX  = 25;
+        let autoSnapshotTimer = null;
+
+        function getSnapshots() {
+            try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || '[]'); } catch(e) { return []; }
+        }
+        function putSnapshots(arr) {
+            localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(arr));
+        }
+
+        window.saveSnapshot = function(autoName) {
+            const nameInput = document.getElementById('snapshot-name');
+            const name = (autoName || (nameInput ? nameInput.value.trim() : '')) || '';
+            const snap = {
+                id: Date.now().toString(),
+                name: name,
+                ts: Date.now(),
+                // Vollständiger Stand: Code, Typen, Layout, 2D-Anlage, Plugins
+                code: textarea.value,
+                types: JSON.stringify(componentTypes),
+                layout: currentLayout,
+                factory: JSON.stringify(getFactoryStateObj()),
+                plugins: JSON.stringify(activePlugins),
+                keyBindings: JSON.stringify(window.inputKeyBindings || {})
+            };
+            const arr = getSnapshots();
+            arr.unshift(snap);
+            while (arr.length > SNAPSHOT_MAX) arr.pop();
+            putSnapshots(arr);
+            if (nameInput) nameInput.value = '';
+            renderSnapshotList();
+            const ind = document.getElementById('save-indicator');
+            if (ind) { ind.textContent = '📸 Snapshot gespeichert'; ind.style.color = '#4caf50'; ind.style.opacity = '1'; setTimeout(() => { ind.textContent = 'Gespeichert'; ind.style.color = '#3cb44b'; ind.style.opacity = '0.3'; }, 1500); }
+        };
+
+        window.loadSnapshot = function(id) {
+            const arr = getSnapshots();
+            const snap = arr.find(s => s.id === id);
+            if (!snap) return;
+            if (!confirm('Aktuellen Stand durch den Snapshot ersetzen?\n(Nicht gespeicherte Änderungen gehen verloren)')) return;
+            textarea.value = snap.code;
+            try { componentTypes = JSON.parse(snap.types); } catch(e) {}
+            if (snap.layout) {
+                const layoutIcons = { 'flex-row': '◫', 'flex-col': '⬒', 'grid-sim-bottom': '🗗', 'grid-sim-top': '🗒', 'grid-sim-right': '◧', 'grid-sim-left': '◨' };
+                window.selectLayout(snap.layout, layoutIcons[snap.layout] || '◫');
+            }
+            if (snap.factory) {
+                try { localStorage.setItem('logikFactoryState', snap.factory); loadFactoryState(); } catch(e) {}
+            }
+            if (snap.plugins) {
+                try {
+                    activePlugins = JSON.parse(snap.plugins);
+                    localStorage.setItem('valisActivePlugins', JSON.stringify(activePlugins));
+                } catch(e) {}
+            }
+            if (snap.keyBindings) {
+                try {
+                    window.inputKeyBindings = JSON.parse(snap.keyBindings);
+                    localStorage.setItem('valisKeyBindings', JSON.stringify(window.inputKeyBindings));
+                } catch(e) {}
+            }
+            saveToStorage();
+            updateHighlighting();
+            updateEditor();
+            closeHistoryModal();
+        };
+
+        window.deleteSnapshot = function(id) {
+            const arr = getSnapshots().filter(s => s.id !== id);
+            putSnapshots(arr);
+            renderSnapshotList();
+        };
+
+        window.compareSnapshot = function(id) {
+            const arr = getSnapshots();
+            const snap = arr.find(s => s.id === id);
+            if (!snap) return;
+            const panel = document.getElementById('history-diff-panel');
+            document.getElementById('diff-old').value = snap.code;
+            document.getElementById('diff-new').value = textarea.value;
+            const dt = new Date(snap.ts);
+            document.getElementById('diff-label').textContent =
+                `"${snap.name || '(ohne Name)'}" vom ${dt.toLocaleDateString('de-DE')} ${dt.toLocaleTimeString('de-DE')}`;
+            panel.style.display = 'block';
+        };
+
+        function renderSnapshotList() {
+            const list = document.getElementById('snapshot-list');
+            if (!list) return;
+            const arr = getSnapshots();
+            const cnt = document.getElementById('history-count');
+            if (cnt) cnt.textContent = `${arr.length} / ${SNAPSHOT_MAX} Snapshots`;
+            if (arr.length === 0) {
+                list.innerHTML = '<div style="color:#555;text-align:center;padding:24px;font-size:12px;">Noch keine Snapshots gespeichert.<br>Klicke „📸 Snapshot erstellen" um den aktuellen Stand zu sichern.</div>';
+                return;
+            }
+            list.innerHTML = arr.map(snap => {
+                const dt = new Date(snap.ts);
+                const dateStr = dt.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+                const timeStr = dt.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+                const preview = snap.code.split('\n').filter(l => l.trim() && !l.trim().startsWith('//')).slice(0, 2).join(' · ') || '(leer)';
+                const nameHtml = snap.name
+                    ? `<span style="color:#90caf9;font-weight:bold;">${snap.name}</span> &nbsp;`
+                    : '';
+                // Badges: was ist in diesem Snapshot enthalten?
+                const badges = [
+                    { label: '💻 Code',    has: !!snap.code },
+                    { label: '🏭 Anlage',  has: !!snap.factory },
+                    { label: '🔌 Plugins', has: !!snap.plugins && JSON.parse(snap.plugins || '{}') && Object.keys(JSON.parse(snap.plugins || '{}')).some(k => JSON.parse(snap.plugins)[k]) },
+                    { label: '📐 Layout',  has: !!snap.layout },
+                ].filter(b => b.has).map(b =>
+                    `<span style="background:#1e3050;color:#78a8d0;border:1px solid #2a4070;border-radius:3px;padding:1px 5px;font-size:9px;">${b.label}</span>`
+                ).join(' ');
+                return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #1e2030;" onmouseenter="this.style.background='#1a2040'" onmouseleave="this.style.background=''">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:12px;margin-bottom:3px;">${nameHtml}<span style="color:#666;font-size:11px;">${dateStr} ${timeStr}</span></div>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:3px;">${badges}</div>
+                        <div style="color:#556;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${snap.code.replace(/"/g,'&quot;')}">${preview}</div>
+                    </div>
+                    <button onclick="compareSnapshot('${snap.id}')" style="background:#1565c0;color:#fff;border:none;padding:4px 9px;border-radius:3px;cursor:pointer;font-size:11px;white-space:nowrap;">🔍 Vergleich</button>
+                    <button onclick="loadSnapshot('${snap.id}')" style="background:#2e7d32;color:#fff;border:none;padding:4px 9px;border-radius:3px;cursor:pointer;font-size:11px;white-space:nowrap;">⏮ Laden</button>
+                    <button onclick="deleteSnapshot('${snap.id}')" style="background:#4a1a1a;color:#ef9a9a;border:none;padding:4px 9px;border-radius:3px;cursor:pointer;font-size:11px;white-space:nowrap;" title="Snapshot löschen">🗑</button>
+                </div>`;
+            }).join('');
+        }
+
+        window.openVersionHistory = function() {
+            const modal = document.getElementById('history-modal');
+            modal.style.display = 'flex';
+            document.getElementById('history-diff-panel').style.display = 'none';
+            renderSnapshotList();
+        };
+
+        window.closeHistoryModal = function() {
+            document.getElementById('history-modal').style.display = 'none';
+        };
+
+        window.toggleAutoSnapshot = function() {
+            const chk = document.getElementById('auto-snapshot-chk');
+            const min = parseInt(document.getElementById('auto-snapshot-min').value) || 10;
+            if (autoSnapshotTimer) { clearInterval(autoSnapshotTimer); autoSnapshotTimer = null; }
+            if (chk && chk.checked) {
+                autoSnapshotTimer = setInterval(() => {
+                    const m = parseInt(document.getElementById('auto-snapshot-min').value) || 10;
+                    saveSnapshot('Auto-Snapshot');
+                }, min * 60 * 1000);
+            }
+        };
+
         window.uploadValisave = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -10843,7 +11289,14 @@ You must output exactly this JSON format. The logic code goes as a single string
             drawAnalyzer();
         };
         window.closeAnalyzerModal = function() {
-            document.getElementById('analyzer-modal').style.display = 'none';
+            // Wenn das Oszilloskop abgekoppelt ist, das Popup-Fenster schließen
+            // (beforeunload übernimmt dann die Cleanup-Logik und das Zurücksetzen)
+            if (window.popOutWindows && window.popOutWindows['analyzer-modal'] && !window.popOutWindows['analyzer-modal'].closed) {
+                window.popOutWindows['analyzer-modal'].close();
+                return;
+            }
+            const el = document.getElementById('analyzer-modal');
+            if (el) el.style.display = 'none';
             isAnalyzerOpen = false;
         };
         window.clearAnalyzer = function() {
@@ -11217,7 +11670,7 @@ You must output exactly this JSON format. The logic code goes as a single string
             document.querySelectorAll('.tb-submenu').forEach(submenu => {
                 let content = submenu.querySelector('.tb-submenu-content');
                 if (content) {
-                    let hasVisible = Array.from(content.children).some(child => child.style.display !== 'none' && child.hasAttribute('onclick'));
+                    let hasVisible = !!content.querySelector('[onclick]:not([style*="display: none"]):not([style*="display:none"])') || Array.from(content.children).some(child => child.style.display !== 'none' && child.hasAttribute('onclick'));
                     submenu.style.display = hasVisible ? 'block' : 'none';
                 }
             });
@@ -11225,7 +11678,7 @@ You must output exactly this JSON format. The logic code goes as a single string
             document.querySelectorAll('.tb-dropdown').forEach(dropdown => {
                 let content = dropdown.querySelector('.tb-dropdown-content');
                 if (content) {
-                    let hasVisible = Array.from(content.children).some(child => child.style.display !== 'none' && (child.hasAttribute('onclick') || (child.classList.contains('tb-submenu') && child.style.display !== 'none')));
+                    let hasVisible = !!content.querySelector('[onclick]:not([style*="display: none"]):not([style*="display:none"])') || content.querySelector('.tb-submenu') !== null || Array.from(content.children).some(child => child.style.display !== 'none' && (child.hasAttribute('onclick') || (child.classList.contains('tb-submenu') && child.style.display !== 'none')));
                     dropdown.style.display = hasVisible ? 'inline-block' : 'none';
                 }
             });
