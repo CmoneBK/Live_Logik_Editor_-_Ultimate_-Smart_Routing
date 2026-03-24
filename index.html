@@ -496,6 +496,10 @@
         .task-mgr-btn.primary:hover { background:#1976d2; }
         .task-mgr-btn.danger { background:#c62828; border-color:#b71c1c; }
         .task-mgr-btn.danger:hover { background:#b71c1c; }
+        .task-mgr-pack-card { background:#1a2332; border:1px solid #37474f; border-left:3px solid #ff6f00; border-radius:6px; padding:10px 12px; margin-bottom:8px; }
+        .task-mgr-tab-btn { padding:8px 14px; font-size:12px; border:none; border-bottom:2px solid transparent; background:transparent; color:#78909c; cursor:pointer; }
+        .task-mgr-tab-btn.active { color:#fff; border-bottom-color:#42a5f5; background:transparent; }
+        .task-mgr-tab-btn:hover:not(.active) { color:#b0bec5; }
         .task-device-hidden { display: none !important; }
         .task-area-blocked { position: relative !important; pointer-events: none !important; }
         .task-area-blocked-code { opacity: 0.55; }
@@ -1396,6 +1400,10 @@
                     <button onclick="window._openTaskEditor(null)" class="task-mgr-btn">✏️ Neue Aufgabe erstellen</button>
                     <button onclick="window._loadExampleTasks()" class="task-mgr-btn" style="background:#1b5e20;color:#c8e6c9;border-color:#2e7d32;" title="Mitgelieferte Beispielaufgaben in die Liste laden">📚 Beispiele laden</button>
                 </div>
+                <div id="task-mgr-tabs" style="display:flex;border-bottom:1px solid #263238;padding:0 8px;flex-shrink:0;background:#172535;">
+                    <button class="task-mgr-tab-btn active" data-tab="tasks"    onclick="window._taskMgrRender('tasks')">📋 Aufgaben</button>
+                    <button class="task-mgr-tab-btn"        data-tab="packages" onclick="window._taskMgrRender('packages')">📦 Pakete</button>
+                </div>
                 <div id="task-mgr-list" style="overflow-y:auto; padding:12px 16px; flex:1; color:#fff; font-size:12px;"></div>
             </div>
         </div>
@@ -1407,8 +1415,9 @@
             </div>
             <div id="task-editor-body" style="padding:16px; color:#fff; font-size:12px;"></div>
         </div>
-        <!-- Versteckter File-Input für .valitask Import -->
+        <!-- Versteckter File-Input für .valitask / .valipack Import -->
         <input type="file" id="task-upload" accept=".valitask" style="display:none;">
+        <input type="file" id="pack-upload" accept=".valipack" style="display:none;">
         <!-- ====== ENDE AUFGABEN-MODUS ====== -->
 		<div id="fbs-add-modal" style="display: none; position: absolute; top: 15%; left: 35%; background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 25px rgba(0,0,0,0.8); z-index: 3000; width: 320px;">
             <h3 id="fbs-add-title" style="margin-top: 0; font-size: 14px; color: #fff; border-bottom: 1px solid #555; padding-bottom: 8px;" data-i18n="fbs_add_title">Baustein hinzufügen</h3>
@@ -6274,6 +6283,8 @@ You must output exactly this JSON format. The logic code goes as a single string
         let taskDespawnCount = 0;
         let _taskCheckThrottle = 0;
         let _taskTimerInterval = null;
+        let _taskMgrView = 'tasks';   // 'tasks' | 'packages' | 'pack-detail' | 'pack-edit'
+        let _taskMgrPackId = null;
 
         function _escHtml(s) {
             return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -6299,12 +6310,37 @@ You must output exactly this JSON format. The logic code goes as a single string
             localStorage.setItem('valisTasks', JSON.stringify(_getLocalTasks().filter(t => t.id !== taskId)));
         }
 
+        // === Aufgabenpakete: CRUD ===
+        function _getLocalPackages() {
+            try { return JSON.parse(localStorage.getItem('valisTaskPackages') || '[]'); } catch(e) { return []; }
+        }
+        function _savePackageLocally(pack) {
+            let packs = _getLocalPackages();
+            let idx = packs.findIndex(p => p.id === pack.id);
+            if (idx >= 0) packs[idx] = pack; else packs.push(pack);
+            localStorage.setItem('valisTaskPackages', JSON.stringify(packs));
+        }
+        function _deleteLocalPackage(packId) {
+            localStorage.setItem('valisTaskPackages', JSON.stringify(_getLocalPackages().filter(p => p.id !== packId)));
+        }
+        function _exportPackage(pack) {
+            let tasks = _getLocalTasks().filter(t => (pack.taskIds || []).includes(t.id));
+            let exportObj = Object.assign({}, pack, { tasks });
+            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = (pack.name || 'paket').replace(/[^a-zA-Z0-9_\-]/g, '-') + '.valipack';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         // === Eingebaute Beispielaufgaben ===
         const _EXAMPLE_TASKS = [
           {
             version:'1.0', type:'valitask',
             id:'task-sortieranlage-metall-kunststoff-2026',
-            name:'Sortieranlage: Metall und Kunststoff automatisch trennen',
+            name:'Sortieranlage: Metall und Kunststoff automatisch trennen [Beta: Nicht fertig erstellt!]',
             description:'Eine Förderanlage transportiert Werkstücke aus Metall und Kunststoff auf einem gemeinsamen Hauptförderband. Metallteile sollen automatisch erkannt und über einen Zylinder auf ein Sortierförderband umgeleitet werden. Kunststoffteile laufen durch bis zum Ende des Hauptbands.\n\n🎯 DEINE AUFGABE IN 3 SCHRITTEN:\n\n① Fabrikobjekte verknüpfen\nRechtsklick auf jedes Objekt → Einstellungen → Variable eingeben.\nVerwende exakt die unten genannten Variablennamen!\n\n② SPS-Programm schreiben\nDeklariere Eingänge mit INPUT und schreibe die Steuerlogik.\n\n③ Simulation testen\nDrücke Start-Taster, beobachte ob Metallteile korrekt aussortiert werden.\n\n──────────────────────────────\n📋 VARIABLEN (exakt so verwenden!)\n\nEingänge (mit INPUT deklarieren):\n• E_TASTER_START  – Start-Taster (TRUE = gedrückt)\n• E_NOTHALT       – Not-Halt (TRUE = nicht ausgelöst → Anlage darf laufen)\n• E_SENSOR_IND    – Induktiv-Sensor (TRUE = Metallteil erkannt)\n\nAusgänge (durch Zuweisung := definieren):\n• A_BAND_HAUPT    – Hauptförderband-Motor\n• A_BAND_SORT     – Sortierförderband-Motor\n• A_ZYL_VOR       – Zylinder vorfahren (Metallteil ausschleusen)\n• A_ZYL_ZUR       – Zylinder zurückfahren (Grundstellung)\n• A_LAMPE_GRUEN   – Grüne Betriebsmeldeleuchte\n\n──────────────────────────────\n⚙️ STEUERLOGIK\n\nBetriebsbedingung:\n  Beide Förderbänder und die Lampe laufen nur, wenn Start gedrückt UND Not-Halt nicht ausgelöst.\n\nSortiersteuerung:\n  • Metallteil erkannt (E_SENSOR_IND = TRUE) UND Band läuft\n    → Zylinder fährt VOR (A_ZYL_VOR = TRUE)\n  • Kein Metallteil erkannt\n    → Zylinder fährt ZURÜCK (A_ZYL_ZUR = TRUE)\n\n──────────────────────────────\n✅ ERFOLGSKRITERIEN\nAlle 14 Bedingungen müssen gleichzeitig erfüllt sein:\n  – Alle Objekte korrekt verknüpft\n  – Variablen im Code verwendet\n  – Anlage läuft (Hauptband aktiv)\n  – Mindestens 8 Werkstücke verarbeitet\n  – Simulation mindestens 60 Sekunden aktiv',
             hint:'💡 SCHRITT-FÜR-SCHRITT HILFE:\n\n1. Beginne mit den INPUT-Deklarationen:\n   INPUT E_TASTER_START\n   INPUT E_NOTHALT\n   INPUT E_SENSOR_IND\n\n2. Betriebsbereitschaft (AND-Verknüpfung):\n   A_BAND_HAUPT := E_TASTER_START AND E_NOTHALT\n\n3. Sortierzylinder:\n   A_ZYL_VOR := E_SENSOR_IND AND A_BAND_HAUPT\n   A_ZYL_ZUR := NOT E_SENSOR_IND\n\n4. Vergiss nicht: Not-Halt bedeutet TRUE = Anlage darf laufen (Schließer-Prinzip). Der Zylinder fährt mit A_ZYL_VOR vor und mit A_ZYL_ZUR zurück – beide Signale brauchst du!\n\n5. Nach dem Programmieren: Start-Taster im IO-Panel aktivieren, dann beobachten ob Metallteile (FE) auf das Sortierband umgeleitet werden.',
             category:'Automatisierungstechnik',
@@ -6382,21 +6418,237 @@ You must output exactly this JSON format. The logic code goes as a single string
           }
         ];
 
+        // === Eingebautes Beispielpaket: Grundlagen der Steuerungstechnik ===
+        const _EXAMPLE_PACKS = [
+          {
+            version:'1.0', type:'valipack',
+            id:'pack-grundlagen-steuerungstechnik-2026',
+            name:'Grundlagen der Steuerungstechnik',
+            description:'Drei aufeinander aufbauende Aufgaben – von einer einfachen Code-Ergänzung über den Logikplan bis zum Schaltplan-Editor. Alle Anlagen sind bereits verdrahtet.',
+            taskIds:['task-t1-not-halt-2026','task-t2-sort-fbs-2026','task-t3-zweihand-circ-2026'],
+            tasks:[
+
+              // ─────────────────────────────────────────────────────────────────
+              // AUFGABE 1 – Code-Ergänzung (leicht)
+              // ─────────────────────────────────────────────────────────────────
+              {
+                version:'1.0', type:'valitask',
+                id:'task-t1-not-halt-2026',
+                name:'① Förderband – Not-Halt-Logik ergänzen [Beta: Nicht fertig erstellt!]',
+                description:'Eine Förderanlage ist bereits fertig aufgebaut und verdrahtet. Fast das gesamte SPS-Programm ist schon geschrieben – es fehlt nur eine einzige Zeile!\n\n🎯 AUFGABE:\nDas Förderband (A_BAND) soll laufen, solange der Not-Halt nicht ausgelöst ist.\n\n• E_NOTHALT = TRUE  → Not-Halt nicht gedrückt → Anlage darf laufen\n• E_NOTHALT = FALSE → Not-Halt ausgelöst     → Anlage stoppt\n\nDie Betriebslampe ist bereits fertig programmiert:\n  A_LAMPE := A_BAND\n\n❓ Was fehlt:\nEine Zuweisungszeile für A_BAND unter dem TODO-Kommentar.\n\n✅ TIPP: Die Syntax lautet:\n  AUSGANGSVARIABLE := EINGANGSVARIABLE\n\n⚙ BESCHRÄNKUNGEN:\nNur der Code-Editor ist verfügbar.\nLogikplan und Schaltplan sind für diese Aufgabe gesperrt.',
+                hint:'Die fehlende Zeile lautet:\n  A_BAND := E_NOTHALT\n\nDas bedeutet: Weise dem Förderband-Ausgang den Wert des Not-Halt-Eingangs zu. Solange E_NOTHALT = TRUE (nicht gedrückt), läuft das Band.',
+                category:'Grundlagen', difficulty:'leicht',
+                timeLimit:300, solutionMode:'after_time', solutionMinTime:60, solutionMinDone:2,
+                restrictObjects:'none', allowedObjectTypes:[],
+                blockAreas:{codeEditor:false, ioPanel:false, logikplan:true, schaltplan:true, factory2d:true, factoryNewVars:true},
+                conditions:[
+                  {type:'sps_output', variable:'A_BAND',  value:true},
+                  {type:'sps_output', variable:'A_LAMPE', value:true},
+                  {type:'despawner_count', count:4},
+                  {type:'sim_running', minSeconds:20}
+                ],
+                preset:{
+                  code:'INPUT E_NOTHALT\n\n// ╔═══════════════════════════════════════════════════╗\n// ║  AUFGABE: Förderband-Steuerung vervollständigen   ║\n// ╚═══════════════════════════════════════════════════╝\n//\n// Die Anlage ist bereits komplett verdrahtet:\n//   • Förderband    → A_BAND\n//   • Betriebslampe → A_LAMPE\n//   • Not-Halt      → E_NOTHALT (TRUE = nicht ausgelöst)\n//\n// ✅ Bereits gelöst – Lampe leuchtet wenn Band läuft:\nA_LAMPE := A_BAND\n//\n// ❓ AUFGABE: Ergänze hier die fehlende Zeile!\n//   Das Band soll laufen solange E_NOTHALT = TRUE ist.\n// ─────────────────────────────────────────────────────\n',
+                  types:{}, layout:'grid-sim-top',
+                  factory:{
+                    globalViewMode:'top', items:[],
+                    pins:[{id:'p1',x:148,y:155,text:'① Eine Codezeile ergänzen\n② Simulation beobachten',color:'#ffd54f',minimized:false}],
+                    objects:[
+                      {id:'t1_band',   type:'conveyor',      x:155,y:262,width:490,height:38,rotation:0,  linkedVar:'A_BAND',    startupTime:null, locked:false},
+                      {id:'t1_spawn',  type:'spawner_metall', x:113,y:264,width:34, height:34,rotation:0,  linkedVar:'',          interval:3, spawnSolid:true, locked:false},
+                      {id:'t1_desp',   type:'despawner',      x:647,y:264,width:34, height:34,rotation:0,  linkedVar:'',          locked:false},
+                      {id:'t1_led',    type:'led',            x:282,y:168,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE',   color:'#4caf50', locked:false},
+                      {id:'t1_nh',     type:'nothalt',        x:378,y:161,width:42, height:42,rotation:0,  linkedVar:'E_NOTHALT', locked:false},
+                      {id:'t1_frame',  type:'frame',          x:268,y:154,width:168,height:65, rotation:0,  linkedVar:'',          normLabel:'Bedienpult', locked:true},
+                      {id:'t1_wl',     type:'wall',           x:149,y:262,width:7,  height:38, rotation:0,  linkedVar:'',          locked:true},
+                      {id:'t1_wr',     type:'wall',           x:645,y:262,width:7,  height:38, rotation:0,  linkedVar:'',          locked:true}
+                    ]
+                  }
+                },
+                solution:{
+                  code:'INPUT E_NOTHALT\n\nA_BAND := E_NOTHALT\nA_LAMPE := A_BAND\n',
+                  types:{}, layout:'grid-sim-top',
+                  factory:{
+                    globalViewMode:'top', items:[],
+                    pins:[{id:'p1',x:148,y:155,text:'① Eine Codezeile ergänzen\n② Simulation beobachten',color:'#ffd54f',minimized:false}],
+                    objects:[
+                      {id:'t1_band',   type:'conveyor',      x:155,y:262,width:490,height:38,rotation:0,  linkedVar:'A_BAND',    startupTime:null, locked:false},
+                      {id:'t1_spawn',  type:'spawner_metall', x:113,y:264,width:34, height:34,rotation:0,  linkedVar:'',          interval:3, spawnSolid:true, locked:false},
+                      {id:'t1_desp',   type:'despawner',      x:647,y:264,width:34, height:34,rotation:0,  linkedVar:'',          locked:false},
+                      {id:'t1_led',    type:'led',            x:282,y:168,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE',   color:'#4caf50', locked:false},
+                      {id:'t1_nh',     type:'nothalt',        x:378,y:161,width:42, height:42,rotation:0,  linkedVar:'E_NOTHALT', locked:false},
+                      {id:'t1_frame',  type:'frame',          x:268,y:154,width:168,height:65, rotation:0,  linkedVar:'',          normLabel:'Bedienpult', locked:true},
+                      {id:'t1_wl',     type:'wall',           x:149,y:262,width:7,  height:38, rotation:0,  linkedVar:'',          locked:true},
+                      {id:'t1_wr',     type:'wall',           x:645,y:262,width:7,  height:38, rotation:0,  linkedVar:'',          locked:true}
+                    ]
+                  }
+                }
+              },
+
+              // ─────────────────────────────────────────────────────────────────
+              // AUFGABE 2 – Logikplan / FBS (mittel)
+              // ─────────────────────────────────────────────────────────────────
+              {
+                version:'1.0', type:'valitask',
+                id:'task-t2-sort-fbs-2026',
+                name:'② Sortieranlage – Logik per FBS aufbauen [Beta: Nicht fertig erstellt!]',
+                description:'Eine Sortieranlage mit zwei Sensoren ist vollständig verdrahtet. Die Bänder laufen bereits. Die Sortierlogik fehlt noch – sie muss im LOGIKPLAN (FBS) aufgebaut werden.\n\nDer Code-Editor und der Schaltplan sind für diese Aufgabe gesperrt!\n\n🎯 AUFGABE:\nBaue im Logikplan-Editor folgende Ausgänge auf:\n\n• A_ZYL_VOR   = Zylinder fährt aus\n  Bedingung: Teil erkannt (E_SENSOR_OPT) UND Metallerkennung (E_SENSOR_IND)\n\n• A_ZYL_ZUR   = Zylinder fährt zurück\n  Bedingung: NICHT (E_SENSOR_OPT UND E_SENSOR_IND)\n\n• A_LAMPE_IND = Metallerkennungs-LED leuchtet\n  Bedingung: Metallerkennung aktiv (E_SENSOR_IND)\n\n🛠 SO GEHTS MIT DEM LOGIKPLAN:\n① Klicke im Logikplan-Panel auf das ➕-Symbol (Baustein hinzufügen)\n② Wähle den Typ (AND, OR, direkte Verbindung etc.)\n③ Trage Ziel-Variable (Ausgang) und Eingänge ein\n④ Klicke Generieren\n\n⚙ BESCHRÄNKUNGEN:\nNur der Logikplan-Editor ist verfügbar.\nCode-Editor und Schaltplan sind gesperrt.',
+                hint:'Für A_ZYL_VOR: Typ = AND, Ziel = A_ZYL_VOR, Eingang 1 = E_SENSOR_OPT, Eingang 2 = E_SENSOR_IND\n\nFür A_ZYL_ZUR: Typ = AND, Ziel = A_ZYL_ZUR, Eingang 1 = ¬E_SENSOR_OPT, Eingang 2 = ¬E_SENSOR_IND\n  → oder einfacher: direkter Eingang mit NOT: Eingang 1 = ¬(E_SENSOR_OPT && E_SENSOR_IND)\n\nFür A_LAMPE_IND: Typ = direkt (kein Gatter), Ziel = A_LAMPE_IND, Eingang 1 = E_SENSOR_IND',
+                category:'Grundlagen', difficulty:'mittel',
+                timeLimit:480, solutionMode:'after_time', solutionMinTime:120, solutionMinDone:3,
+                restrictObjects:'none', allowedObjectTypes:[],
+                blockAreas:{codeEditor:true, ioPanel:false, logikplan:false, schaltplan:true, factory2d:true, factoryNewVars:true},
+                conditions:[
+                  {type:'variable_exists', variable:'A_ZYL_VOR'},
+                  {type:'variable_exists', variable:'A_LAMPE_IND'},
+                  {type:'sps_output', variable:'A_BAND', value:true},
+                  {type:'sps_output', variable:'A_BAND_SORT', value:true},
+                  {type:'despawner_count', count:6},
+                  {type:'sim_running', minSeconds:40}
+                ],
+                preset:{
+                  code:'INPUT E_SENSOR_OPT\nINPUT E_SENSOR_IND\n\n// ╔══════════════════════════════════════════════════════╗\n// ║  AUFGABE: Sortierlogik im LOGIKPLAN aufbauen         ║\n// ╚══════════════════════════════════════════════════════╝\n//\n// Der Code-Editor ist GESPERRT – arbeite mit dem Logikplan!\n// Öffne das Logikplan-Panel und füge die fehlenden\n// Ausgänge über den Baustein-hinzufügen-Dialog ein.\n//\n// Bereits vorhanden: Beide Bänder laufen immer.\nA_BAND := TRUE\nA_BAND_SORT := TRUE\n//\n// Noch fehlende Ausgänge (im Logikplan ergänzen):\n//   A_ZYL_VOR   := E_SENSOR_OPT AND E_SENSOR_IND\n//   A_ZYL_ZUR   := NOT (E_SENSOR_OPT AND E_SENSOR_IND)\n//   A_LAMPE_IND := E_SENSOR_IND\n',
+                  types:{}, layout:'grid-sim-top',
+                  factory:{
+                    globalViewMode:'top', items:[],
+                    pins:[{id:'p2',x:148,y:155,text:'① Logikplan öffnen\n② Ausgänge hinzufügen\n③ Simulation starten',color:'#ffd54f',minimized:false}],
+                    objects:[
+                      {id:'t2_b1',  type:'conveyor',          x:175,y:265,width:490,height:38,rotation:0,  linkedVar:'A_BAND',      startupTime:null, locked:false},
+                      {id:'t2_b2',  type:'conveyor',          x:556,y:303,width:180,height:38,rotation:90, linkedVar:'A_BAND_SORT', startupTime:null, locked:false},
+                      {id:'t2_sm',  type:'spawner_metall',    x:133,y:267,width:34, height:34,rotation:0,  linkedVar:'',            interval:2.5, spawnSolid:true, locked:false},
+                      {id:'t2_sk',  type:'spawner_kunststoff',x:133,y:299,width:34, height:34,rotation:0,  linkedVar:'',            interval:3.5, spawnSolid:true, locked:false},
+                      {id:'t2_so',  type:'sensor_opt',        x:390,y:243,width:26, height:26,rotation:0,  linkedVar:'E_SENSOR_OPT',locked:false},
+                      {id:'t2_si',  type:'sensor_ind',        x:460,y:243,width:26, height:26,rotation:0,  linkedVar:'E_SENSOR_IND',locked:false},
+                      {id:'t2_zyl', type:'zylinder_double',   x:556,y:241,width:58, height:26,rotation:90, linkedVar:'A_ZYL_VOR',   linkedVarRet:'A_ZYL_ZUR', isDouble:true, locked:false},
+                      {id:'t2_dm',  type:'despawner',         x:539,y:487,width:34, height:34,rotation:0,  linkedVar:'',            locked:false},
+                      {id:'t2_dk',  type:'despawner',         x:663,y:250,width:34, height:34,rotation:0,  linkedVar:'',            locked:false},
+                      {id:'t2_led', type:'led',               x:240,y:168,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE_IND', color:'#ffc107', locked:false},
+                      {id:'t2_f1',  type:'frame',             x:228,y:155,width:62, height:62, rotation:0,  linkedVar:'',            normLabel:'Metall-Ind.', locked:true},
+                      {id:'t2_f2',  type:'frame',             x:376,y:230,width:148,height:100,rotation:0, linkedVar:'',            normLabel:'Sortierpunkt', locked:true},
+                      {id:'t2_wl',  type:'wall',              x:169,y:265,width:7,  height:38, rotation:0,  linkedVar:'',            locked:true},
+                      {id:'t2_wr',  type:'wall',              x:661,y:265,width:7,  height:38, rotation:0,  linkedVar:'',            locked:true}
+                    ]
+                  }
+                },
+                solution:{
+                  code:'INPUT E_SENSOR_OPT\nINPUT E_SENSOR_IND\n\nA_BAND := TRUE\nA_BAND_SORT := TRUE\nA_ZYL_VOR := (E_SENSOR_OPT && E_SENSOR_IND)\nA_ZYL_ZUR := ¬(E_SENSOR_OPT && E_SENSOR_IND)\nA_LAMPE_IND := E_SENSOR_IND\n',
+                  types:{}, layout:'grid-sim-top',
+                  factory:{
+                    globalViewMode:'top', items:[],
+                    pins:[{id:'p2',x:148,y:155,text:'① Logikplan öffnen\n② Ausgänge hinzufügen\n③ Simulation starten',color:'#ffd54f',minimized:false}],
+                    objects:[
+                      {id:'t2_b1',  type:'conveyor',          x:175,y:265,width:490,height:38,rotation:0,  linkedVar:'A_BAND',      startupTime:null, locked:false},
+                      {id:'t2_b2',  type:'conveyor',          x:556,y:303,width:180,height:38,rotation:90, linkedVar:'A_BAND_SORT', startupTime:null, locked:false},
+                      {id:'t2_sm',  type:'spawner_metall',    x:133,y:267,width:34, height:34,rotation:0,  linkedVar:'',            interval:2.5, spawnSolid:true, locked:false},
+                      {id:'t2_sk',  type:'spawner_kunststoff',x:133,y:299,width:34, height:34,rotation:0,  linkedVar:'',            interval:3.5, spawnSolid:true, locked:false},
+                      {id:'t2_so',  type:'sensor_opt',        x:390,y:243,width:26, height:26,rotation:0,  linkedVar:'E_SENSOR_OPT',locked:false},
+                      {id:'t2_si',  type:'sensor_ind',        x:460,y:243,width:26, height:26,rotation:0,  linkedVar:'E_SENSOR_IND',locked:false},
+                      {id:'t2_zyl', type:'zylinder_double',   x:556,y:241,width:58, height:26,rotation:90, linkedVar:'A_ZYL_VOR',   linkedVarRet:'A_ZYL_ZUR', isDouble:true, locked:false},
+                      {id:'t2_dm',  type:'despawner',         x:539,y:487,width:34, height:34,rotation:0,  linkedVar:'',            locked:false},
+                      {id:'t2_dk',  type:'despawner',         x:663,y:250,width:34, height:34,rotation:0,  linkedVar:'',            locked:false},
+                      {id:'t2_led', type:'led',               x:240,y:168,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE_IND', color:'#ffc107', locked:false},
+                      {id:'t2_f1',  type:'frame',             x:228,y:155,width:62, height:62, rotation:0,  linkedVar:'',            normLabel:'Metall-Ind.', locked:true},
+                      {id:'t2_f2',  type:'frame',             x:376,y:230,width:148,height:100,rotation:0, linkedVar:'',            normLabel:'Sortierpunkt', locked:true},
+                      {id:'t2_wl',  type:'wall',              x:169,y:265,width:7,  height:38, rotation:0,  linkedVar:'',            locked:true},
+                      {id:'t2_wr',  type:'wall',              x:661,y:265,width:7,  height:38, rotation:0,  linkedVar:'',            locked:true}
+                    ]
+                  }
+                }
+              },
+
+              // ─────────────────────────────────────────────────────────────────
+              // AUFGABE 3 – Schaltplan / IEC 61131 (schwer)
+              // ─────────────────────────────────────────────────────────────────
+              {
+                version:'1.0', type:'valitask',
+                id:'task-t3-zweihand-circ-2026',
+                name:'③ Zweihand-Sicherheitsschaltung – Schaltplan erstellen [Beta: Nicht fertig erstellt!]',
+                description:'Eine pneumatische Presse mit Zweihand-Sicherheitsschaltung ist verdrahtet aber noch nicht programmiert. Aus Sicherheitsgründen müssen beide Taster gleichzeitig gedrückt werden, damit der Zylinder ausfährt.\n\nDer Code-Editor und der Logikplan sind für diese Aufgabe gesperrt!\n\n🎯 AUFGABE:\nErstelle im SCHALTPLAN-EDITOR (IEC 61131) folgende drei Ausgänge:\n\n• A_ZYLINDER = Zylinder auslösen\n  Bedingung: Taster Links (E_TASTE_L) UND Taster Rechts (E_TASTE_R)\n             UND Not-Halt aktiv (E_NOTHALT)\n\n• A_LAMPE_GRUEN = Grüne Bereitschafts-LED\n  Bedingung: Not-Halt aktiv (E_NOTHALT)\n\n• A_LAMPE_ROT = Rote Not-Halt-LED\n  Bedingung: Not-Halt ausgelöst (NOT E_NOTHALT)\n\n🛠 SO GEHTS MIT DEM SCHALTPLAN:\n① Öffne das Schaltplan-Panel\n② Klicke auf das 🎨-Symbol (Palette) oben rechts im Panel\n③ Ziehe Kontakte (Schließer/Öffner) und Spulen in die Schaltplanreihen\n④ Gib die Variablennamen an den Elementen ein\n⑤ Für eine neue Reihe: ziehe ein Element auf eine freie Reihe\n\n⚙ BESCHRÄNKUNGEN:\nNur der Schaltplan-Editor ist verfügbar.\nCode-Editor und Logikplan sind gesperrt.',
+                hint:'Für A_ZYLINDER (neue Reihe im Schaltplan):\n  [E_TASTE_L] ── [E_TASTE_R] ── [E_NOTHALT] ──( A_ZYLINDER )\n  (Drei Schließer-Kontakte in Reihe, eine Ausgangs-Spule)\n\nFür A_LAMPE_GRUEN:\n  [E_NOTHALT] ──( A_LAMPE_GRUEN )\n  (Ein Schließer, eine Spule)\n\nFür A_LAMPE_ROT:\n  [/E_NOTHALT/] ──( A_LAMPE_ROT )\n  (Ein Öffner-Kontakt = normally-closed, eine Spule)',
+                category:'Grundlagen', difficulty:'schwer',
+                timeLimit:600, solutionMode:'after_time', solutionMinTime:180, solutionMinDone:3,
+                restrictObjects:'none', allowedObjectTypes:[],
+                blockAreas:{codeEditor:true, ioPanel:false, logikplan:true, schaltplan:false, factory2d:true, factoryNewVars:true},
+                conditions:[
+                  {type:'variable_exists', variable:'A_ZYLINDER'},
+                  {type:'variable_exists', variable:'A_LAMPE_GRUEN'},
+                  {type:'variable_exists', variable:'A_LAMPE_ROT'},
+                  {type:'sps_output', variable:'A_LAMPE_GRUEN', value:true},
+                  {type:'sim_running', minSeconds:30}
+                ],
+                preset:{
+                  code:'INPUT E_TASTE_L\nINPUT E_TASTE_R\nINPUT E_NOTHALT\n\n// ╔══════════════════════════════════════════════════════╗\n// ║  AUFGABE: Schaltplan (IEC 61131) vervollständigen    ║\n// ╚══════════════════════════════════════════════════════╝\n//\n// Code-Editor und Logikplan sind GESPERRT.\n// Arbeite ausschließlich im SCHALTPLAN-EDITOR!\n//\n// Fehlende Ausgänge (im Schaltplan als neue Reihen):\n//\n//   A_ZYLINDER   = E_TASTE_L AND E_TASTE_R AND E_NOTHALT\n//   A_LAMPE_GRUEN = E_NOTHALT\n//   A_LAMPE_ROT  = NOT E_NOTHALT\n',
+                  types:{}, layout:'grid-sim-top',
+                  factory:{
+                    globalViewMode:'top', items:[],
+                    pins:[{id:'p3',x:148,y:148,text:'① Schaltplan-Panel öffnen\n② 🎨 Palette aktivieren\n③ Reihen hinzufügen',color:'#ffd54f',minimized:false}],
+                    objects:[
+                      {id:'t3_zyl', type:'zylinder_single', x:355,y:230,width:70, height:30,rotation:90, linkedVar:'A_ZYLINDER',   locked:false},
+                      {id:'t3_tl',  type:'taster',          x:225,y:185,width:30, height:30,rotation:0,  linkedVar:'E_TASTE_L',    locked:false},
+                      {id:'t3_tr',  type:'taster',          x:320,y:185,width:30, height:30,rotation:0,  linkedVar:'E_TASTE_R',    locked:false},
+                      {id:'t3_nh',  type:'nothalt',         x:434,y:178,width:42, height:42,rotation:0,  linkedVar:'E_NOTHALT',    locked:false},
+                      {id:'t3_lg',  type:'led',             x:541,y:185,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE_GRUEN',color:'#4caf50', locked:false},
+                      {id:'t3_lr',  type:'led',             x:593,y:185,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE_ROT',  color:'#ef5350', locked:false},
+                      {id:'t3_f1',  type:'frame',           x:210,y:168,width:188,height:64, rotation:0,  linkedVar:'',             normLabel:'Zweihand-Sicherheit', locked:true},
+                      {id:'t3_f2',  type:'frame',           x:527,y:168,width:114,height:64, rotation:0,  linkedVar:'',             normLabel:'Signalleuchten', locked:true}
+                    ]
+                  }
+                },
+                solution:{
+                  code:'INPUT E_TASTE_L\nINPUT E_TASTE_R\nINPUT E_NOTHALT\n\nA_ZYLINDER := E_TASTE_L AND E_TASTE_R AND E_NOTHALT\nA_LAMPE_GRUEN := E_NOTHALT\nA_LAMPE_ROT := NOT E_NOTHALT\n',
+                  types:{}, layout:'grid-sim-top',
+                  factory:{
+                    globalViewMode:'top', items:[],
+                    pins:[{id:'p3',x:148,y:148,text:'① Schaltplan-Panel öffnen\n② 🎨 Palette aktivieren\n③ Reihen hinzufügen',color:'#ffd54f',minimized:false}],
+                    objects:[
+                      {id:'t3_zyl', type:'zylinder_single', x:355,y:230,width:70, height:30,rotation:90, linkedVar:'A_ZYLINDER',   locked:false},
+                      {id:'t3_tl',  type:'taster',          x:225,y:185,width:30, height:30,rotation:0,  linkedVar:'E_TASTE_L',    locked:false},
+                      {id:'t3_tr',  type:'taster',          x:320,y:185,width:30, height:30,rotation:0,  linkedVar:'E_TASTE_R',    locked:false},
+                      {id:'t3_nh',  type:'nothalt',         x:434,y:178,width:42, height:42,rotation:0,  linkedVar:'E_NOTHALT',    locked:false},
+                      {id:'t3_lg',  type:'led',             x:541,y:185,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE_GRUEN',color:'#4caf50', locked:false},
+                      {id:'t3_lr',  type:'led',             x:593,y:185,width:34, height:34,rotation:0,  linkedVar:'A_LAMPE_ROT',  color:'#ef5350', locked:false},
+                      {id:'t3_f1',  type:'frame',           x:210,y:168,width:188,height:64, rotation:0,  linkedVar:'',             normLabel:'Zweihand-Sicherheit', locked:true},
+                      {id:'t3_f2',  type:'frame',           x:527,y:168,width:114,height:64, rotation:0,  linkedVar:'',             normLabel:'Signalleuchten', locked:true}
+                    ]
+                  }
+                }
+              }
+            ]  // end tasks[]
+          }
+        ];  // end _EXAMPLE_PACKS
+
         window._loadExampleTasks = function() {
-            let existing = _getLocalTasks();
-            let added = 0;
+            let existingTasks = _getLocalTasks();
+            let existingPacks = _getLocalPackages();
+            let addedTasks = 0, addedPacks = 0;
+            // Einzelne Beispielaufgaben (_EXAMPLE_TASKS)
             _EXAMPLE_TASKS.forEach(task => {
-                if (!existing.some(t => t.id === task.id)) {
-                    _saveTaskLocally(task);
-                    added++;
+                if (!existingTasks.some(t => t.id === task.id)) {
+                    _saveTaskLocally(task); existingTasks = _getLocalTasks(); addedTasks++;
+                }
+            });
+            // Beispielpakete + eingebettete Aufgaben (_EXAMPLE_PACKS)
+            _EXAMPLE_PACKS.forEach(pack => {
+                if (Array.isArray(pack.tasks)) {
+                    pack.tasks.forEach(t => {
+                        if (t && t.id && !existingTasks.some(e => e.id === t.id)) {
+                            _saveTaskLocally(t); addedTasks++;
+                        }
+                    });
+                    existingTasks = _getLocalTasks();
+                }
+                if (!existingPacks.some(p => p.id === pack.id)) {
+                    let packToSave = Object.assign({}, pack);
+                    delete packToSave.tasks;
+                    _savePackageLocally(packToSave); addedPacks++;
                 }
             });
             window._openTaskManager();
-            if (added > 0) {
-                _showToast('✅ ' + added + ' Beispielaufgabe' + (added !== 1 ? 'n' : '') + ' geladen.');
-            } else {
-                _showToast('ℹ️ Bereits vorhanden – keine neuen Beispiele.', '#1565c0');
-            }
+            let parts = [];
+            if (addedTasks > 0) parts.push(addedTasks + ' Aufgabe' + (addedTasks !== 1 ? 'n' : ''));
+            if (addedPacks > 0) parts.push(addedPacks + ' Paket' + (addedPacks !== 1 ? 'e' : ''));
+            if (parts.length > 0) _showToast('✅ ' + parts.join(' und ') + ' geladen.');
+            else _showToast('ℹ️ Alle Beispiele bereits vorhanden.', '#1565c0');
         };
 
         function _exportTask(task) {
@@ -6411,53 +6663,273 @@ You must output exactly this JSON format. The logic code goes as a single string
 
         window._openTaskManager = function() {
             let modal = document.getElementById('task-manager-modal');
+            // Beim erstmaligen Öffnen (modal war versteckt) → Tasks-Tab
+            if (modal.style.display === 'none' || modal.style.display === '') _taskMgrView = 'tasks';
+            window._taskMgrRender();
+            modal.style.display = 'flex';
+        };
+
+        // Haupt-Dispatcher: rendert je nach _taskMgrView den richtigen Inhalt
+        window._taskMgrRender = function(view, packId) {
+            if (view !== undefined) _taskMgrView = view;
+            if (packId !== undefined) _taskMgrPackId = packId;
+            // Tab-Buttons aktualisieren
+            document.querySelectorAll('#task-mgr-tabs [data-tab]').forEach(btn => {
+                let isActive = btn.dataset.tab === (_taskMgrView === 'tasks' ? 'tasks' : 'packages');
+                btn.classList.toggle('active', isActive);
+            });
             let list = document.getElementById('task-mgr-list');
+            if (!list) return;
+            switch (_taskMgrView) {
+                case 'tasks':       _tmgrRenderTasks(list);   break;
+                case 'packages':    _tmgrRenderPacks(list);   break;
+                case 'pack-detail': _tmgrRenderDetail(list);  break;
+                case 'pack-edit':   _tmgrRenderEdit(list);    break;
+            }
+        };
+
+        // ── Aufgaben-Tab ─────────────────────────────────────────────────────────
+        function _tmgrRenderTasks(list) {
+            let modal = document.getElementById('task-manager-modal');
             let tasks = _getLocalTasks();
             modal._tasks = tasks;
             if (tasks.length === 0) {
                 list.innerHTML = '<div style="color:#607d8b;text-align:center;padding:24px 0;font-size:12px;">Keine Aufgaben gespeichert.<br>Importiere eine <b>.valitask</b>-Datei oder erstelle eine neue.</div>';
-            } else {
-                list.innerHTML = '';
-                tasks.forEach((task, i) => {
-                    let card = document.createElement('div');
-                    card.className = 'task-mgr-card';
-                    let diffColor = _getDiffColor(task.difficulty);
-                    card.innerHTML = `
-                        <div class="task-mgr-card-name">${_escHtml(task.name || 'Unbenannte Aufgabe')}</div>
-                        <div class="task-mgr-card-meta">
-                            <span style="color:${diffColor}">${_escHtml(task.difficulty || 'k.A.')}</span>
-                            ${task.category ? ' &bull; ' + _escHtml(task.category) : ''}
-                            ${task.conditions ? ' &bull; ' + task.conditions.length + ' Bedingung(en)' : ''}
-                        </div>
-                        <div>
-                            <button class="task-mgr-btn primary" data-action="start" data-idx="${i}">▶ Starten</button>
-                            <button class="task-mgr-btn" data-action="edit" data-idx="${i}">✏️ Bearbeiten</button>
-                            <button class="task-mgr-btn" data-action="export" data-idx="${i}">📤 Export</button>
-                            <button class="task-mgr-btn danger" data-action="delete" data-idx="${i}">🗑</button>
-                        </div>`;
-                    card.querySelectorAll('[data-action]').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            let t = modal._tasks[parseInt(btn.dataset.idx)];
-                            if (!t) return;
-                            if (btn.dataset.action === 'start') {
-                                document.getElementById('task-manager-modal').style.display = 'none';
-                                window._startTask(t);
-                            } else if (btn.dataset.action === 'edit') {
-                                window._openTaskEditor(t);
-                            } else if (btn.dataset.action === 'export') {
-                                _exportTask(t);
-                            } else if (btn.dataset.action === 'delete') {
-                                if (confirm('Aufgabe "' + t.name + '" löschen?')) {
-                                    _deleteLocalTask(t.id);
-                                    window._openTaskManager();
-                                }
-                            }
-                        });
-                    });
-                    list.appendChild(card);
-                });
+                return;
             }
-            modal.style.display = 'flex';
+            list.innerHTML = '';
+            let solved = {};
+            try { solved = JSON.parse(localStorage.getItem('valisTasksSolved') || '{}'); } catch(e) {}
+            tasks.forEach((task, i) => {
+                let card = document.createElement('div');
+                card.className = 'task-mgr-card';
+                let diffColor = _getDiffColor(task.difficulty);
+                let isSolved = !!solved[task.id];
+                card.innerHTML = `
+                    <div class="task-mgr-card-name">${isSolved ? '✅ ' : ''} ${_escHtml(task.name || 'Unbenannte Aufgabe')}</div>
+                    <div class="task-mgr-card-meta">
+                        <span style="color:${diffColor}">${_escHtml(task.difficulty || 'k.A.')}</span>
+                        ${task.category ? ' &bull; ' + _escHtml(task.category) : ''}
+                        ${task.conditions ? ' &bull; ' + task.conditions.length + ' Bedingung(en)' : ''}
+                        ${isSolved ? ' &bull; <span style="color:#4caf50">Gelöst</span>' : ''}
+                    </div>
+                    <div>
+                        <button class="task-mgr-btn primary" data-action="start"  data-idx="${i}">▶ Starten</button>
+                        <button class="task-mgr-btn"         data-action="edit"   data-idx="${i}">✏️ Bearbeiten</button>
+                        <button class="task-mgr-btn"         data-action="export" data-idx="${i}">📤 Export</button>
+                        <button class="task-mgr-btn danger"  data-action="delete" data-idx="${i}">🗑</button>
+                    </div>`;
+                card.querySelectorAll('[data-action]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        let t = modal._tasks[parseInt(btn.dataset.idx)];
+                        if (!t) return;
+                        if (btn.dataset.action === 'start')  { document.getElementById('task-manager-modal').style.display = 'none'; window._startTask(t); }
+                        else if (btn.dataset.action === 'edit')   { window._openTaskEditor(t); }
+                        else if (btn.dataset.action === 'export') { _exportTask(t); }
+                        else if (btn.dataset.action === 'delete') {
+                            if (confirm('Aufgabe "' + t.name + '" löschen?')) { _deleteLocalTask(t.id); window._taskMgrRender(); }
+                        }
+                    });
+                });
+                list.appendChild(card);
+            });
+        }
+
+        // ── Pakete-Tab ────────────────────────────────────────────────────────────
+        function _tmgrRenderPacks(list) {
+            let packs = _getLocalPackages();
+            list.innerHTML = '';
+            // Aktionsleiste innerhalb des Tabs
+            let actBar = document.createElement('div');
+            actBar.style.cssText = 'margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;';
+            actBar.innerHTML = `
+                <button class="task-mgr-btn primary" onclick="window._taskMgrRender('pack-edit','__new__')">➕ Neues Paket</button>
+                <button class="task-mgr-btn" onclick="document.getElementById('pack-upload').click()">📥 .valipack importieren</button>`;
+            list.appendChild(actBar);
+
+            if (packs.length === 0) {
+                let empty = document.createElement('div');
+                empty.style.cssText = 'color:#607d8b;text-align:center;padding:20px 0;font-size:12px;';
+                empty.innerHTML = 'Keine Pakete vorhanden.<br>Erstelle ein neues Paket oder importiere eine <b>.valipack</b>-Datei.';
+                list.appendChild(empty);
+                return;
+            }
+            packs.forEach(pack => {
+                let taskCount = (pack.taskIds || []).length;
+                let card = document.createElement('div');
+                card.className = 'task-mgr-pack-card';
+                card.innerHTML = `
+                    <div class="task-mgr-card-name">📦 ${_escHtml(pack.name || 'Unbenanntes Paket')}</div>
+                    <div class="task-mgr-card-meta">${taskCount} Aufgabe${taskCount !== 1 ? 'n' : ''}${pack.description ? ' &bull; ' + _escHtml(pack.description.substring(0, 60)) + (pack.description.length > 60 ? '…' : '') : ''}</div>
+                    <div>
+                        <button class="task-mgr-btn primary" data-pack-action="open">📂 Öffnen</button>
+                        <button class="task-mgr-btn"         data-pack-action="edit">✏️ Bearbeiten</button>
+                        <button class="task-mgr-btn"         data-pack-action="export">📤 Export</button>
+                        <button class="task-mgr-btn danger"  data-pack-action="delete">🗑</button>
+                    </div>`;
+                card.querySelectorAll('[data-pack-action]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (btn.dataset.packAction === 'open')   window._taskMgrRender('pack-detail', pack.id);
+                        if (btn.dataset.packAction === 'edit')   window._taskMgrRender('pack-edit', pack.id);
+                        if (btn.dataset.packAction === 'export') _exportPackage(pack);
+                        if (btn.dataset.packAction === 'delete') {
+                            if (confirm('Paket "' + pack.name + '" löschen?\n(Die enthaltenen Aufgaben bleiben erhalten.)')) {
+                                _deleteLocalPackage(pack.id); window._taskMgrRender();
+                            }
+                        }
+                    });
+                });
+                list.appendChild(card);
+            });
+        }
+
+        // ── Paket-Detailansicht ───────────────────────────────────────────────────
+        function _tmgrRenderDetail(list) {
+            let pack = _getLocalPackages().find(p => p.id === _taskMgrPackId);
+            if (!pack) { window._taskMgrRender('packages'); return; }
+            let allTasks = _getLocalTasks();
+            let packTasks = (pack.taskIds || []).map(id => allTasks.find(t => t.id === id)).filter(Boolean);
+            let solved = {};
+            try { solved = JSON.parse(localStorage.getItem('valisTasksSolved') || '{}'); } catch(e) {}
+
+            list.innerHTML = '';
+            // Kopfzeile
+            let head = document.createElement('div');
+            head.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;';
+            head.innerHTML = `
+                <button class="task-mgr-btn" onclick="window._taskMgrRender('packages')">← Pakete</button>
+                <span style="font-weight:bold;font-size:13px;color:#fff;">📦 ${_escHtml(pack.name)}</span>
+                <button class="task-mgr-btn" onclick="window._taskMgrRender('pack-edit','${pack.id}')">✏️ Bearbeiten</button>
+                <button class="task-mgr-btn" onclick="_exportPackage(_getLocalPackages().find(p=>p.id==='${pack.id}'))">📤 Export</button>`;
+            list.appendChild(head);
+            if (pack.description) {
+                let desc = document.createElement('div');
+                desc.style.cssText = 'color:#90a4ae;font-size:11px;margin-bottom:10px;line-height:1.4;';
+                desc.textContent = pack.description;
+                list.appendChild(desc);
+            }
+            let progress = document.createElement('div');
+            let solvedCount = packTasks.filter(t => solved[t.id]).length;
+            progress.style.cssText = 'font-size:11px;color:#78909c;margin-bottom:10px;';
+            progress.textContent = solvedCount + ' / ' + packTasks.length + ' Aufgaben gelöst';
+            list.appendChild(progress);
+
+            if (packTasks.length === 0) {
+                let empty = document.createElement('div');
+                empty.style.cssText = 'color:#607d8b;font-size:12px;padding:12px 0;';
+                empty.textContent = 'Dieses Paket enthält keine Aufgaben.';
+                list.appendChild(empty);
+                return;
+            }
+            let modal = document.getElementById('task-manager-modal');
+            modal._tasks = packTasks;
+            packTasks.forEach((task, i) => {
+                let card = document.createElement('div');
+                card.className = 'task-mgr-card';
+                let isSolved = !!solved[task.id];
+                let diffColor = _getDiffColor(task.difficulty);
+                card.innerHTML = `
+                    <div class="task-mgr-card-name">${isSolved ? '✅ ' : ''}${_escHtml(task.name || 'Unbenannte Aufgabe')}</div>
+                    <div class="task-mgr-card-meta">
+                        <span style="color:${diffColor}">${_escHtml(task.difficulty || 'k.A.')}</span>
+                        ${task.category ? ' &bull; ' + _escHtml(task.category) : ''}
+                        ${task.conditions ? ' &bull; ' + task.conditions.length + ' Bedingung(en)' : ''}
+                        ${isSolved ? ' &bull; <span style="color:#4caf50">Gelöst</span>' : ''}
+                    </div>
+                    <div>
+                        <button class="task-mgr-btn primary" data-action="start"  data-idx="${i}">▶ Starten</button>
+                        <button class="task-mgr-btn"         data-action="export" data-idx="${i}">📤 Export</button>
+                    </div>`;
+                card.querySelectorAll('[data-action]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        let t = modal._tasks[parseInt(btn.dataset.idx)];
+                        if (!t) return;
+                        if (btn.dataset.action === 'start') { document.getElementById('task-manager-modal').style.display = 'none'; window._startTask(t); }
+                        else if (btn.dataset.action === 'export') { _exportTask(t); }
+                    });
+                });
+                list.appendChild(card);
+            });
+        }
+
+        // ── Paket-Editor ─────────────────────────────────────────────────────────
+        function _tmgrRenderEdit(list) {
+            let isNew = (_taskMgrPackId === '__new__');
+            let pack = isNew
+                ? { id: '', name: '', description: '', taskIds: [] }
+                : (_getLocalPackages().find(p => p.id === _taskMgrPackId) || { id: '', name: '', description: '', taskIds: [] });
+            let allTasks = _getLocalTasks();
+            let packTaskIds = pack.taskIds || [];
+
+            // Reihenfolge: zuerst enthaltene Aufgaben (in Paket-Reihenfolge), dann restliche
+            let inPack    = packTaskIds.map(id => allTasks.find(t => t.id === id)).filter(Boolean);
+            let notInPack = allTasks.filter(t => !packTaskIds.includes(t.id));
+            let ordered   = [...inPack, ...notInPack];
+
+            let safeId = _escHtml(pack.id || '');
+            list.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <button class="task-mgr-btn" onclick="window._taskMgrRender('packages')">← Abbrechen</button>
+                    <span style="font-weight:bold;font-size:13px;color:#fff;">${isNew ? '➕ Neues Paket' : '✏️ Paket bearbeiten'}</span>
+                </div>
+                <label style="color:#90a4ae;font-size:11px;display:block;margin-bottom:3px;">Paketname *</label>
+                <input id="pkg-ed-name" type="text" value="${_escHtml(pack.name)}" placeholder="z.B. Grundlagen Automatisierung"
+                    style="width:100%;padding:6px 8px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:4px;font-size:12px;margin-bottom:10px;box-sizing:border-box;">
+                <label style="color:#90a4ae;font-size:11px;display:block;margin-bottom:3px;">Beschreibung (optional)</label>
+                <textarea id="pkg-ed-desc" rows="2" placeholder="Kurze Beschreibung des Pakets…"
+                    style="width:100%;padding:6px 8px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:4px;font-size:12px;margin-bottom:12px;box-sizing:border-box;resize:vertical;">${_escHtml(pack.description || '')}</textarea>
+                <label style="color:#90a4ae;font-size:11px;display:block;margin-bottom:6px;">
+                    Aufgaben im Paket <span style="color:#607d8b;">(angehakt = enthalten · ↑↓ = Reihenfolge)</span>
+                </label>
+                ${allTasks.length === 0 ? '<div style="color:#607d8b;font-size:11px;padding:8px 0;">Keine Aufgaben vorhanden.</div>' : ''}
+                <div id="pkg-ed-tasklist" style="margin-bottom:14px;max-height:200px;overflow-y:auto;"></div>
+                <div style="display:flex;gap:8px;">
+                    <button class="task-mgr-btn primary" onclick="window._pkgEdSave('${safeId}')">💾 Speichern</button>
+                    <button class="task-mgr-btn" onclick="window._taskMgrRender('packages')">Abbrechen</button>
+                </div>`;
+
+            let taskList = list.querySelector('#pkg-ed-tasklist');
+            ordered.forEach(task => {
+                let row = document.createElement('div');
+                row.dataset.taskid = task.id;
+                row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:4px;margin-bottom:3px;background:#1e2a3a;';
+                let checked = packTaskIds.includes(task.id) ? 'checked' : '';
+                let diffColor = _getDiffColor(task.difficulty);
+                row.innerHTML = `
+                    <input type="checkbox" class="pkg-task-cb" ${checked} style="cursor:pointer;flex-shrink:0;">
+                    <span style="flex:1;font-size:11px;color:#cfd8dc;">${_escHtml(task.name || 'Unbenannte Aufgabe')}</span>
+                    <span style="font-size:10px;color:${diffColor};flex-shrink:0;">${_escHtml(task.difficulty || '')}</span>
+                    <button onclick="window._pkgEdMove(this.closest('[data-taskid]'),-1)" style="background:none;border:none;color:#78909c;cursor:pointer;font-size:14px;padding:0 2px;" title="Nach oben">↑</button>
+                    <button onclick="window._pkgEdMove(this.closest('[data-taskid]'), 1)" style="background:none;border:none;color:#78909c;cursor:pointer;font-size:14px;padding:0 2px;" title="Nach unten">↓</button>`;
+                taskList.appendChild(row);
+            });
+        }
+
+        window._pkgEdMove = function(row, dir) {
+            if (!row) return;
+            let p = row.parentElement;
+            if (dir === -1 && row.previousElementSibling) p.insertBefore(row, row.previousElementSibling);
+            else if (dir === 1 && row.nextElementSibling)  p.insertBefore(row.nextElementSibling, row);
+        };
+
+        window._pkgEdSave = function(existingId) {
+            let name = (document.getElementById('pkg-ed-name') || {}).value;
+            if (!name || !name.trim()) { _showToast('⚠ Bitte einen Paketnamen eingeben.', '#b71c1c'); return; }
+            let taskIds = [];
+            document.querySelectorAll('#pkg-ed-tasklist [data-taskid]').forEach(row => {
+                if (row.querySelector('.pkg-task-cb') && row.querySelector('.pkg-task-cb').checked)
+                    taskIds.push(row.dataset.taskid);
+            });
+            let pack = {
+                version: '1.0', type: 'valipack',
+                id: existingId || ('pack-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6)),
+                name: name.trim(),
+                description: ((document.getElementById('pkg-ed-desc') || {}).value || '').trim(),
+                taskIds
+            };
+            _savePackageLocally(pack);
+            window._taskMgrRender('packages');
+            _showToast('✅ Paket "' + pack.name + '" gespeichert.');
         };
 
         window._startTask = function(taskObj) {
@@ -7198,8 +7670,38 @@ You must output exactly this JSON format. The logic code goes as a single string
                     if (task.type !== 'valitask') { alert('Keine gültige .valitask-Datei!'); return; }
                     if (!task.id) task.id = 'task-' + Date.now();
                     _saveTaskLocally(task);
+                    window._taskMgrRender('tasks');
                     window._openTaskManager();
                 } catch(ex) { alert('Fehler beim Lesen: ' + ex.message); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        document.getElementById('pack-upload').addEventListener('change', function(e) {
+            let file = e.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    let data = JSON.parse(ev.target.result);
+                    if (data.type !== 'valipack') { _showToast('⚠ Keine gültige .valipack-Datei!', '#b71c1c'); return; }
+                    // Enthaltene Aufgaben importieren
+                    let tasksAdded = 0;
+                    if (Array.isArray(data.tasks)) {
+                        data.tasks.forEach(t => {
+                            if (t && t.id && t.type === 'valitask') { _saveTaskLocally(t); tasksAdded++; }
+                        });
+                    }
+                    // Paket speichern (ohne eingebettete Tasks)
+                    let packToSave = Object.assign({}, data);
+                    delete packToSave.tasks;
+                    if (!packToSave.id) packToSave.id = 'pack-' + Date.now();
+                    _savePackageLocally(packToSave);
+                    window._taskMgrRender('packages');
+                    window._openTaskManager();
+                    _showToast('✅ Paket "' + (data.name || '?') + '" importiert (' + tasksAdded + ' Aufgabe' + (tasksAdded !== 1 ? 'n' : '') + ').');
+                } catch(ex) { _showToast('⚠ Fehler beim Import: ' + ex.message, '#b71c1c'); }
             };
             reader.readAsText(file);
             e.target.value = '';
