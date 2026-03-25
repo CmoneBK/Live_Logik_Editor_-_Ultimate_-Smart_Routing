@@ -5358,14 +5358,14 @@ You must output exactly this JSON format. The logic code goes as a single string
             inputsList.forEach(i => { 
                 let cType = componentTypes[i] || 'taster';
                 // 🌟 FIX: Lichtgitter ist ein aktiver Sensor (mit Kasten), mech_sensor bleibt ein passiver Kontakt!
-                if (cType.startsWith('sensor_') || cType === 'light_curtain' || cType === 'nothalt') {
+                if ((cType.startsWith('sensor_') || cType === 'light_curtain' || cType === 'nothalt') && usedAsSource.has(i)) {
                     let deviceName = cType === 'nothalt' ? `-SF${sfCount++}` : `-BG${bgCount++}`;
-                    let kfName = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (${deviceName})` : ''); 
+                    let kfName = `-KF${kfCount++}` + (window.configDetails >= 1 ? ` (${deviceName})` : '');
                     contactTypeMap[i] = 'relais';
                     preRungsToDraw.push({ id: i, cType: cType, kfName: kfName, deviceName: deviceName });
-                } else {
-                    symMap[i] = `-SF${sfCount++}` + (window.configDetails >= 1 ? ` (${i})` : ''); 
-                    contactTypeMap[i] = cType.replace('_nc', ''); 
+                } else if (usedAsSource.has(i)) {
+                    symMap[i] = `-SF${sfCount++}` + (window.configDetails >= 1 ? ` (${i})` : '');
+                    contactTypeMap[i] = cType.replace('_nc', '');
                 }
             });
             let sortedNodes = Array.from(graph.nodes.values()).sort((a,b) => a.level - b.level);
@@ -5840,8 +5840,9 @@ You must output exactly this JSON format. The logic code goes as a single string
                 // 🌟 FIX: Keine Invertierung mehr! Ein ungedrückter Not-Halt (NC) lässt Strom durch und zieht das Relais an!
                 let pCond = `state['${item.id}']`;
                 if (item.cType === 'nothalt') {
+                    symMap[item.id] = item.kfName; // KF-Name in iecSymMap eintragen
                     let p1 = pathCounter++;
-                    drawText(currX, yTop - 25, p1.toString(), true); 
+                    drawText(currX, yTop - 25, p1.toString(), true);
                     setPower(drawLine(currX, yTop, currX, 135, 2, item.id, col, true), "true");
                     setPower(drawContact(currX, 150, `${item.deviceName} (${item.id})`, true, 'nothalt', item.id, col, p1, item.id), "true");
                     setPower(drawLine(currX, 165, currX, coilApproachY, 2, item.id, col, true), pCond);
@@ -5849,8 +5850,9 @@ You must output exactly this JSON format. The logic code goes as a single string
                     setPower(drawLine(currX, coilExitY, currX, yBot, 2, item.id, col), pCond);
                     currX += 100; 
                 } else {
+                    symMap[item.id] = item.kfName; // KF-Name in iecSymMap eintragen
                     let p1 = pathCounter++; let p2 = pathCounter++;
-                    drawText(currX, yTop - 25, p1.toString(), true); drawText(currX + 60, yTop - 25, p2.toString(), true); 
+                    drawText(currX, yTop - 25, p1.toString(), true); drawText(currX + 60, yTop - 25, p2.toString(), true);
                     let sBoxY = 150;
                     // 🌟 FIX: Sensor als anklickbare Gruppe (g) kapseln!
                     let gSens = createSvgElement('g', {
@@ -15437,10 +15439,10 @@ You must output exactly this JSON format. The logic code goes as a single string
                 let isSensor = currentType.startsWith('sensor_') || currentType === 'mech_sensor' || currentType === 'light_curtain';
                 let isNotHalt = currentType === 'nothalt'; 
                 // 🌟 FIX: Die Rolle sagt uns jetzt ganz klar, ob wir auf das Hardware-Symbol oder auf seinen Schalter (Relais) geklickt haben
-                let isPhysicalHardwareBox = (role === 'sensor-box') || (role === 'contact' && isNotHalt);
+                let isPhysicalHardwareBox = (role === 'sensor-box') || (role === 'contact' && isNotHalt && cType !== 'relais');
                 let canSwapHardware = isHardwareInput && !isSensor && !isGate;
                 // 1. Kontakt-Belegung wechseln (Nur für Schalter, nicht für Hardware-Boxen oder Not-Halt!)
-                if ((!window.configStrictHardware || !isHardwareInput || isGate) && !isPhysicalHardwareBox && !isNotHalt) {
+                if ((!window.configStrictHardware || !isHardwareInput || isGate) && !isPhysicalHardwareBox && !(isNotHalt && cType !== 'relais')) {
                     let btnLogic = document.createElement('div');
                     btnLogic.className = 'ctx-item';
                     btnLogic.innerHTML = isGate ? t('ctx_iec_gate_invert') : t('ctx_iec_contact_swap');
@@ -16124,15 +16126,16 @@ You must output exactly this JSON format. The logic code goes as a single string
                 } else add(inp('circ-add-out', t('circ_add_out_lbl'), 'text', '', 'z.B. MOTOR_1'));
 
             } else if (cat === 'RELAY_CONTACT') {
-                let allRelayVars = [...(globalOutputs || [])];
-                if (currentGraph) {
-                    currentGraph.nodes.forEach((node, id) => {
-                        if (node.type === 'GATE') allRelayVars.push(id);
+                // Alle Relais-Spulen aus iecSymMap: jeder Eintrag mit -KF-Prefix ist ein Relais
+                let allRelayVars = [];
+                if (window.iecSymMap) {
+                    Object.entries(window.iecSymMap).forEach(([varId, sym]) => {
+                        if (sym && sym.trimStart().startsWith('-KF')) allRelayVars.push(varId);
                     });
                 }
                 let relayOpts = allRelayVars.map(v => {
-                    if (globalOutputs && globalOutputs.includes(v)) return `<option value="${v}">${v}</option>`;
-                    let lbl = window.getFbsVariableDisplay ? window.getFbsVariableDisplay(v) : v;
+                    let sym = window.iecSymMap[v];
+                    let lbl = sym ? `${sym.split(' ')[0]} (${v})` : v;
                     return `<option value="${v}">${lbl}</option>`;
                 }).join('');
                 add(sel('circ-add-relay-sel', t('circ_add_relay_lbl'), relayOpts));
@@ -16144,6 +16147,12 @@ You must output exactly this JSON format. The logic code goes as a single string
             } else if (cat === 'COIL') {
                 add(inp('circ-add-var1', t('circ_add_var1_contact'), 'text', '', 'z.B. START'));
                 add(inp('circ-add-out', t('circ_add_out_lbl'), 'text', '', 'z.B. MOTOR_1'));
+                add(sel('circ-add-coil-type', 'Bauteil-Typ (Ausgang):',
+                    ['led','valve','contactor','motor','heater','siren','relais'].map(ct => {
+                        const labels = { led:'LED / Lampe', valve:'Ventil (MB)', contactor:'Schütz (K)', motor:'Motor (M)', heater:'Heizung (E)', siren:'Signalhorn (H)', relais:'Relais / Hilfsrelais (-KF)' };
+                        return `<option value="${ct}">${labels[ct]||ct}</option>`;
+                    }).join('')
+                ));
 
             } else if (cat === 'SPECIAL') {
                 if (subtype === 'RS') {
@@ -16376,10 +16385,9 @@ You must output exactly this JSON format. The logic code goes as a single string
                     let otherVar = `${otherPin}${rsAutoC[2]}${rsAutoC[3] ? rsAutoC[3].toUpperCase() : ''}`;
                     if (circFindLine(otherVar) === -1) lines.push(`${otherVar} := TRUE`);
                 }
-                if (!componentTypes[outVar]) {
-                    componentTypes[outVar] = subtype || 'led';
-                    localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
-                }
+                let chosenCoilType = document.getElementById('circ-add-coil-type')?.value || subtype || 'led';
+                componentTypes[outVar] = chosenCoilType;
+                localStorage.setItem('logikComponentTypes', JSON.stringify(componentTypes));
 
             } else if (cat === 'SPECIAL') {
                 let type   = document.getElementById('circ-add-subtype')?.value || subtype;
