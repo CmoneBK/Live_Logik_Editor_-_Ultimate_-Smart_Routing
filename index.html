@@ -7120,6 +7120,9 @@ You must output exactly this JSON format. The logic code goes as a single string
                         } else if (ro === 'manual') {
                             if (!(activeTask.allowedObjectTypes || []).includes(type)) return;
                         }
+                        // Anzahl-Begrenzung prüfen
+                        const _mc = (activeTask.objectMaxCounts || {})[type];
+                        if (_mc !== undefined && factoryObjects.filter(o => o.type === type).length >= _mc) return;
                     }
                     window._origAddFactoryDevice(type);
                 };
@@ -7306,7 +7309,10 @@ You must output exactly this JSON format. The logic code goes as a single string
             const elapsedSec = (Date.now() - taskStartTime) / 1000;
             const timeOk = elapsedSec >= (activeTask.solutionMinTime || 0);
             const doneCount = (activeTask.conditions || []).filter(c => _checkCondition(c)).length;
-            const partialOk = doneCount >= (activeTask.solutionMinDone || 1);
+            const _specConds = activeTask.solutionPartialConditions;
+            const partialOk = (_specConds && _specConds.length > 0)
+                ? _specConds.every(idx => { const c = (activeTask.conditions||[])[idx]; return c && _checkCondition(c); })
+                : doneCount >= (activeTask.solutionMinDone || 1);
             if (mode === 'after_time') return timeOk;
             if (mode === 'after_partial') return partialOk;
             if (mode === 'after_both') return timeOk && partialOk;
@@ -7363,6 +7369,17 @@ You must output exactly this JSON format. The logic code goes as a single string
             let pr = document.getElementById('ted-sol-partial-row');
             if (tr) tr.style.display = showTime ? 'flex' : 'none';
             if (pr) pr.style.display = showPart ? 'flex' : 'none';
+        };
+        window._taskTogglePartialMode = function() {
+            const specific = (document.querySelector('input[name="ted-partial-mode"]:checked') || {}).value === 'specific';
+            const cc = document.getElementById('ted-partial-conds');
+            if (cc) cc.style.display = specific ? 'block' : 'none';
+        };
+        window._taskToggleRestrictMode = function(val) {
+            const manualEl = document.getElementById('ted-restrict-manual');
+            const condsEl  = document.getElementById('ted-restrict-conditions');
+            if (manualEl) manualEl.style.display = val === 'manual' ? 'block' : 'none';
+            if (condsEl)  condsEl.style.display  = val === 'conditions' ? 'block' : 'none';
         };
 
         // Lesbare Kurzbezeichnung ohne Spoiler (zeigt WAS zu tun ist, nicht WIE)
@@ -7800,12 +7817,23 @@ You must output exactly this JSON format. The logic code goes as a single string
                     task.allowedObjectTypes.push(cb.dataset.type);
                 });
             }
+            task.objectMaxCounts = {};
+            document.querySelectorAll('.ted-max-count').forEach(inp => {
+                const v = parseInt(inp.value);
+                if (!isNaN(v) && v >= 0) task.objectMaxCounts[inp.dataset.type] = v;
+            });
             // Musterlösung
             task.solution = (document.getElementById('task-editor-modal')._editTask || {}).solution || null;
             let solModeEl = document.getElementById('ted-sol-mode');
             task.solutionMode = solModeEl ? solModeEl.value : 'hidden';
             task.solutionMinTime = parseInt((document.getElementById('ted-sol-time') || {value:'60'}).value) || 60;
             task.solutionMinDone = parseInt((document.getElementById('ted-sol-partial') || {value:'1'}).value) || 1;
+            const _partialMode = (document.querySelector('input[name="ted-partial-mode"]:checked') || {}).value || 'count';
+            if (_partialMode === 'specific') {
+                task.solutionPartialConditions = Array.from(document.querySelectorAll('.ted-partial-cond:checked')).map(cb => parseInt(cb.dataset.idx));
+            } else {
+                task.solutionPartialConditions = [];
+            }
             // Bearbeitungsbereiche
             task.blockAreas = {
                 codeEditor:     !!(document.getElementById('ted-block-code') || {}).checked,
@@ -7896,18 +7924,39 @@ You must output exactly this JSON format. The logic code goes as a single string
                     <button onclick="window._taskAddCondition()" style="background:#1565c0;color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;">+ Bedingung hinzufügen</button>
                     ${(() => {
                         const rm = task.restrictObjects === true ? 'conditions' : (task.restrictObjects || 'none');
-                        const typeOpts = _getFactoryObjectTypes().map(({type, label}) =>
-                            `<label style="display:flex;align-items:center;gap:6px;margin-bottom:3px;cursor:pointer;color:#b0bec5;font-size:11px;">
-                                <input type="checkbox" class="ted-allow-type" data-type="${_escHtml(type)}" ${(task.allowedObjectTypes||[]).includes(type)?'checked':''}>${_escHtml(label)}
-                            </label>`).join('');
+                        const mc = task.objectMaxCounts || {};
+                        const cntInpStyle = 'width:42px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;padding:2px 4px;font-size:11px;';
+                        const typeOpts = _getFactoryObjectTypes().map(({type, label}) => {
+                            const mcVal = mc[type] !== undefined ? mc[type] : '';
+                            return `<label style="display:flex;align-items:center;gap:6px;margin-bottom:3px;cursor:pointer;color:#b0bec5;font-size:11px;">
+                                <input type="checkbox" class="ted-allow-type" data-type="${_escHtml(type)}" ${(task.allowedObjectTypes||[]).includes(type)?'checked':''}>
+                                <span style="flex:1;">${_escHtml(label)}</span>
+                                <span style="color:#607d8b;font-size:10px;">max:</span><input type="number" class="ted-max-count" data-type="${_escHtml(type)}" min="0" value="${mcVal}" placeholder="∞" style="${cntInpStyle}">
+                            </label>`;
+                        }).join('');
+                        // For 'conditions' mode: show count inputs for types derived from factory_object conditions
+                        const condTypes = [...new Set((task.conditions||[]).filter(c=>c.type==='factory_object'&&c.objectType).map(c=>c.objectType))];
+                        const allTypes = _getFactoryObjectTypes();
+                        const condCountOpts = condTypes.map(t => {
+                            const info = allTypes.find(x=>x.type===t) || {label:t};
+                            const mcVal = mc[t] !== undefined ? mc[t] : '';
+                            return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;color:#b0bec5;font-size:11px;">
+                                <span style="flex:1;">${_escHtml(info.label)}</span>
+                                <span style="color:#607d8b;font-size:10px;">max:</span><input type="number" class="ted-max-count" data-type="${_escHtml(t)}" min="0" value="${mcVal}" placeholder="∞" style="${cntInpStyle}">
+                            </div>`;
+                        }).join('');
                         return `<div style="margin-top:10px;">
                             <div style="color:#90a4ae;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;">🔩 Objekt-Einschränkung</div>
                             ${[['none','Keine Einschränkung'],['conditions','Nur geforderte Objekte (factory_object-Bedingungen)'],['manual','Manuell festlegen']].map(([val,lbl])=>
                                 `<label style="display:flex;align-items:center;gap:7px;margin-bottom:4px;cursor:pointer;color:#b0bec5;font-size:11px;">
-                                    <input type="radio" name="ted-restrict" value="${val}" ${rm===val?'checked':''} onchange="document.getElementById('ted-restrict-manual').style.display=this.value==='manual'?'block':'none'">
+                                    <input type="radio" name="ted-restrict" value="${val}" ${rm===val?'checked':''} onchange="window._taskToggleRestrictMode(this.value)">
                                     ${lbl}
                                 </label>`).join('')}
-                            <div id="ted-restrict-manual" style="display:${rm==='manual'?'block':'none'};margin-top:6px;max-height:150px;overflow-y:auto;border:1px solid #333;border-radius:3px;padding:6px;background:#111;">
+                            <div id="ted-restrict-conditions" style="display:${rm==='conditions'?'block':'none'};margin-top:6px;border:1px solid #333;border-radius:3px;padding:6px;background:#111;">
+                                <div style="color:#546e7a;font-size:10px;margin-bottom:5px;">Anzahl pro Typ begrenzen (leer = unbegrenzt):</div>
+                                ${condCountOpts || '<span style="color:#546e7a;font-size:10px;">Keine factory_object-Bedingungen vorhanden</span>'}
+                            </div>
+                            <div id="ted-restrict-manual" style="display:${rm==='manual'?'block':'none'};margin-top:6px;max-height:180px;overflow-y:auto;border:1px solid #333;border-radius:3px;padding:6px;background:#111;">
                                 ${typeOpts}
                             </div>
                         </div>`;
@@ -7933,8 +7982,27 @@ You must output exactly this JSON format. The logic code goes as a single string
                     <div id="ted-sol-time-row" style="display:${(task.solutionMode==='after_time'||task.solutionMode==='after_both')?'flex':'none'};align-items:center;gap:6px;margin-top:6px;color:#b0bec5;font-size:11px;">
                         Nach <input id="ted-sol-time" type="number" min="0" max="3600" value="${task.solutionMinTime||60}" style="width:60px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;padding:3px 5px;font-size:11px;"> Sekunden
                     </div>
-                    <div id="ted-sol-partial-row" style="display:${(task.solutionMode==='after_partial'||task.solutionMode==='after_both')?'flex':'none'};align-items:center;gap:6px;margin-top:6px;color:#b0bec5;font-size:11px;">
-                        Nach <input id="ted-sol-partial" type="number" min="1" value="${task.solutionMinDone||1}" style="width:50px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;padding:3px 5px;font-size:11px;"> erledigten Bedingungen
+                    <div id="ted-sol-partial-row" style="display:${(task.solutionMode==='after_partial'||task.solutionMode==='after_both')?'flex':'none'};flex-direction:column;gap:4px;margin-top:6px;color:#b0bec5;font-size:11px;">
+                        ${(()=>{
+                            const hasSpec = !!(task.solutionPartialConditions && task.solutionPartialConditions.length);
+                            const condLabels = (task.conditions||[]).map((c,i)=>{
+                                const lbl = c.label || (c.type+' '+(c.variable||c.objectType||''));
+                                const chk = hasSpec && task.solutionPartialConditions.includes(i);
+                                return `<label style="display:flex;align-items:center;gap:5px;margin-bottom:2px;cursor:pointer;"><input type="checkbox" class="ted-partial-cond" data-idx="${i}" ${chk?'checked':''}><span style="color:#cfd8dc;">${_escHtml(lbl)}</span></label>`;
+                            }).join('');
+                            return `
+                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                <input type="radio" name="ted-partial-mode" value="count" ${!hasSpec?'checked':''} onchange="window._taskTogglePartialMode()">
+                                Nach <input id="ted-sol-partial" type="number" min="1" value="${task.solutionMinDone||1}" style="width:50px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;padding:3px 5px;font-size:11px;margin:0 3px;"> erledigten Bedingungen
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                <input type="radio" name="ted-partial-mode" value="specific" ${hasSpec?'checked':''} onchange="window._taskTogglePartialMode()">
+                                Nach bestimmten Bedingungen:
+                            </label>
+                            <div id="ted-partial-conds" style="display:${hasSpec?'block':'none'};margin-left:18px;max-height:120px;overflow-y:auto;border:1px solid #333;border-radius:3px;padding:5px;background:#111;">
+                                ${condLabels || '<span style="color:#546e7a;font-size:10px;">Noch keine Bedingungen definiert</span>'}
+                            </div>`;
+                        })()}
                     </div>
                 </div>
                 <div style="margin-top:14px;padding:10px;background:#151515;border-radius:4px;border:1px solid #333;">
