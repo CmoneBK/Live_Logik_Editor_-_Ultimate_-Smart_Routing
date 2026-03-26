@@ -631,7 +631,7 @@
         #factory-sidebar.open { width:230px; }
         #factory-sidebar-tab { flex-shrink:0;width:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#37474f;gap:6px; }
         #factory-sidebar-tab:hover { background:#455a64; }
-        #factory-sidebar-content { flex-shrink:0;width:208px;padding:10px;overflow-y:auto;box-sizing:border-box; }
+        #factory-sidebar-content { flex-shrink:0;width:208px;padding:10px;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;min-height:100%; }
         #factory-minimap { position:absolute;bottom:10px;right:60px;width:200px;height:150px;background:#1a1a2e;border:1px solid #555;border-radius:4px;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.6);overflow:hidden; }
         #factory-wrapper.sidebar-open .factory-zoom-controls { right:232px; }
         #factory-wrapper.sidebar-open #factory-minimap { right:290px; }
@@ -1270,9 +1270,6 @@
                         <input type="range" min="0.1" max="3.0" step="0.1" value="1.0" oninput="updateSimSpeed(this.value)" style="width: 70px; cursor: ew-resize;">
                     </div>
                     <button id="btn-viewmode" class="tool-btn" onclick="toggleGlobalViewMode()" style="margin-left: auto; background-color: #4caf50;" data-i18n="fac_btn_view_side">🌍 Global: Seitenansicht</button>
-                    <button class="tool-btn" style="background-color: #26a69a; margin-left: 10px;" onclick="openSnippetLibrary()">📚 Bibliothek</button>
-                    <button class="tool-btn" style="background-color: #5c6bc0; margin-left: 10px;" onclick="window._openLayerManager()">📐 Ebenen</button>
-                    <button class="btn-export" style="background-color: #ff9800; margin-left: 10px;" onclick="openPluginModal()" data-i18n="fac_btn_plugins">🧩 Plugins</button>
                     <button class="tool-btn" onclick="clearFactory()" style="background-color: #b71c1c; margin-left: 10px;" data-i18n="fac_btn_clear">🗑️ Alles löschen</button>
                 </div>
                 <div id="factory-modal" style="display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: #2d2d30; padding: 20px; border: 1px solid #444; border-radius: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; width: 300px;">
@@ -1316,22 +1313,6 @@
                     </div>
                 </div>
                 <div id="factory-context-menu"></div>
-                <!-- Ebenen-Manager -->
-                <div id="factory-layer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:3500;align-items:center;justify-content:center;">
-                  <div style="background:#1e1e1e;border-radius:8px;padding:18px;width:340px;max-height:70vh;overflow-y:auto;border:1px solid #555;box-shadow:0 4px 20px rgba(0,0,0,0.6);">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                      <span style="color:#fff;font-weight:bold;font-size:13px;">📐 Ebenen-Manager</span>
-                      <button onclick="document.getElementById('factory-layer-modal').style.display='none'" style="background:none;border:none;color:#aaa;font-size:16px;cursor:pointer;">✖</button>
-                    </div>
-                    <div id="layer-list" style="margin-bottom:10px;"></div>
-                    <div style="display:flex;gap:6px;">
-                      <input id="layer-name-inp" type="text" placeholder="Ebenenname…" style="flex:1;padding:5px 8px;background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:4px;font-size:12px;">
-                      <input id="layer-z-inp" type="number" placeholder="Z-Offset" value="100" style="width:70px;padding:5px 8px;background:#2a2a2a;color:#fff;border:1px solid #555;border-radius:4px;font-size:12px;">
-                      <button onclick="window._layerAdd()" style="padding:5px 10px;background:#5c6bc0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">＋</button>
-                    </div>
-                    <div style="color:#607d8b;font-size:10px;margin-top:6px;">Objekte erhalten über das Rechtsklick-Menü ihre Ebene. Der Z-Offset wird zum Basiswert des Objekttyps addiert.</div>
-                  </div>
-                </div>
                 <div id="path-edit-banner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1565c0;color:#fff;padding:8px 16px;border-radius:20px;z-index:9999;align-items:center;gap:10px;font-size:12px;box-shadow:0 2px 10px rgba(0,0,0,0.6);white-space:nowrap;">
                     ✏️ Pfad-Editor: <b>Linksklick</b> = Punkt setzen &nbsp;|&nbsp; <b>Rechtsklick</b> auf Punkt = Löschen &nbsp;|&nbsp;
                     Modus: <select id="path-mode-sel" style="background:#0d47a1;color:#fff;border:1px solid #64b5f6;border-radius:6px;padding:2px 6px;font-size:11px;" onchange="if(window.pathEditingObj){window.pathEditingObj.pathMode=this.value;window._renderPathOverlay();}">
@@ -1366,6 +1347,26 @@
                                 <input id="inp-snap-size" type="number" min="5" max="200" step="5" value="20" onchange="setGridSize(this.value)" style="width:50px;background:#1e1e1e;color:#ddd;border:1px solid #555;border-radius:3px;font-size:11px;padding:3px 5px;text-align:center;">
                                 <span style="color:#aaa;font-size:11px;">px</span>
                             </div>
+                        </div>
+                        <!-- Spacer pushes bottom sections down -->
+                        <div style="flex:1;"></div>
+                        <!-- Werkzeuge -->
+                        <div style="border-top:1px solid #444;padding-top:10px;display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
+                            <div style="color:#90a4ae;font-size:10px;margin-bottom:4px;font-weight:bold;">🔧 Werkzeuge</div>
+                            <button onclick="openSnippetLibrary()" style="width:100%;background:#26a69a;color:#fff;border:none;border-radius:3px;padding:5px 8px;cursor:pointer;font-size:11px;text-align:left;">📚 Bibliothek</button>
+                            <button onclick="openPluginModal()" style="width:100%;background:#ff9800;color:#fff;border:none;border-radius:3px;padding:5px 8px;cursor:pointer;font-size:11px;text-align:left;">🧩 Plugins</button>
+                        </div>
+                        <!-- Ebenen (ganz unten, gleicher Stil wie Snap-to-Grid) -->
+                        <div style="border-top:1px solid #444;padding-top:10px;">
+                            <div style="color:#90a4ae;font-size:10px;margin-bottom:6px;font-weight:bold;">📐 Ebenen</div>
+                            <div id="layer-list" style="margin-bottom:8px;max-height:160px;overflow-y:auto;"></div>
+                            <input id="layer-name-inp" type="text" placeholder="Ebenenname…" style="width:100%;padding:4px 6px;background:#1e1e1e;color:#ddd;border:1px solid #555;border-radius:3px;font-size:11px;box-sizing:border-box;margin-bottom:4px;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                                <span style="color:#90a4ae;font-size:10px;white-space:nowrap;">Z-Offset:</span>
+                                <input id="layer-z-inp" type="number" value="100" style="flex:1;min-width:0;padding:3px 5px;background:#1e1e1e;color:#ddd;border:1px solid #555;border-radius:3px;font-size:11px;text-align:center;">
+                                <button onclick="window._layerAdd()" style="padding:3px 8px;background:#5c6bc0;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;white-space:nowrap;">＋ Hinzufügen</button>
+                            </div>
+                            <div style="color:#546e7a;font-size:9px;line-height:1.4;">Ebene per Rechtsklick-Menü zuweisen.</div>
                         </div>
                     </div>
                 </div>
@@ -7361,6 +7362,8 @@ You must output exactly this JSON format. The logic code goes as a single string
                 case 'sps_input':       return 'SPS-Eingang prüfen';
                 case 'variable_exists': return 'Variable deklarieren';
                 case 'code_contains':   return 'Code-Struktur prüfen';
+                case 'component_type':   return 'Bauteiltyp zuweisen';
+                case 'logic_equivalent': return 'Logik korrekt programmieren';
                 case 'factory_object':  return 'Fabrikobjekt platzieren';
                 case 'sim_running':     return 'Simulation laufen lassen';
                 case 'despawner_count': return 'Teile verarbeiten';
@@ -7375,6 +7378,8 @@ You must output exactly this JSON format. The logic code goes as a single string
                 case 'sps_input':       return `${cond.variable} = ${cond.value ? '1 (aktiv)' : '0 (inaktiv)'}`;
                 case 'variable_exists': return `"${cond.variable}" deklariert`;
                 case 'code_contains':   return `Enthält: ${cond.pattern}`;
+                case 'component_type':   return `${cond.variable} als „${cond.compType}" definiert`;
+                case 'logic_equivalent': return `Logisch äquivalent zu Referenz (${(cond.refCode||'').split('\n').filter(l=>l.trim()).length} Zeile(n))`;
                 case 'factory_object':  return `${_getObjectTypeLabel(cond.objectType)}` + (cond.linkedVar ? ` → ${cond.linkedVar}` : '');
                 case 'sim_running':     return `≥ ${cond.minSeconds} s`;
                 case 'despawner_count': return `${cond.count} Teile`;
@@ -7519,6 +7524,36 @@ You must output exactly this JSON format. The logic code goes as a single string
                     case 'sps_input':       return spsState[cond.variable] === cond.value;
                     case 'variable_exists': return (globalInputs||[]).includes(cond.variable) || (globalOutputs||[]).includes(cond.variable);
                     case 'code_contains':   return new RegExp(cond.pattern).test(document.getElementById('code').value);
+                    case 'component_type':  return (componentTypes[cond.variable] || 'taster') === cond.compType;
+                    case 'logic_equivalent': {
+                        const _refCode = (cond.refCode || '').trim();
+                        if (!_refCode) return false;
+                        const _stuCode = document.getElementById('code').value;
+                        const _ckey = _refCode + '\x00' + _stuCode;
+                        if (window._logicEqCache && window._logicEqCache.key === _ckey)
+                            return window._logicEqCache.result;
+                        const _cache = r => { window._logicEqCache = { key: _ckey, result: r }; return r; };
+                        let _rp, _sp;
+                        try { _rp = parseToGraph(_refCode); } catch(e) { return _cache(false); }
+                        try { _sp = parseToGraph(_stuCode); } catch(e) { return _cache(false); }
+                        let _rf, _sf;
+                        try { _rf = new Function('state','deltaMs','timers', _rp.jsCompiledCode); } catch(e) { return _cache(false); }
+                        try { _sf = new Function('state','deltaMs','timers', _sp.jsCompiledCode); } catch(e) { return _cache(false); }
+                        const _ins = _rp.inputs.filter(i => i !== 'TRUE' && i !== 'FALSE');
+                        const _outs = _rp.outputs;
+                        if (!_outs.length) return _cache(false);
+                        const _N = _ins.length;
+                        const _combos = Math.min(1 << Math.min(_N, 16), 1024);
+                        for (let _m = 0; _m < _combos; _m++) {
+                            const _rs = { TRUE:true, FALSE:false };
+                            _ins.forEach((inp, i) => { _rs[inp] = !!(_m & (1 << i)); });
+                            const _ss = { TRUE:true, FALSE:false, ..._rs };
+                            const _rt = {}, _st = {};
+                            for (let _t = 0; _t < 3; _t++) { _rf(_rs, 0, _rt); _sf(_ss, 0, _st); }
+                            for (const _o of _outs) { if (!!_rs[_o] !== !!_ss[_o]) return _cache(false); }
+                        }
+                        return _cache(true);
+                    }
                     case 'factory_object':  return factoryObjects.some(o => o.type === cond.objectType && o.linkedVar === cond.linkedVar);
                     case 'sim_running':     return taskSimSeconds >= cond.minSeconds;
                     case 'despawner_count': return taskDespawnCount >= cond.count;
@@ -7563,6 +7598,8 @@ You must output exactly this JSON format. The logic code goes as a single string
             { value:'sps_input',       label:'SPS Eingang (Input)' },
             { value:'variable_exists', label:'Variable deklariert' },
             { value:'code_contains',   label:'Code enthält Muster (Regex)' },
+            { value:'logic_equivalent',label:'Logik-Äquivalenz (syntax-unabhängig)' },
+            { value:'component_type',  label:'Bauteiltyp zugewiesen' },
             { value:'factory_object',  label:'Fabrikobjekt vorhanden' },
             { value:'sim_running',     label:'Simulation läuft (Mindestzeit)' },
             { value:'despawner_count', label:'Teile verarbeitet (Despawner)' },
@@ -7630,6 +7667,28 @@ You must output exactly this JSON format. The logic code goes as a single string
                     return `<label class="task-ed-label">Variable</label><input class="task-ed-input cond-var" type="text" value="${_escHtml(cond.variable||'')}" placeholder="z.B. A_LAMPE">`;
                 case 'code_contains':
                     return `<label class="task-ed-label">Regex-Muster</label><input class="task-ed-input cond-pattern" type="text" value="${_escHtml(cond.pattern||'')}" placeholder="z.B. SR oder TON">`;
+                case 'component_type': {
+                    const _allTypes = [
+                        ['taster','Taster (Schließer)'],['taster_nc','Taster (Öffner)'],
+                        ['schalter','Schalter (rastend)'],['schalter_nc','Schalter (Öffner, rastend)'],
+                        ['nothalt','Not-Halt (Öffner)'],['key_switch','Schlüsselschalter'],
+                        ['light_curtain','Lichtgitter (NC)'],
+                        ['sensor_opt','Sensor Optisch'],['sensor_kap','Sensor Kapazitiv'],
+                        ['sensor_mag','Sensor Magnetisch'],['mech_sensor','Positions-Schalter'],
+                        ['led','LED / Lampe'],['valve','Ventil (MB)'],['contactor','Schütz (K)'],
+                        ['motor','Motor (M)'],['heater','Heizung (E)'],['siren','Signalhorn (H)'],
+                        ['relais','Relais / Hilfsrelais (-KF)'],
+                    ];
+                    const sel = _allTypes.map(([v,l]) => `<option value="${v}" ${v===(cond.compType||'led')?'selected':''}>${l}</option>`).join('');
+                    return `<label class="task-ed-label">Variable</label>
+                        <input class="task-ed-input cond-var" type="text" value="${_escHtml(cond.variable||'')}" placeholder="z.B. A_MOTOR">
+                        <label class="task-ed-label" style="margin-top:6px;">Erwarteter Bauteiltyp</label>
+                        <select class="task-ed-input cond-comptype">${sel}</select>`;
+                }
+                case 'logic_equivalent':
+                    return `<label class="task-ed-label">Referenz-Code (beliebige gültige Syntax)</label>
+                        <textarea class="task-ed-input cond-refcode" rows="4" placeholder="z.B.:\nA_MOTOR := E_TASTER1 AND E_TASTER2\nA_LAMPE := A_MOTOR" style="resize:vertical;font-family:monospace;font-size:11px;width:100%;box-sizing:border-box;">${_escHtml(cond.refCode||'')}</textarea>
+                        <div style="color:#546e7a;font-size:10px;margin-top:3px;">Das Programm gilt als korrekt, wenn es für alle Eingangskombinationen dieselben Ausgangswerte liefert wie der Referenz-Code — unabhängig von der verwendeten Syntax.</div>`;
                 case 'factory_object': {
                     const dlId = 'task-obj-types-dl';
                     const dlOpts = _getFactoryObjectTypes().map(({label}) => `<option value="${_escHtml(label)}">`).join('');
@@ -7692,6 +7751,11 @@ You must output exactly this JSON format. The logic code goes as a single string
                         cond.variable = (row.querySelector('.cond-var')||{value:''}).value.trim(); break;
                     case 'code_contains':
                         cond.pattern = (row.querySelector('.cond-pattern')||{value:''}).value; break;
+                    case 'component_type':
+                        cond.variable = (row.querySelector('.cond-var')||{value:''}).value.trim().toUpperCase();
+                        cond.compType = (row.querySelector('.cond-comptype')||{value:'led'}).value; break;
+                    case 'logic_equivalent':
+                        cond.refCode = (row.querySelector('.cond-refcode')||{value:''}).value; break;
                     case 'factory_object':
                         cond.objectType = _getTypeFromLabel((row.querySelector('.cond-objtype')||{value:''}).value.trim());
                         cond.linkedVar = (row.querySelector('.cond-linkedvar')||{value:''}).value.trim(); break;
@@ -8309,6 +8373,7 @@ You must output exactly this JSON format. The logic code goes as a single string
             sidebar.classList.toggle('open');
             document.getElementById('factory-wrapper').classList.toggle('sidebar-open');
             if (arrow) arrow.textContent = sidebar.classList.contains('open') ? '◀' : '▶';
+            if (sidebar.classList.contains('open')) window._layerRender();
         };
         function renderMinimap() {
             if (!minimapVisible) return;
@@ -8502,8 +8567,13 @@ You must output exactly this JSON format. The logic code goes as a single string
         // =========================================================
         // ---- Ebenen-Manager ----
         window._openLayerManager = function() {
+            const sidebar = document.getElementById('factory-sidebar');
+            if (sidebar && !sidebar.classList.contains('open')) {
+                sidebar.classList.add('open');
+                document.getElementById('factory-wrapper').classList.add('sidebar-open');
+                document.getElementById('sidebar-arrow').textContent = '◀';
+            }
             window._layerRender();
-            document.getElementById('factory-layer-modal').style.display = 'flex';
         };
         window._layerRender = function() {
             const list = document.getElementById('layer-list');
@@ -8513,17 +8583,63 @@ You must output exactly this JSON format. The logic code goes as a single string
                 list.innerHTML = '<div style="color:#607d8b;font-size:11px;padding:6px 0;">Noch keine Ebenen angelegt.</div>';
                 return;
             }
-            factoryLayers.forEach(layer => {
+            let dragSrcIdx = null;
+            factoryLayers.forEach((layer, idx) => {
                 let row = document.createElement('div');
-                row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 6px;background:#2a2a2a;border-radius:4px;margin-bottom:4px;';
-                let nameSpan = document.createElement('span'); nameSpan.style.cssText = 'flex:1;font-size:12px;color:#ccc;'; nameSpan.textContent = `${layer.name} (Z+${layer.zOffset})`;
-                let btnDel = document.createElement('button'); btnDel.textContent = '🗑'; btnDel.style.cssText = 'background:none;border:none;color:#ef9a9a;cursor:pointer;font-size:13px;';
-                btnDel.onclick = () => {
+                row.style.cssText = 'display:flex;align-items:center;gap:5px;padding:4px 6px;background:#2a2a2a;border-radius:4px;margin-bottom:3px;cursor:grab;border:1px solid transparent;box-sizing:border-box;';
+                row.draggable = true;
+                row.dataset.idx = idx;
+                // Drag handle
+                let handle = document.createElement('span');
+                handle.textContent = '⠿';
+                handle.style.cssText = 'color:#546e7a;font-size:14px;cursor:grab;flex-shrink:0;line-height:1;';
+                // Name + Z
+                let nameSpan = document.createElement('span');
+                nameSpan.style.cssText = 'flex:1;font-size:11px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;';
+                nameSpan.textContent = `${layer.name}`;
+                let zBadge = document.createElement('span');
+                zBadge.style.cssText = 'font-size:10px;color:#607d8b;flex-shrink:0;';
+                zBadge.textContent = `Z+${layer.zOffset}`;
+                let btnDel = document.createElement('button');
+                btnDel.textContent = '✕';
+                btnDel.style.cssText = 'background:none;border:none;color:#ef9a9a;cursor:pointer;font-size:11px;flex-shrink:0;padding:0 2px;';
+                btnDel.title = 'Ebene löschen';
+                btnDel.onclick = (e) => {
+                    e.stopPropagation();
                     factoryLayers = factoryLayers.filter(l => l.id !== layer.id);
                     factoryObjects.forEach(o => { if (o.layerId === layer.id) { o.layerId = null; _applyObjZIndex(o); } });
                     saveFactoryState(); window._layerRender();
                 };
-                row.appendChild(nameSpan); row.appendChild(btnDel);
+                // Drag & Drop
+                row.addEventListener('dragstart', e => {
+                    dragSrcIdx = idx;
+                    row.style.opacity = '0.4';
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                row.addEventListener('dragend', () => { row.style.opacity = '1'; list.querySelectorAll('[data-idx]').forEach(r => r.style.borderTop = r.style.borderBottom = ''); });
+                row.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    list.querySelectorAll('[data-idx]').forEach(r => { r.style.borderTop = ''; r.style.borderBottom = ''; });
+                    const rect = row.getBoundingClientRect();
+                    const mid = rect.top + rect.height / 2;
+                    row.style.borderTop = e.clientY < mid ? '2px solid #5c6bc0' : '';
+                    row.style.borderBottom = e.clientY >= mid ? '2px solid #5c6bc0' : '';
+                });
+                row.addEventListener('dragleave', () => { row.style.borderTop = row.style.borderBottom = ''; });
+                row.addEventListener('drop', e => {
+                    e.preventDefault();
+                    if (dragSrcIdx === null || dragSrcIdx === idx) return;
+                    const rect = row.getBoundingClientRect();
+                    const insertAfter = e.clientY >= rect.top + rect.height / 2;
+                    const moved = factoryLayers.splice(dragSrcIdx, 1)[0];
+                    let targetIdx = idx > dragSrcIdx ? idx - 1 : idx;
+                    if (insertAfter) targetIdx++;
+                    factoryLayers.splice(targetIdx, 0, moved);
+                    dragSrcIdx = null;
+                    saveFactoryState(); window._layerRender();
+                });
+                row.appendChild(handle); row.appendChild(nameSpan); row.appendChild(zBadge); row.appendChild(btnDel);
                 list.appendChild(row);
             });
         };
