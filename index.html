@@ -1477,6 +1477,10 @@
                 <label id="fbs-add-in2-lbl" style="color: #aaa; font-size: 11px; display: block; margin-bottom: 3px;" data-i18n="fbs_add_lbl_in2">Eingang 2</label>
                 <input type="text" id="fbs-add-in2" list="fbs-var-list" placeholder="(Optional)" style="width: 100%; padding: 6px; background: #1e1e1e; color: #fff; border: 1px solid #555; border-radius: 3px; font-size: 12px; box-sizing: border-box;">
             </div>
+            <div id="fbs-extra-inputs"></div>
+            <div id="fbs-add-more-btn-grp" style="display: none; margin-bottom: 10px;">
+                <button onclick="fbsAddExtraInput()" style="background: #37474f; color: #9CDCFE; border: 1px dashed #555; padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; width: 100%;">+ Eingang hinzufügen</button>
+            </div>
             <div id="fbs-add-negate-grp" style="margin-bottom: 12px; display: none;">
                 <label style="color: #CE9178; font-size: 11px; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
                     <input type="checkbox" id="fbs-add-negate" style="cursor: pointer; width: 13px; height: 13px; accent-color: #8b5cf6;">
@@ -15666,6 +15670,8 @@ You must output exactly this JSON format. The logic code goes as a single string
             document.getElementById('fbs-add-in2').value = '';
             document.getElementById('fbs-add-in2').placeholder = window.t('dyn_ph_opt');
             document.getElementById('fbs-add-in2-grp').style.display = '';
+            document.getElementById('fbs-extra-inputs').innerHTML = '';
+            document.getElementById('fbs-add-more-btn-grp').style.display = 'none';
             const title = document.getElementById('fbs-add-title');
             const lbl1 = document.getElementById('fbs-add-in1-lbl');
             const lbl2 = document.getElementById('fbs-add-in2-lbl');
@@ -15685,6 +15691,7 @@ You must output exactly this JSON format. The logic code goes as a single string
                 lbl2.textContent = window.t('fbs_add_lbl_in2');
                 negGrp.style.display = 'block';
                 negChk.checked = false;
+                document.getElementById('fbs-add-more-btn-grp').style.display = 'block';
             } else if (type === 'RS') {
                 title.textContent = window.t('dyn_add_ff');
                 lbl1.textContent = window.t('dyn_ff_s');
@@ -15701,11 +15708,24 @@ You must output exactly this JSON format. The logic code goes as a single string
                 lblParam.textContent = window.t('dyn_ctu_pv');
             }
         };
+        window.fbsAddExtraInput = function() {
+            let container = document.getElementById('fbs-extra-inputs');
+            let idx = container.querySelectorAll('input[data-fbs-extra]').length + 3;
+            let grp = document.createElement('div');
+            grp.style.cssText = 'margin-bottom: 10px; display: flex; align-items: center; gap: 5px;';
+            let inputId = `fbs-extra-in-${Date.now()}`;
+            grp.innerHTML = `<label style="color:#aaa;font-size:11px;min-width:62px;">Eingang ${idx}</label><input type="text" id="${inputId}" data-fbs-extra="1" list="fbs-var-list" placeholder="(Optional)" style="flex:1;padding:6px;background:#1e1e1e;color:#fff;border:1px solid #555;border-radius:3px;font-size:12px;box-sizing:border-box;"><button onclick="this.parentElement.remove()" style="background:#c62828;color:#fff;border:none;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:11px;" title="Entfernen">✕</button>`;
+            container.appendChild(grp);
+            let inp = grp.querySelector('input');
+            inp.addEventListener('focus', function() { window.activeFbsInput = this; });
+            inp.focus();
+        };
         window.confirmFbsAdd = function() {
             let type = document.getElementById('fbs-add-type').value;
             let outRaw = document.getElementById('fbs-add-out').value.trim().toUpperCase();
             let in1 = document.getElementById('fbs-add-in1').value.trim().toUpperCase();
             let in2 = document.getElementById('fbs-add-in2').value.trim().toUpperCase();
+            let extraIns = Array.from(document.querySelectorAll('#fbs-extra-inputs input[data-fbs-extra]')).map(el => el.value.trim().toUpperCase()).filter(v => v);
             let param = document.getElementById('fbs-add-param').value;
             let negate = (['AND','OR'].includes(type)) && !!(document.getElementById('fbs-add-negate') || {}).checked;
             if (!outRaw || !in1) { alert("Bitte mindestens Ziel und Eingang 1 ausfüllen!"); return; }
@@ -15752,7 +15772,9 @@ You must output exactly this JSON format. The logic code goes as a single string
                     } else if (['AND', 'OR'].includes(type)) {
                         let op = type === 'AND' ? '&&' : '||';
                         // 🌟 FIX: Immer exakt denselben String mit festen Klammern erzeugen!
-                        let replacement = negate ? `¬(${in1} ${op} ${in2 || 'FALSE'})` : `(${in1} ${op} ${in2 || 'FALSE'})`;
+                        let allIns = [in1, in2, ...extraIns].filter(v => v);
+                        if (allIns.length < 2) allIns.push('FALSE');
+                        let replacement = negate ? `¬(${allIns.join(` ${op} `)})` : `(${allIns.join(` ${op} `)})`;
                         if (isExactMatch) {
                             // Stamm ist identisch -> Wir ersetzen ihn komplett durch den perfekten String
                             lines[matchLine.idx] = `${matchLine.left} := ${replacement}`;
@@ -15806,8 +15828,8 @@ You must output exactly this JSON format. The logic code goes as a single string
                     let newCodeLine = "";
                     // 🌟 FIX: Auch neue Kabel bekommen den identischen Klammer-String!
                     if (type === 'DIRECT') newCodeLine = `${out} := ${in1}`;
-                    else if (type === 'AND') newCodeLine = negate ? `${out} := ¬(${in1} && ${in2 || 'FALSE'})` : `${out} := (${in1} && ${in2 || 'FALSE'})`;
-                    else if (type === 'OR') newCodeLine = negate ? `${out} := ¬(${in1} || ${in2 || 'FALSE'})` : `${out} := (${in1} || ${in2 || 'FALSE'})`;
+                    else if (type === 'AND') { let ai = [in1, in2, ...extraIns].filter(v=>v); if(ai.length<2) ai.push('FALSE'); newCodeLine = negate ? `${out} := ¬(${ai.join(' && ')})` : `${out} := (${ai.join(' && ')})`; }
+                    else if (type === 'OR') { let ai = [in1, in2, ...extraIns].filter(v=>v); if(ai.length<2) ai.push('FALSE'); newCodeLine = negate ? `${out} := ¬(${ai.join(' || ')})` : `${out} := (${ai.join(' || ')})`; }
                     else if (type === 'RS') {
                         if (out.match(/^Q?\d+$/)) newCodeLine = `S${rsNum} := ${in1}\nR${rsNum} := ${in2 || 'FALSE'}`;
                         else newCodeLine = `${out} := Q${rsNum}\nS${rsNum} := ${in1}\nR${rsNum} := ${in2 || 'FALSE'}`;
@@ -16703,7 +16725,7 @@ You must output exactly this JSON format. The logic code goes as a single string
                 el.style.backgroundColor = '#007acc';
                 setTimeout(() => el.style.backgroundColor = oldBg, 250);
             };
-            if (inputId === 'fbs-add-in1' || inputId === 'fbs-add-in2') {
+            if (inputId === 'fbs-add-in1' || inputId === 'fbs-add-in2' || window.activeFbsInput.dataset.fbsExtra) {
                 window.activeFbsInput.value = clickedVar;
                 visualFlash(window.activeFbsInput);
             } 
